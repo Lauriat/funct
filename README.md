@@ -11,6 +11,12 @@ the same functionality and the dynamic nature of the built-in list.
 
 [Documentation](https://Lauriat.github.io/funct/Array.html)
 
+Array is available on PyPi and can be installed with pip
+```python
+$ pip install funct
+```
+
+
 Examples
 -------
 
