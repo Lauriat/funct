@@ -9,7 +9,7 @@ Array provides a combination of python built-ins, functionality found in NumPy a
 and higher-order methods usually used in functional languages, however still retainging
 the same functionality and the dynamic nature of the built-in list.
 
-[Documentation](https://www.google.com)
+[Documentation](https://Lauriat.github.io/funct/Array.html)
 
 Examples
 -------
@@ -88,7 +88,7 @@ all(map(func3, filter(func2, map(func1, zip(a, b)))))
 ```
 
 
-#### Full documentation available [here](https://www.google.com).
+#### Full documentation available [here](https://Lauriat.github.io/funct/Array.html).
 
 Array Creation
 -------
