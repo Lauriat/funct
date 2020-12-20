@@ -1,4 +1,4 @@
-# FuPy
+# Funct
 
 A functional mutable sequence inheriting from Python's built-in list.
 Array provides higher-order methods and more functionality to the built-in
