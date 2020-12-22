@@ -1,11 +1,11 @@
 import math
-import operator
 import multiprocessing
-from numbers import Number
-from itertools import repeat, starmap, zip_longest
-from functools import reduce
+import operator
 from collections.abc import Iterable
-from operator import add, mul, pow, gt, ge, lt, le, eq, ne, mod
+from functools import reduce
+from itertools import repeat, starmap, zip_longest
+from numbers import Number
+from operator import add, mul, pow, gt, ge, lt, le, eq, ne, mod, and_, or_, inv
 
 
 class Array(list):
@@ -27,9 +27,7 @@ class Array(list):
             args = list(args[0])
 
         if any(map(lambda e: isinstance(e, Array.__baseIterables), args)):
-            super().__init__(
-                Array(a) if isinstance(a, Array.__baseIterables) else a for a in args
-            )
+            super().__init__(self.__convert(a) for a in args)
         else:
             super().__init__(args)
 
@@ -96,6 +94,36 @@ class Array(list):
         and given scalar or sequence, element-wise.
         """
         self[:] = self.__operate(mod, e)
+        return self
+
+    def bitwiseAnd(self, e):
+        """
+        Computes the bit-wise AND between elements in this Array
+        and given scalar or sequence, element-wise.
+        """
+        return self & e
+
+    def bitwiseAnd_(self, e):
+        """
+        Computes (in-place) the bit-wise AND between elements in this Array
+        and given scalar or sequence, element-wise.
+        """
+        self[:] = self & e
+        return self
+
+    def bitwiseOr(self, e):
+        """
+        Computes the bit-wise OR between elements in this Array
+        and given scalar or sequence, element-wise.
+        """
+        return self | e
+
+    def bitwiseOr_(self, e):
+        """
+        Computes (in-place) the bit-wise AND between elements in this Array
+        and given scalar or sequence, element-wise.
+        """
+        self[:] = self | e
         return self
 
     def sum(self):
@@ -186,9 +214,9 @@ class Array(list):
     def diff(self, n=1):
         """ Returns the n-th discrete difference of the Array. """
         if n == 1:
-            return self[1:].add(self[:-1].mul(-1))
+            return self[1:].add(-self[:-1])
         else:
-            return self[1:].add(self[:-1].mul(-1)).diff(n - 1)
+            return self[1:].add(-self[:-1]).diff(n - 1)
 
     def difference(self, b):
         """
@@ -458,14 +486,14 @@ class Array(list):
     def maxBy(self, l):
         """ Finds the maximum value measured by a function. """
         r = max(self, key=l)
-        if isinstance(r, (list, range)):
+        if isinstance(r, Array.__baseIterables):
             return Array(r)
         return r
 
     def minBy(self, l):
         """ Finds the minimum value measured by a function. """
         r = min(self, key=l)
-        if isinstance(r, (list, range)):
+        if isinstance(r, Array.__baseIterables):
             return Array(r)
         return r
 
@@ -568,7 +596,7 @@ class Array(list):
 
     def insert_(self, i, e):
         """ Inserts element(s) (in place) before given index/indices. """
-        if isinstance(e, (list, range)):
+        if isinstance(e, Array.__baseIterables):
             for ei in e:
                 self.insert_(i, ei)
                 i += 1
@@ -888,10 +916,23 @@ class Array(list):
         return "Array" + "(" + super().__repr__()[1:-1] + ")"
 
     def __add__(self, b):
-        return Array(super().__add__(b))
+        if isinstance(b, Array.__baseIterables):
+            return Array(super().__add__(Array(b)))
+        else:
+            raise TypeError(f"Can not concatenate {type(b).__name__} to Array")
+
+    def __iadd__(self, b):
+        if isinstance(b, Array.__baseIterables):
+            super().__iadd__(b)
+            return self
+        else:
+            raise TypeError(f"Can not concatenate {type(b).__name__} to Array")
 
     def __radd__(self, b):
-        return Array(b) + self
+        if isinstance(b, Array.__baseIterables):
+            return Array(b) + self
+        else:
+            raise TypeError(f"Can not concatenate {type(b).__name__} to Array")
 
     def __gt__(self, e):
         return self.__operate(gt, e)
@@ -911,6 +952,20 @@ class Array(list):
     def __ne__(self, e):
         return self.__operate(ne, e)
 
+    def __and__(self, e):
+        return self.__operate(and_, e)
+
+    def __or__(self, e):
+        return self.__operate(or_, e)
+
+    def __neg__(self):
+        return self.mul(-1)
+
+    def __invert__(self):
+        if all(map(lambda e: isinstance(e, bool), self)):
+            return self.map(lambda e: not e)
+        return self.map(inv)
+
     def __hash__(self):
         return hash(self.toTuple)
 
@@ -923,7 +978,7 @@ class Array(list):
             for _i, _e in zip(i, e):
                 super().__setitem__(_i, _e)
             return
-        if isinstance(e, (list, range)):
+        if isinstance(e, Array.__baseIterables):
             super().__setitem__(i, Array(e))
             return
         if isinstance(i, slice) and not isinstance(e, Iterable):

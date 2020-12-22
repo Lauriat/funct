@@ -116,8 +116,8 @@ Array(5, 5, 5, 5, 5)
 Array(5, 5, 5, 5, 5)
 ```
 
-Nested python built-in sequences i.e. lists, tuples and ranges are also converted to
-Arrays. However, other iterables e.g. generators and numpy ndarrays
+Python built-in sequences (including nested ones) lists, tuples and ranges are converted to
+Arrays on instantiation. However, other iterables e.g. generators and numpy ndarrays
 are converted to Arrays only if the argument consists of a single sequence. The elements
 can be converted to Arrays by calling the `toArray` method.
 ```python

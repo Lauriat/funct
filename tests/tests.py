@@ -5,6 +5,7 @@ import unittest
 
 # Ugly
 
+
 class TestArray(unittest.TestCase):
     def test(self):
         l = Array(1, 2, 3)
@@ -110,6 +111,9 @@ class TestArray(unittest.TestCase):
         self.assertTrue(d.pow([1, 2, 0.5]).eq((9, 16, 6)).all)
         d.pow_([1, 2, 0.5])
         self.assertTrue(d.eq((9, 16, 6)).all)
+        hh = Array(1, 2, 3, 4, 6, 10)
+        self.assertEqual(Array(np.diff(hh)), hh.diff())
+        self.assertEqual(Array(np.diff(hh, 2)), hh.diff(2))
 
         self.assertEqual(a.difference(b).size, a.size)
         self.assertTrue(l.difference([2, 3, 4]).eq([1]).all)
@@ -226,6 +230,12 @@ class TestArray(unittest.TestCase):
         self.assertEqual(Array(1, 2, 3).mean(), 2)
         self.assertEqual(Array(1, 2, 3).average(), 2)
         self.assertEqual(Array(1, 2, 3).product(), 6)
+        self.assertTrue(([1] + Array(2)).equal((1, 2)))
+        self.assertTrue(((1, 2) + Array(3)).equal((1, 2, 3)))
+        self.assertTrue((Array(1) + [2]).equal((1, 2)))
+        self.assertTrue((Array(1) + [2, 3]).equal((1, 2, 3)))
+        self.assertTrue((Array(0, 1, 2) + range(3)).equal((0, 1, 2, 0, 1, 2)))
+        self.assertTrue((range(3) + Array(0, 1, 2)).equal((0, 1, 2, 0, 1, 2)))
 
     def test_errs(self):
         with self.assertRaises(ValueError):
@@ -250,6 +260,18 @@ class TestArray(unittest.TestCase):
             Array().pad(4.2)
         with self.assertRaises(TypeError):
             Array().get("a")
+        with self.assertRaises(TypeError):
+            1 + Array(1, 2, 3)
+        with self.assertRaises(TypeError):
+            "a" + Array(1, 2, 3)
+        with self.assertRaises(TypeError):
+            iter([1]) + Array(1, 2, 3)
+        with self.assertRaises(TypeError):
+            Array(1, 2, 3) + 1
+        with self.assertRaises(TypeError):
+            "a" + Array(1, 2, 3) + "a"
+        with self.assertRaises(TypeError):
+            Array(1, 2, 3) + iter([22])
 
 
 if __name__ == "__main__":

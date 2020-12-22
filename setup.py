@@ -4,8 +4,8 @@ with open("README.md", "r") as f:
     long_description = f.read()
 
 setuptools.setup(
-    name="Func",
-    version="0.1",
+    name="Funct",
+    version="0.8",
     author="Lauri Tuominen",
     author_email="lauri@port6.io",
     description="Functional Python Sequence",
