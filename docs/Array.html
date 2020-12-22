@@ -27,13 +27,13 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">import math
-import operator
 import multiprocessing
-from numbers import Number
-from itertools import repeat, starmap, zip_longest
-from functools import reduce
+import operator
 from collections.abc import Iterable
-from operator import add, mul, pow, gt, ge, lt, le, eq, ne, mod
+from functools import reduce
+from itertools import repeat, starmap, zip_longest
+from numbers import Number
+from operator import add, mul, pow, gt, ge, lt, le, eq, ne, mod, and_, or_, inv
 
 
 class Array(list):
@@ -55,9 +55,7 @@ class Array(list):
             args = list(args[0])
 
         if any(map(lambda e: isinstance(e, Array.__baseIterables), args)):
-            super().__init__(
-                Array(a) if isinstance(a, Array.__baseIterables) else a for a in args
-            )
+            super().__init__(self.__convert(a) for a in args)
         else:
             super().__init__(args)
 
@@ -124,6 +122,36 @@ class Array(list):
         and given scalar or sequence, element-wise.
         &#34;&#34;&#34;
         self[:] = self.__operate(mod, e)
+        return self
+
+    def bitwiseAnd(self, e):
+        &#34;&#34;&#34;
+        Computes the bit-wise AND between elements in this Array
+        and given scalar or sequence, element-wise.
+        &#34;&#34;&#34;
+        return self &amp; e
+
+    def bitwiseAnd_(self, e):
+        &#34;&#34;&#34;
+        Computes (in-place) the bit-wise AND between elements in this Array
+        and given scalar or sequence, element-wise.
+        &#34;&#34;&#34;
+        self[:] = self &amp; e
+        return self
+
+    def bitwiseOr(self, e):
+        &#34;&#34;&#34;
+        Computes the bit-wise OR between elements in this Array
+        and given scalar or sequence, element-wise.
+        &#34;&#34;&#34;
+        return self | e
+
+    def bitwiseOr_(self, e):
+        &#34;&#34;&#34;
+        Computes (in-place) the bit-wise AND between elements in this Array
+        and given scalar or sequence, element-wise.
+        &#34;&#34;&#34;
+        self[:] = self | e
         return self
 
     def sum(self):
@@ -214,9 +242,9 @@ class Array(list):
     def diff(self, n=1):
         &#34;&#34;&#34; Returns the n-th discrete difference of the Array. &#34;&#34;&#34;
         if n == 1:
-            return self[1:].add(self[:-1].mul(-1))
+            return self[1:].add(-self[:-1])
         else:
-            return self[1:].add(self[:-1].mul(-1)).diff(n - 1)
+            return self[1:].add(-self[:-1]).diff(n - 1)
 
     def difference(self, b):
         &#34;&#34;&#34;
@@ -486,14 +514,14 @@ class Array(list):
     def maxBy(self, l):
         &#34;&#34;&#34; Finds the maximum value measured by a function. &#34;&#34;&#34;
         r = max(self, key=l)
-        if isinstance(r, (list, range)):
+        if isinstance(r, Array.__baseIterables):
             return Array(r)
         return r
 
     def minBy(self, l):
         &#34;&#34;&#34; Finds the minimum value measured by a function. &#34;&#34;&#34;
         r = min(self, key=l)
-        if isinstance(r, (list, range)):
+        if isinstance(r, Array.__baseIterables):
             return Array(r)
         return r
 
@@ -596,7 +624,7 @@ class Array(list):
 
     def insert_(self, i, e):
         &#34;&#34;&#34; Inserts element(s) (in place) before given index/indices. &#34;&#34;&#34;
-        if isinstance(e, (list, range)):
+        if isinstance(e, Array.__baseIterables):
             for ei in e:
                 self.insert_(i, ei)
                 i += 1
@@ -916,10 +944,23 @@ class Array(list):
         return &#34;Array&#34; + &#34;(&#34; + super().__repr__()[1:-1] + &#34;)&#34;
 
     def __add__(self, b):
-        return Array(super().__add__(b))
+        if isinstance(b, Array.__baseIterables):
+            return Array(super().__add__(Array(b)))
+        else:
+            raise TypeError(f&#34;Can not concatenate {type(b).__name__} to Array&#34;)
+
+    def __iadd__(self, b):
+        if isinstance(b, Array.__baseIterables):
+            super().__iadd__(b)
+            return self
+        else:
+            raise TypeError(f&#34;Can not concatenate {type(b).__name__} to Array&#34;)
 
     def __radd__(self, b):
-        return Array(b) + self
+        if isinstance(b, Array.__baseIterables):
+            return Array(b) + self
+        else:
+            raise TypeError(f&#34;Can not concatenate {type(b).__name__} to Array&#34;)
 
     def __gt__(self, e):
         return self.__operate(gt, e)
@@ -939,6 +980,20 @@ class Array(list):
     def __ne__(self, e):
         return self.__operate(ne, e)
 
+    def __and__(self, e):
+        return self.__operate(and_, e)
+
+    def __or__(self, e):
+        return self.__operate(or_, e)
+
+    def __neg__(self):
+        return self.mul(-1)
+
+    def __invert__(self):
+        if all(map(lambda e: isinstance(e, bool), self)):
+            return self.map(lambda e: not e)
+        return self.map(inv)
+
     def __hash__(self):
         return hash(self.toTuple)
 
@@ -951,7 +1006,7 @@ class Array(list):
             for _i, _e in zip(i, e):
                 super().__setitem__(_i, _e)
             return
-        if isinstance(e, (list, range)):
+        if isinstance(e, Array.__baseIterables):
             super().__setitem__(i, Array(e))
             return
         if isinstance(i, slice) and not isinstance(e, Iterable):
@@ -1019,9 +1074,7 @@ Arrays, while other iterables will stored as Array elements.</p></div>
             args = list(args[0])
 
         if any(map(lambda e: isinstance(e, Array.__baseIterables), args)):
-            super().__init__(
-                Array(a) if isinstance(a, Array.__baseIterables) else a for a in args
-            )
+            super().__init__(self.__convert(a) for a in args)
         else:
             super().__init__(args)
 
@@ -1088,6 +1141,36 @@ Arrays, while other iterables will stored as Array elements.</p></div>
         and given scalar or sequence, element-wise.
         &#34;&#34;&#34;
         self[:] = self.__operate(mod, e)
+        return self
+
+    def bitwiseAnd(self, e):
+        &#34;&#34;&#34;
+        Computes the bit-wise AND between elements in this Array
+        and given scalar or sequence, element-wise.
+        &#34;&#34;&#34;
+        return self &amp; e
+
+    def bitwiseAnd_(self, e):
+        &#34;&#34;&#34;
+        Computes (in-place) the bit-wise AND between elements in this Array
+        and given scalar or sequence, element-wise.
+        &#34;&#34;&#34;
+        self[:] = self &amp; e
+        return self
+
+    def bitwiseOr(self, e):
+        &#34;&#34;&#34;
+        Computes the bit-wise OR between elements in this Array
+        and given scalar or sequence, element-wise.
+        &#34;&#34;&#34;
+        return self | e
+
+    def bitwiseOr_(self, e):
+        &#34;&#34;&#34;
+        Computes (in-place) the bit-wise AND between elements in this Array
+        and given scalar or sequence, element-wise.
+        &#34;&#34;&#34;
+        self[:] = self | e
         return self
 
     def sum(self):
@@ -1178,9 +1261,9 @@ Arrays, while other iterables will stored as Array elements.</p></div>
     def diff(self, n=1):
         &#34;&#34;&#34; Returns the n-th discrete difference of the Array. &#34;&#34;&#34;
         if n == 1:
-            return self[1:].add(self[:-1].mul(-1))
+            return self[1:].add(-self[:-1])
         else:
-            return self[1:].add(self[:-1].mul(-1)).diff(n - 1)
+            return self[1:].add(-self[:-1]).diff(n - 1)
 
     def difference(self, b):
         &#34;&#34;&#34;
@@ -1450,14 +1533,14 @@ Arrays, while other iterables will stored as Array elements.</p></div>
     def maxBy(self, l):
         &#34;&#34;&#34; Finds the maximum value measured by a function. &#34;&#34;&#34;
         r = max(self, key=l)
-        if isinstance(r, (list, range)):
+        if isinstance(r, Array.__baseIterables):
             return Array(r)
         return r
 
     def minBy(self, l):
         &#34;&#34;&#34; Finds the minimum value measured by a function. &#34;&#34;&#34;
         r = min(self, key=l)
-        if isinstance(r, (list, range)):
+        if isinstance(r, Array.__baseIterables):
             return Array(r)
         return r
 
@@ -1560,7 +1643,7 @@ Arrays, while other iterables will stored as Array elements.</p></div>
 
     def insert_(self, i, e):
         &#34;&#34;&#34; Inserts element(s) (in place) before given index/indices. &#34;&#34;&#34;
-        if isinstance(e, (list, range)):
+        if isinstance(e, Array.__baseIterables):
             for ei in e:
                 self.insert_(i, ei)
                 i += 1
@@ -1880,10 +1963,23 @@ Arrays, while other iterables will stored as Array elements.</p></div>
         return &#34;Array&#34; + &#34;(&#34; + super().__repr__()[1:-1] + &#34;)&#34;
 
     def __add__(self, b):
-        return Array(super().__add__(b))
+        if isinstance(b, Array.__baseIterables):
+            return Array(super().__add__(Array(b)))
+        else:
+            raise TypeError(f&#34;Can not concatenate {type(b).__name__} to Array&#34;)
+
+    def __iadd__(self, b):
+        if isinstance(b, Array.__baseIterables):
+            super().__iadd__(b)
+            return self
+        else:
+            raise TypeError(f&#34;Can not concatenate {type(b).__name__} to Array&#34;)
 
     def __radd__(self, b):
-        return Array(b) + self
+        if isinstance(b, Array.__baseIterables):
+            return Array(b) + self
+        else:
+            raise TypeError(f&#34;Can not concatenate {type(b).__name__} to Array&#34;)
 
     def __gt__(self, e):
         return self.__operate(gt, e)
@@ -1903,6 +1999,20 @@ Arrays, while other iterables will stored as Array elements.</p></div>
     def __ne__(self, e):
         return self.__operate(ne, e)
 
+    def __and__(self, e):
+        return self.__operate(and_, e)
+
+    def __or__(self, e):
+        return self.__operate(or_, e)
+
+    def __neg__(self):
+        return self.mul(-1)
+
+    def __invert__(self):
+        if all(map(lambda e: isinstance(e, bool), self)):
+            return self.map(lambda e: not e)
+        return self.map(inv)
+
     def __hash__(self):
         return hash(self.toTuple)
 
@@ -1915,7 +2025,7 @@ Arrays, while other iterables will stored as Array elements.</p></div>
             for _i, _e in zip(i, e):
                 super().__setitem__(_i, _e)
             return
-        if isinstance(e, (list, range)):
+        if isinstance(e, Array.__baseIterables):
             super().__setitem__(i, Array(e))
             return
         if isinstance(i, slice) and not isinstance(e, Iterable):
@@ -2611,6 +2721,80 @@ provided sorting criteria.</p></div>
     return self.mean()</code></pre>
 </details>
 </dd>
+<dt id="funct.Array.Array.bitwiseAnd"><code class="name flex">
+<span>def <span class="ident">bitwiseAnd</span></span>(<span>self, e)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Computes the bit-wise AND between elements in this Array
+and given scalar or sequence, element-wise.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def bitwiseAnd(self, e):
+    &#34;&#34;&#34;
+    Computes the bit-wise AND between elements in this Array
+    and given scalar or sequence, element-wise.
+    &#34;&#34;&#34;
+    return self &amp; e</code></pre>
+</details>
+</dd>
+<dt id="funct.Array.Array.bitwiseAnd_"><code class="name flex">
+<span>def <span class="ident">bitwiseAnd_</span></span>(<span>self, e)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Computes (in-place) the bit-wise AND between elements in this Array
+and given scalar or sequence, element-wise.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def bitwiseAnd_(self, e):
+    &#34;&#34;&#34;
+    Computes (in-place) the bit-wise AND between elements in this Array
+    and given scalar or sequence, element-wise.
+    &#34;&#34;&#34;
+    self[:] = self &amp; e
+    return self</code></pre>
+</details>
+</dd>
+<dt id="funct.Array.Array.bitwiseOr"><code class="name flex">
+<span>def <span class="ident">bitwiseOr</span></span>(<span>self, e)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Computes the bit-wise OR between elements in this Array
+and given scalar or sequence, element-wise.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def bitwiseOr(self, e):
+    &#34;&#34;&#34;
+    Computes the bit-wise OR between elements in this Array
+    and given scalar or sequence, element-wise.
+    &#34;&#34;&#34;
+    return self | e</code></pre>
+</details>
+</dd>
+<dt id="funct.Array.Array.bitwiseOr_"><code class="name flex">
+<span>def <span class="ident">bitwiseOr_</span></span>(<span>self, e)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Computes (in-place) the bit-wise AND between elements in this Array
+and given scalar or sequence, element-wise.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def bitwiseOr_(self, e):
+    &#34;&#34;&#34;
+    Computes (in-place) the bit-wise AND between elements in this Array
+    and given scalar or sequence, element-wise.
+    &#34;&#34;&#34;
+    self[:] = self | e
+    return self</code></pre>
+</details>
+</dd>
 <dt id="funct.Array.Array.cat"><code class="name flex">
 <span>def <span class="ident">cat</span></span>(<span>self, b)</span>
 </code></dt>
@@ -2707,9 +2891,9 @@ provided sorting criteria.</p></div>
 <pre><code class="python">def diff(self, n=1):
     &#34;&#34;&#34; Returns the n-th discrete difference of the Array. &#34;&#34;&#34;
     if n == 1:
-        return self[1:].add(self[:-1].mul(-1))
+        return self[1:].add(-self[:-1])
     else:
-        return self[1:].add(self[:-1].mul(-1)).diff(n - 1)</code></pre>
+        return self[1:].add(-self[:-1]).diff(n - 1)</code></pre>
 </details>
 </dd>
 <dt id="funct.Array.Array.difference"><code class="name flex">
@@ -3084,7 +3268,7 @@ to given discriminator function.</p></div>
 </summary>
 <pre><code class="python">def insert_(self, i, e):
     &#34;&#34;&#34; Inserts element(s) (in place) before given index/indices. &#34;&#34;&#34;
-    if isinstance(e, (list, range)):
+    if isinstance(e, Array.__baseIterables):
         for ei in e:
             self.insert_(i, ei)
             i += 1
@@ -3194,7 +3378,7 @@ Returns the values that are both in this Array and Array b.</p></div>
 <pre><code class="python">def maxBy(self, l):
     &#34;&#34;&#34; Finds the maximum value measured by a function. &#34;&#34;&#34;
     r = max(self, key=l)
-    if isinstance(r, (list, range)):
+    if isinstance(r, Array.__baseIterables):
         return Array(r)
     return r</code></pre>
 </details>
@@ -3224,7 +3408,7 @@ Returns the values that are both in this Array and Array b.</p></div>
 <pre><code class="python">def minBy(self, l):
     &#34;&#34;&#34; Finds the minimum value measured by a function. &#34;&#34;&#34;
     r = min(self, key=l)
-    if isinstance(r, (list, range)):
+    if isinstance(r, Array.__baseIterables):
         return Array(r)
     return r</code></pre>
 </details>
@@ -4055,6 +4239,10 @@ of uneven length, missing values are filled with default.</p></div>
 <li><code><a title="funct.Array.Array.argsortBy" href="#funct.Array.Array.argsortBy">argsortBy</a></code></li>
 <li><code><a title="funct.Array.Array.asType" href="#funct.Array.Array.asType">asType</a></code></li>
 <li><code><a title="funct.Array.Array.average" href="#funct.Array.Array.average">average</a></code></li>
+<li><code><a title="funct.Array.Array.bitwiseAnd" href="#funct.Array.Array.bitwiseAnd">bitwiseAnd</a></code></li>
+<li><code><a title="funct.Array.Array.bitwiseAnd_" href="#funct.Array.Array.bitwiseAnd_">bitwiseAnd_</a></code></li>
+<li><code><a title="funct.Array.Array.bitwiseOr" href="#funct.Array.Array.bitwiseOr">bitwiseOr</a></code></li>
+<li><code><a title="funct.Array.Array.bitwiseOr_" href="#funct.Array.Array.bitwiseOr_">bitwiseOr_</a></code></li>
 <li><code><a title="funct.Array.Array.cat" href="#funct.Array.Array.cat">cat</a></code></li>
 <li><code><a title="funct.Array.Array.clip" href="#funct.Array.Array.clip">clip</a></code></li>
 <li><code><a title="funct.Array.Array.clip_" href="#funct.Array.Array.clip_">clip_</a></code></li>
