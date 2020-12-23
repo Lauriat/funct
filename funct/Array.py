@@ -127,16 +127,23 @@ class Array(list):
         return self
 
     def sum(self):
+        ''' Returns the sum of the Array elements. '''
         return sum(self)
 
     def product(self):
+        ''' Returns the product of the Array elements. '''
         return self.reduce(lambda a, b: a * b)
 
     def mean(self):
+        ''' Returns the average of the Array elements. '''
         return self.sum() / self.size
 
-    def average(self):
-        return self.mean()
+    def average(self, weights=None):
+        ''' Returns the weighted average of the Array elements. '''
+        if weights is None:
+            return self.mean()
+        else:
+            return self.mul(weights).sum() / sum(weights)
 
     def round(self, d=0):
         """ Rounds the Array to the given number of decimals. """
@@ -148,49 +155,63 @@ class Array(list):
         return self
 
     def gt(self, e):
+        ''' Returns x > y element-wise '''
         return self.__gt__(e)
 
     def gt_(self, e):
+        ''' Returns x > y element-wise (in-place) '''
         self[:] = self.__gt__(e)
         return self
 
     def ge(self, e):
+        ''' Returns x >= y element-wise '''
         return self.__ge__(e)
 
     def ge_(self, e):
+        ''' Returns x >= y element-wise (in-place) '''
         self[:] = self.__ge__(e)
         return self
 
     def lt(self, e):
+        ''' Returns x < y element-wise '''
         return self.__lt__(e)
 
     def lt_(self, e):
+        ''' Returns x < y element-wise (in-place) '''
         self[:] = self.__lt__(e)
         return self
 
     def le(self, e):
+        ''' Returns x <= y element-wise '''
         return self.__le__(e)
 
     def le_(self, e):
+        ''' Returns x <= y element-wise (in-place) '''
         self[:] = self.__le__(e)
         return self
 
     def eq(self, e):
+        ''' Returns x == y element-wise '''
         return self.__operate(eq, e)
 
     def eq_(self, e):
+        ''' Returns x == y element-wise (in-place) '''
         self[:] = self.__operate(eq, e)
         return self
 
     def ne(self, e):
+        ''' Returns x != y element-wise '''
         return self.__ne__(e)
 
     def ne_(self, e):
+        ''' Returns x != y element-wise (in-place) '''
         self[:] = self.__ne__(e)
         return self
 
     def clip(self, _min, _max):
-        """ Clip the values in the Array. """
+        """
+        Clip the values in the Array between the interval ('_min', '_max').
+        """
         return self.map(lambda e: max(min(e, _max), _min))
 
     def clip_(self, _min, _max):
