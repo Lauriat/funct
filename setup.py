@@ -11,7 +11,7 @@ setuptools.setup(
     description="Functional Python Sequence",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/lauriat/func",
+    url="https://github.com/lauriat/funct",
     packages=setuptools.find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",
