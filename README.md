@@ -135,7 +135,7 @@ Notes
 - Mathematical operations such as addition or multiplication can be done with the
   `add` and `mul` methods, not with the symbols `+` and `*` to avoid confusion and to
   retain the functionality of the built-in list.
-- Inplace operations in an Array are postfixed with a underscore (e.g. `arr.add\_(x)`).
+- Inplace operations in an Array are postfixed with a underscore (e.g. `arr.add_(x)`).
 
 - Even though Array preserves nearly the same functionality, 
   as the built-in list, there are a few differences in their behaviour, the most
