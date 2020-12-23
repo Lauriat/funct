@@ -682,6 +682,7 @@ class Array(list):
 
     @property
     def argmax(self):
+        """ Returns the index of the maximum value """
         return self.zipWithIndex.maxBy(lambda e: e[1])[0]
 
     @property
@@ -690,6 +691,7 @@ class Array(list):
 
     @property
     def argmin(self):
+        """ Returns the index of the minimum value """
         return self.zipWithIndex.minBy(lambda e: e[1])[0]
 
     @property
@@ -769,6 +771,13 @@ class Array(list):
             raise TypeError("Expected an Array of numbers or characters") from err
 
     @property
+    def toBool(self):
+        """
+        Converts elements in this Array to booleans.
+        """
+        return self.map(bool)
+
+    @property
     def toArray(self):
         """ Converts all iterables in the Array to Arrays """
         return self.map(lambda e: Array(e).toArray if isinstance(e, Iterable) else e)
@@ -778,7 +787,7 @@ class Array(list):
         """
         Converts an Array of integers to chars.
         """
-        return Array(map(chr, self))
+        return self.map(chr)
 
     @property
     def toStr(self):
@@ -800,7 +809,7 @@ class Array(list):
 
     @property
     def toIter(self):
-        """ Returns set of the Array elements."""
+        """ Returns an iterator for the Array."""
         for e in self:
             yield e
 
@@ -815,7 +824,7 @@ class Array(list):
         Returns the Array with the same elements, but with
         outermost singleton dimension removed (if exists).
         """
-        if isinstance(self.headOption, Iterable) and self.length == 1:
+        if isinstance(self.headOption, Array.__baseIterables) and self.length == 1:
             return self[0]
         else:
             return self
