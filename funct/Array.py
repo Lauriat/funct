@@ -1,6 +1,5 @@
 import math
 import multiprocessing
-import operator
 from collections.abc import Iterable
 from functools import reduce
 from itertools import repeat, starmap, zip_longest
@@ -120,7 +119,7 @@ class Array(list):
 
     def bitwiseOr_(self, e):
         """
-        Computes (in-place) the bit-wise AND between elements in this Array
+        Computes (in-place) the bit-wise OR between elements in this Array
         and given scalar or sequence, element-wise.
         """
         self[:] = self | e
@@ -242,7 +241,7 @@ class Array(list):
     def difference(self, b):
         """
         Difference between this Array and another iterable.
-        Returns the values in this Array that are not in Array b.
+        Returns the values in this Array that are not in sequence b.
         """
         s = set(b)
         return Array([e for e in self if e not in s])
@@ -250,15 +249,15 @@ class Array(list):
     def setDifference(self, b):
         """
         Difference between this Array and another iterable.
-        Returns the unique values in this Array that are not in Array b.
-        Does not preserve element order.
+        Returns the unique values in this Array that are not in sequence b.
+        Does not preserve order of elements.
         """
         return Array(set(self).difference(set(b)))
 
     def intersect(self, b):
         """
         Intersection between this Array and another iterable.
-        Returns the values that are both in this Array and Array b.
+        Returns the values that are both in this Array and sequence b.
         """
         s = set(b)
         return Array([e for e in self if e in s])
@@ -266,42 +265,44 @@ class Array(list):
     def setIntersect(self, b):
         """
         Intersection between this Array and another iterable.
-        Returns the unique values that are both in this Array and Array b.
+        Returns the unique values that are both in this Array and sequence b.
+        Does not preserve order of elements.
         """
         return Array(set(self).intersection(set(b)))
 
     def union(self, b):
         """
         Union of this Array and another iterable.
-        Returns the values that are in either this Array or Array b.
+        Returns the values that are in either this Array or sequence b.
         """
         return self + b
 
     def setUnion(self, b):
         """
         Union of this Array and another iterable.
-        Returns the unique values that are in either this Array or Array b.
+        Returns the unique values that are in either this Array or sequence b.
+        Does not preserve order of elements.
         """
         return Array(set(self).union(set(b)))
 
     def equal(self, b):
-        """ Returns true if Arrays have the same elements """
+        """ Returns true this Array and given sequence have the same elements. """
         return self.eq(b).all
 
     def remove(self, b):
         """ Removes first occurence(s) of the value(s). """
         a = self.copy()
         if isinstance(b, Iterable):
-            for i in set(b):
+            for i in b:
                 super(Array, a).remove(i)
         else:
             super(Array, a).remove(b)
         return a
 
     def remove_(self, b):
-        """ Removes first occurence(s) of the value(s) in place. """
+        """ Removes first occurence(s) of the value(s) in-place. """
         if isinstance(b, Iterable):
-            for i in set(b):
+            for i in b:
                 super().remove(i)
         else:
             super().remove(b)
@@ -334,7 +335,7 @@ class Array(list):
         return a
 
     def removeByIndex_(self, b):
-        """ Removes the value at specified index or indices in place. """
+        """ Removes the value at specified index or indices in-place. """
         if isinstance(b, Iterable):
             try:
                 c = 0
@@ -558,7 +559,7 @@ class Array(list):
         return Array(reversed(self))
 
     def reverse_(self):
-        """ Reverses this Array in place. """
+        """ Reverses this Array in-place. """
         super().reverse()
         return self
 
@@ -594,13 +595,12 @@ class Array(list):
 
     def extend(self, e):
         """ Extend this Array by appending elements from the iterable. """
-        super().extend(self.__convert(e))
+        super().extend(e)
         return self
 
     def extendLeft(self, e):
         """ Extends this Array by prepending elements from the iterable. """
-        for v in e:
-            self.prepend(v)
+        self[0:0] = e
         return self
 
     def insert(self, i, e):
@@ -631,8 +631,7 @@ class Array(list):
 
     def fill_(self, e):
         """ Replaces (in place) all elements of this Array with given object. """
-        for i in range(self.size):
-            self[i] = e
+        self[:] = e
         return self
 
     def pad(self, n, value=0):
@@ -836,7 +835,7 @@ class Array(list):
 
     @property
     def toDict(self):
-        """ Creates a dictionary from an Array of tuples """
+        """ Creates a dictionary from an Array of Arrays / tuples. """
         return dict(self)
 
     @property
@@ -921,7 +920,6 @@ class Array(list):
         :param num: int, optional
         :param endpoint: bool, optional
         """
-        num = operator.index(num)
         step = (stop - start) / max(num - bool(endpoint), 1)
         return Array(start + step * i for i in range(num))
 
