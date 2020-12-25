@@ -1,23 +1,23 @@
 # Funct
 
 A functional mutable sequence inheriting from Python's built-in list.
-Array provides higher-order methods and more functionality to the built-in
-list, making operations on sequences simpler and one-liners neater.
-No third party packages required.
+Array provides 100+ higher-order methods and more functionality to the built-in
+list, making operations on sequences simpler and one-liners neater, with
+no third party packages required.
 
-Array provides a combination of python built-ins, functionality found in NumPy arrays,
-and higher-order methods usually used in functional languages, however still retainging
+Array provides a combination of python built-ins, features found in NumPy arrays,
+and higher-order methods common to functional languages, still preserving
 the same functionality and the dynamic nature of the built-in list.
 
 [Documentation](https://Lauriat.github.io/funct/Array.html)
 
-Array is available on PyPi and can be installed with pip
+Funct.Array is available on PyPi and can be installed with pip
 ```python
 $ pip install funct
 ```
 
 
-Examples
+Simple examples
 -------
 
 Multiplying elements in a sequence with a constant
@@ -29,6 +29,7 @@ Multiplying elements in a sequence with a constant
 [10, 20, 30, 40, 50]
 
 #  With Arrays multiplication simplifies to
+>>> from funct import Array
 >>> nums = Array(nums)
 >>> nums.mul(10)
 Array(10, 20, 30, 40, 50)
@@ -44,7 +45,7 @@ Multiplying two sequences element-wise
 >>> nums.mul(nums2)
 Array(11, 24, 39, 56, 75)
 ```
-Same syntax applies for all mathematical operations; `add`, `pow`, `mod`, `gt`, `lt`, etc.
+Same syntax applies for all mathematical operators; `add`, `pow`, `mod`, `gt`, `lt`, etc.
 
 Selecting even numbers
 ```python
@@ -116,9 +117,9 @@ Array(5, 5, 5, 5, 5)
 Array(5, 5, 5, 5, 5)
 ```
 
-Python built-in sequences (including nested ones) lists, tuples and ranges are converted to
+Python built-in sequences (including nested ones); lists, tuples and ranges are converted to
 Arrays on instantiation. However, other iterables e.g. generators and numpy ndarrays
-are converted to Arrays only if the argument consists of a single sequence. The elements
+are converted to Arrays only if the argument consists of a single iterable. The elements
 can be converted to Arrays by calling the `toArray` method.
 ```python
 >>> Array(np.zeros(3))
@@ -133,11 +134,11 @@ Array(Array(0.0, 0.0, 0.0], Array(0.0, 0.0, 0.0))
 Notes
 -------
 - Mathematical operations such as addition or multiplication can be done with the
-  `add` and `mul` methods, not with the symbols `+` and `*` to avoid confusion and to
-  retain the functionality of the built-in list.
+  `add` and `mul` methods, not with the `+` and `*` operators to avoid confusion and to
+  retain the behaviour of the built-in list.
 - Inplace operations in an Array are postfixed with a underscore (e.g. `arr.add_(x)`).
-
-- Even though Array preserves nearly the same functionality, 
+- Inplace operators are not faster than out of place operations.
+- Even though Array preserves nearly the same functionality
   as the built-in list, there are a few differences in their behaviour, the most
   important of which are
     - `==` (`__eq__`) Returns element-wise comparison.
