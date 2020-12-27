@@ -1,10 +1,9 @@
+import itertools
 import math
 import multiprocessing
+import operator
 from collections.abc import Iterable
 from functools import reduce
-from itertools import repeat, starmap, zip_longest
-from numbers import Number
-from operator import add, mul, pow, gt, ge, lt, le, eq, ne, mod, and_, or_, inv
 
 
 class Array(list):
@@ -43,26 +42,26 @@ class Array(list):
         """
         Element-wise addition with given scalar or sequence.
         """
-        return self.__operate(add, e)
+        return self.__operate(operator.add, e)
 
     def add_(self, e):
         """
         Inplace element-wise addition with given scalar or sequence.
         """
-        self[:] = self.__operate(add, e)
+        self[:] = self.__operate(operator.add, e)
         return self
 
     def mul(self, e):
         """
         Element-wise multiplication with given scalar or sequence.
         """
-        return self.__operate(mul, e)
+        return self.__operate(operator.mul, e)
 
     def mul_(self, e):
         """
         Inplace element-wise multiplication with given scalar or sequence.
         """
-        self[:] = self.__operate(mul, e)
+        self[:] = self.__operate(operator.mul, e)
         return self
 
     def pow(self, e):
@@ -70,14 +69,14 @@ class Array(list):
         Raises elements of this Array to given power,
         or sequence of powers, element-wise.
         """
-        return self.__operate(pow, e)
+        return self.__operate(operator.pow, e)
 
     def pow_(self, e):
         """
         Raises elements (in-place) of this Array to given power,
         or sequence of powers, element-wise.
         """
-        self[:] = self.__operate(pow, e)
+        self[:] = self.__operate(operator.pow, e)
         return self
 
     def mod(self, e):
@@ -85,14 +84,14 @@ class Array(list):
         Computes the remainder between elements in this Array
         and given scalar or sequence, element-wise.
         """
-        return self.__operate(mod, e)
+        return self.__operate(operator.mod, e)
 
     def mod_(self, e):
         """
         Computes (in-place) the remainder between elements in this Array
         and given scalar or sequence, element-wise.
         """
-        self[:] = self.__operate(mod, e)
+        self[:] = self.__operate(operator.mod, e)
         return self
 
     def bitwiseAnd(self, e):
@@ -126,19 +125,19 @@ class Array(list):
         return self
 
     def sum(self):
-        ''' Returns the sum of the Array elements. '''
+        """ Returns the sum of the Array elements. """
         return sum(self)
 
     def product(self):
-        ''' Returns the product of the Array elements. '''
+        """ Returns the product of the Array elements. """
         return self.reduce(lambda a, b: a * b)
 
     def mean(self):
-        ''' Returns the average of the Array elements. '''
+        """ Returns the average of the Array elements. """
         return self.sum() / self.size
 
     def average(self, weights=None):
-        ''' Returns the weighted average of the Array elements. '''
+        """ Returns the weighted average of the Array elements. """
         if weights is None:
             return self.mean()
         else:
@@ -154,58 +153,65 @@ class Array(list):
         return self
 
     def gt(self, e):
-        ''' Returns x > y element-wise '''
+        """ Returns x > y element-wise """
         return self.__gt__(e)
 
     def gt_(self, e):
-        ''' Returns x > y element-wise (in-place) '''
+        """ Returns x > y element-wise (in-place) """
         self[:] = self.__gt__(e)
         return self
 
     def ge(self, e):
-        ''' Returns x >= y element-wise '''
+        """ Returns x >= y element-wise """
         return self.__ge__(e)
 
     def ge_(self, e):
-        ''' Returns x >= y element-wise (in-place) '''
+        """ Returns x >= y element-wise (in-place) """
         self[:] = self.__ge__(e)
         return self
 
     def lt(self, e):
-        ''' Returns x < y element-wise '''
+        """ Returns x < y element-wise """
         return self.__lt__(e)
 
     def lt_(self, e):
-        ''' Returns x < y element-wise (in-place) '''
+        """ Returns x < y element-wise (in-place) """
         self[:] = self.__lt__(e)
         return self
 
     def le(self, e):
-        ''' Returns x <= y element-wise '''
+        """ Returns x <= y element-wise """
         return self.__le__(e)
 
     def le_(self, e):
-        ''' Returns x <= y element-wise (in-place) '''
+        """ Returns x <= y element-wise (in-place) """
         self[:] = self.__le__(e)
         return self
 
     def eq(self, e):
-        ''' Returns x == y element-wise '''
-        return self.__operate(eq, e)
+        """ Returns x == y element-wise """
+        return self.__operate(operator.eq, e)
 
     def eq_(self, e):
-        ''' Returns x == y element-wise (in-place) '''
-        self[:] = self.__operate(eq, e)
+        """ Returns x == y element-wise (in-place) """
+        self[:] = self.__operate(operator.eq, e)
         return self
 
     def ne(self, e):
-        ''' Returns x != y element-wise '''
+        """ Returns x != y element-wise """
         return self.__ne__(e)
 
     def ne_(self, e):
-        ''' Returns x != y element-wise (in-place) '''
+        """ Returns x != y element-wise (in-place) """
         self[:] = self.__ne__(e)
         return self
+
+    def accumulate(self, l=operator.add):
+        """
+        Returns accumulated Array of elements using provided function.
+        Defaults to accumulated sum.
+        """
+        return Array(itertools.accumulate(self, l))
 
     def clip(self, _min, _max):
         """
@@ -380,7 +386,7 @@ class Array(list):
         Returns an Array by applying provided function
         to this Array with itertools.starmap
         """
-        return Array(starmap(l, self))
+        return Array(itertools.starmap(l, self))
 
     def parmap(self, l, n_processes=None):
         """
@@ -408,7 +414,7 @@ class Array(list):
     def forany(self, l):
         """
         Returns whether the specified predicate
-        holds for any elements of this Array.
+        holds for any element of this Array.
         """
         return self.map(l).any
 
@@ -481,15 +487,11 @@ class Array(list):
 
     def takeWhile(self, l):
         """ Takes the longest prefix of elements that satisfy the given predicate. """
-        for i, v in enumerate(self):
-            if not l(v):
-                return self[:i]
+        return Array(itertools.takewhile(l, self))
 
     def dropWhile(self, l):
         """ Drops the longest prefix of elements that satisfy the given predicate. """
-        for i, v in enumerate(self):
-            if not l(v):
-                return self[i:]
+        return Array(itertools.dropwhile(l, self))
 
     def groupBy(self, l):
         """
@@ -503,21 +505,15 @@ class Array(list):
                 m[k].append(v)
             else:
                 m[k] = Array([v])
-        return m
+        return Array(m.items()).sortBy(lambda x: x[0])
 
     def maxBy(self, l):
         """ Finds the maximum value measured by a function. """
-        r = max(self, key=l)
-        if isinstance(r, Array.__baseIterables):
-            return Array(r)
-        return r
+        return max(self, key=l)
 
     def minBy(self, l):
         """ Finds the minimum value measured by a function. """
-        r = min(self, key=l)
-        if isinstance(r, Array.__baseIterables):
-            return Array(r)
-        return r
+        return min(self, key=l)
 
     def sortBy(self, l):
         """
@@ -595,7 +591,7 @@ class Array(list):
 
     def extend(self, e):
         """ Extend this Array by appending elements from the iterable. """
-        super().extend(e)
+        super().extend(self.__convert(e))
         return self
 
     def extendLeft(self, e):
@@ -684,7 +680,7 @@ class Array(list):
         Zips the sequences. If the iterables are
         of uneven length, missing values are filled with default.
         """
-        return Array(zip_longest(self, *args, fillvalue=default))
+        return Array(itertools.zip_longest(self, *args, fillvalue=default))
 
     @property
     def all(self):
@@ -934,11 +930,18 @@ class Array(list):
                 )
             )
 
+    def __validate_index(self, i):
+        if not isinstance(i, (int, slice)):
+            if not all(map(lambda e: isinstance(e, (bool, int)), i)):
+                raise TypeError(
+                    "Only integers, slices and integer or boolean Arrays are valid indices"
+                )
+
     def __operate(self, f, e):
         if isinstance(e, Iterable):
             self.__validate_seq(e)
             return Array(map(f, self, e))
-        return Array(map(f, self, repeat(e)))
+        return Array(map(f, self, itertools.repeat(e)))
 
     def __repr__(self):
         return "Array" + "(" + super().__repr__()[1:-1] + ")"
@@ -963,36 +966,36 @@ class Array(list):
             raise TypeError(f"Can not concatenate {type(b).__name__} to Array")
 
     def __gt__(self, e):
-        return self.__operate(gt, e)
+        return self.__operate(operator.gt, e)
 
     def __ge__(self, e):
-        return self.__operate(ge, e)
+        return self.__operate(operator.ge, e)
 
     def __lt__(self, e):
-        return self.__operate(lt, e)
+        return self.__operate(operator.lt, e)
 
     def __le__(self, e):
-        return self.__operate(le, e)
+        return self.__operate(operator.le, e)
 
     def __eq__(self, e):
-        return self.__operate(eq, e)
+        return self.__operate(operator.eq, e)
 
     def __ne__(self, e):
-        return self.__operate(ne, e)
+        return self.__operate(operator.ne, e)
 
     def __and__(self, e):
-        return self.__operate(and_, e)
+        return self.__operate(operator.and_, e)
 
     def __or__(self, e):
-        return self.__operate(or_, e)
+        return self.__operate(operator.or_, e)
 
     def __neg__(self):
-        return self.mul(-1)
+        return Array(map(operator.neg, self))
 
     def __invert__(self):
         if all(map(lambda e: isinstance(e, bool), self)):
-            return self.map(lambda e: not e)
-        return self.map(inv)
+            return Array(map(lambda e: not e, self))
+        return Array(map(operator.inv, self))
 
     def __hash__(self):
         return hash(self.toTuple)
@@ -1001,8 +1004,15 @@ class Array(list):
         return self.all
 
     def __setitem__(self, i, e):
+        self.__validate_index(i)
         if isinstance(i, Iterable):
-            e = e if isinstance(e, Iterable) else repeat(e)
+            if isinstance(e, Iterable):
+                if len(i) != len(e):
+                    raise ValueError(
+                        "Expected Array of size {}, got {}".format(len(i), len(e))
+                    )
+            else:
+                e = itertools.repeat(e)
             for _i, _e in zip(i, e):
                 super().__setitem__(_i, _e)
             return
@@ -1014,19 +1024,17 @@ class Array(list):
         super().__setitem__(i, e)
 
     def __getitem__(self, key):
-        if isinstance(key, Number):
+        self.__validate_index(key)
+        if isinstance(key, int):
             return super().__getitem__(key)
         if isinstance(key, slice):
             return Array(super().__getitem__(key))
-        try:
-            if all(map(lambda k: isinstance(k, bool), key)):
-                if not (len(key) == self.size):
-                    raise IndexError(
-                        "Expected boolean array of size {}, got {}".format(
-                            self.size, len(key)
-                        )
+        if all(map(lambda k: isinstance(k, bool), key)):
+            if len(key) != self.size:
+                raise IndexError(
+                    "Expected boolean Array of size {}, got {}".format(
+                        self.size, len(key)
                     )
-                key = [i for i, k in enumerate(key) if k]
-            return Array(map(super().__getitem__, key))
-        except TypeError:
-            return super().__getitem__(key)
+                )
+            key = [i for i, k in enumerate(key) if k]
+        return Array(map(super().__getitem__, key))
