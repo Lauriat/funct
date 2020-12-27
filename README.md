@@ -17,10 +17,21 @@ $ pip install funct
 ```
 
 
-Simple examples
+Examples
 -------
 
-Multiplying elements in a sequence with a constant
+Chaining multiple functions with Arrays result in cleaner code without multiple
+nested functions.
+, e.g.
+```python
+a.zip(b).map(func1).filter(func2).forall(func3)
+
+# vs. in traditional python
+
+all(map(func3, filter(func2, map(func1, zip(a, b)))))
+```
+
+##### Multiplying elements in a sequence with a constant
 
 ```python
 #  In traditional python we could implement it using list comprehensions as follows
@@ -34,7 +45,7 @@ Multiplying elements in a sequence with a constant
 >>> nums.mul(10)
 Array(10, 20, 30, 40, 50)
 ```
-Multiplying two sequences element-wise
+##### Multiplying two sequences element-wise
 ```python
 #  Traditional python
 >>> nums2 = [11, 12, 13, 14, 15]
@@ -47,7 +58,7 @@ Array(11, 24, 39, 56, 75)
 ```
 Same syntax applies for all mathematical operators; `add`, `pow`, `mod`, `gt`, `lt`, etc.
 
-Selecting even numbers
+##### Selecting even numbers
 ```python
 #  Traditional python
 >>> nums1 = [1, 2, 3, 4, 5]
@@ -82,18 +93,6 @@ Functions applied to Arrays can be parallelized with the `parmap` and
 ```python
 >>> Array(1,2,3).parmap(heavy_func)
 ```
-
-Chaining multiple functions with Arrays result in cleaner code without multiple
-nested functions.
-, e.g.
-```python
-a.zip(b).map(func1).filter(func2).forall(func3)
-
-# vs. in traditional python
-
-all(map(func3, filter(func2, map(func1, zip(a, b)))))
-```
-
 
 #### Full documentation available [here](https://Lauriat.github.io/funct/Array.html).
 
