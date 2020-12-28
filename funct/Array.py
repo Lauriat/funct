@@ -29,15 +29,6 @@ class Array(list):
         else:
             super().__init__(args)
 
-    def abs(self):
-        """ Element-wise absolute value. """
-        return self.map(abs)
-
-    def abs_(self):
-        """ Inplace element-wise absolute value. """
-        self[:] = self.abs
-        return self
-
     def add(self, e):
         """
         Element-wise addition with given scalar or sequence.
@@ -143,13 +134,31 @@ class Array(list):
         else:
             return self.mul(weights).sum() / sum(weights)
 
+    def floor(self):
+        """ Floors the Array elements. """
+        return Array(math.floor(e) for e in self)
+
+    def floor_(self):
+        """ Floors the Array elements in-place. """
+        self[:] = Array(math.floor(e) for e in self)
+        return self
+
+    def ceil(self):
+        """ Ceils the Array elements. """
+        return Array(math.ceil(e) for e in self)
+
+    def ceil_(self):
+        """ Ceils the Array elements in-place. """
+        self[:] = Array(math.ceil(e) for e in self)
+        return self
+
     def round(self, d=0):
         """ Rounds the Array to the given number of decimals. """
-        return self.map(lambda e: round(e, d))
+        return Array(map(lambda e: round(e, d), self))
 
     def round_(self, d=0):
         """ Rounds the Array in-place to the given number of decimals. """
-        self[:] = self.map(lambda e: round(e, d))
+        self[:] = Array(map(lambda e: round(e, d), self))
         return self
 
     def gt(self, e):
@@ -217,11 +226,11 @@ class Array(list):
         """
         Clip the values in the Array between the interval ('_min', '_max').
         """
-        return self.map(lambda e: max(min(e, _max), _min))
+        return Array(map(lambda e: max(min(e, _max), _min), self))
 
     def clip_(self, _min, _max):
         """ Clip the values in the Array in-place. """
-        self[:] = self.map(lambda e: max(min(e, _max), _min))
+        self[:] = Array(map(lambda e: max(min(e, _max), _min), self))
         return self
 
     def roll(self, n):
@@ -291,9 +300,20 @@ class Array(list):
         """
         return Array(set(self).union(set(b)))
 
+    def unique(self):
+        """
+        Selects unique values in this Array.
+        Does not preserve order of elements.
+        """
+        return Array(set(self))
+
+    def nunique(self):
+        """ Returns the number of unique elements in the Array. """
+        return len(set(self))
+
     def equal(self, b):
         """ Returns true this Array and given sequence have the same elements. """
-        return self.eq(b).all
+        return all(self.eq(b))
 
     def remove(self, b):
         """ Removes first occurence(s) of the value(s). """
@@ -323,21 +343,21 @@ class Array(list):
                 for i in b:
                     a.pop(i - c)
                     c += 1
-            except TypeError as e:
+            except TypeError:
                 raise TypeError(
                     "{} object cannot be interpreted as an integer".format(
                         type(i).__name__
                     )
-                ) from e
+                ) from None
         else:
             try:
                 a.pop(b)
-            except TypeError as e:
+            except TypeError:
                 raise TypeError(
                     "{} object cannot be interpreted as an integer".format(
                         type(b).__name__
                     )
-                ) from e
+                ) from None
         return a
 
     def removeByIndex_(self, b):
@@ -348,21 +368,21 @@ class Array(list):
                 for i in b:
                     self.pop(i - c)
                     c += 1
-            except Exception as e:
+            except TypeError:
                 raise TypeError(
                     "{} object cannot be interpreted as an integer".format(
                         type(i).__name__
                     )
-                ) from e
+                ) from None
         else:
             try:
                 self.pop(b)
-            except Exception as e:
+            except TypeError:
                 raise TypeError(
                     "{} object cannot be interpreted as an integer".format(
                         type(b).__name__
                     )
-                ) from e
+                ) from None
         return self
 
     def get(self, key, default=None):
@@ -409,18 +429,18 @@ class Array(list):
         Returns whether the specified predicate
         holds for all elements of this Array.
         """
-        return self.map(l).all
+        return all(map(l, self))
 
     def forany(self, l):
         """
         Returns whether the specified predicate
         holds for any element of this Array.
         """
-        return self.map(l).any
+        return any(map(l, self))
 
     def count(self, l):
         """ Returns the number of elements that satify the predicate """
-        return self.map(l).sum
+        return sum(map(l, self))
 
     def reduce(self, l, init=None):
         """ Reduces the elements of this Array using the specified operator. """
@@ -495,7 +515,7 @@ class Array(list):
 
     def groupBy(self, l):
         """
-        Groups this Array into a dict of Arrays according
+        Groups this Array into an Array of Array-tuples according
         to given discriminator function.
         """
         m = {}
@@ -505,7 +525,16 @@ class Array(list):
                 m[k].append(v)
             else:
                 m[k] = Array([v])
-        return Array(m.items()).sortBy(lambda x: x[0])
+        return Array(m.items())
+
+    def getItem(self, n):
+        """
+        Returns the nth element of inner Arrays from an Array of Arrays
+
+        >>> Array((1,2), (3,4)).getItem(0)
+        Array(1, 3)
+        """
+        return Array(e[n] for e in self)
 
     def maxBy(self, l):
         """ Finds the maximum value measured by a function. """
@@ -515,27 +544,27 @@ class Array(list):
         """ Finds the minimum value measured by a function. """
         return min(self, key=l)
 
-    def sortBy(self, l):
+    def sortBy(self, l, reverse=False):
         """
         Sorts this Array according to a function
         defining the sorting criteria.
         """
-        return Array(sorted(self, key=l))
+        return Array(sorted(self, key=l, reverse=reverse))
 
-    def sortBy_(self, l):
+    def sortBy_(self, l, reverse=False):
         """
         Sorts this Array in place according to a function
         defining the sorting criteria.
         """
-        super().sort(key=l)
+        super().sort(key=l, reverse=reverse)
         return self
 
-    def argsortBy(self, l):
+    def argsortBy(self, l, reverse=False):
         """
         Returns the indices that would sort this Array according to
         provided sorting criteria.
         """
-        return self.zipWithIndex.sortBy(lambda e: l(e[1])).map(lambda e: e[0])
+        return self.enumerate.sortBy(lambda e: l(e[1]), reverse=reverse).getItem(0)
 
     def sort(self, **kwargs):
         """ Sorts this Array. """
@@ -546,9 +575,9 @@ class Array(list):
         super().sort(**kwargs)
         return self
 
-    def argsort(self):
+    def argsort(self, reverse=False):
         """ Returns the indices that would sort this Array """
-        return self.zipWithIndex.sortBy(lambda e: e[1]).map(lambda e: e[0])
+        return self.enumerate.sortBy(lambda e: e[1], reverse=reverse).getItem(0)
 
     def reverse(self):
         """ Reverses this Array. """
@@ -634,19 +663,19 @@ class Array(list):
         """ Pads this Array with value. Default value=0. """
         try:
             return self + [value] * n
-        except Exception as e:
+        except TypeError:
             raise TypeError(
                 "{} object cannot be interpreted as an integer".format(type(n).__name__)
-            ) from e
+            ) from None
 
     def padLeft(self, n, value=0):
         """ Pads this Array with value. Default value=0. """
         try:
             return [value] * n + self
-        except Exception as e:
+        except TypeError:
             raise TypeError(
                 "{} object cannot be interpreted as an integer".format(type(n).__name__)
-            ) from e
+            ) from None
 
     def padTo(self, n, value=0):
         """
@@ -655,10 +684,10 @@ class Array(list):
         """
         try:
             return self + [value] * (n - self.size)
-        except Exception as e:
+        except TypeError:
             raise TypeError(
                 "{} object cannot be interpreted as an integer".format(type(n).__name__)
-            ) from e
+            ) from None
 
     def padLeftTo(self, n, value=0):
         """
@@ -667,13 +696,24 @@ class Array(list):
         """
         try:
             return [value] * (n - self.size) + self
-        except Exception as e:
+        except TypeError:
             raise TypeError(
                 "{} object cannot be interpreted as an integer".format(type(n).__name__)
-            ) from e
+            ) from None
 
     def zip(self, *args):
         return Array(zip(self, *args))
+
+    def unzip(self):
+        """
+        'Unzips' nested Arrays by unpacking its elements into a zip.
+
+        >>> Array((1, "a"), (2, "b")).unzip()
+        Array(Array(1, 2), Array('a', 'b'))
+        """
+        if not all(map(lambda e: isinstance(e, Iterable), self)):
+            raise TypeError("Array elements must support iteration")
+        return Array(zip(*self))
 
     def zipAll(self, *args, default=None):
         """
@@ -681,6 +721,17 @@ class Array(list):
         of uneven length, missing values are filled with default.
         """
         return Array(itertools.zip_longest(self, *args, fillvalue=default))
+
+    @property
+    def abs(self):
+        """ Element-wise absolute value. """
+        return Array(map(abs, self))
+
+    @property
+    def abs_(self):
+        """ Inplace element-wise absolute value. """
+        self[:] = self.abs
+        return self
 
     @property
     def all(self):
@@ -699,7 +750,7 @@ class Array(list):
     @property
     def argmax(self):
         """ Returns the index of the maximum value """
-        return self.zipWithIndex.maxBy(lambda e: e[1])[0]
+        return self.enumerate.maxBy(lambda e: e[1])[0]
 
     @property
     def min(self):
@@ -708,7 +759,7 @@ class Array(list):
     @property
     def argmin(self):
         """ Returns the index of the minimum value """
-        return self.zipWithIndex.minBy(lambda e: e[1])[0]
+        return self.enumerate.minBy(lambda e: e[1])[0]
 
     @property
     def head(self):
@@ -756,15 +807,7 @@ class Array(list):
         """
         Returns True if none of the elements are neither infinity nor NaN.
         """
-        return self.forall(math.isfinite)
-
-    @property
-    def unique(self):
-        """
-        Selects unique values in this Array.
-        Does not preserve order of elements.
-        """
-        return Array(set(self))
+        return all(map(math.isfinite, self))
 
     @property
     def length(self):
@@ -782,28 +825,30 @@ class Array(list):
         Converts elements in this Array to integers.
         """
         try:
-            return self.map(lambda e: ord(e) if isinstance(e, str) else int(e))
-        except TypeError as err:
-            raise TypeError("Expected an Array of numbers or characters") from err
+            return Array(map(lambda e: ord(e) if isinstance(e, str) else int(e), self))
+        except TypeError:
+            raise TypeError("Expected an Array of numbers or characters") from None
 
     @property
     def toBool(self):
         """
         Converts elements in this Array to booleans.
         """
-        return self.map(bool)
+        return Array(map(bool, self))
 
     @property
     def toArray(self):
         """ Converts all iterables in the Array to Arrays """
-        return self.map(lambda e: Array(e).toArray if isinstance(e, Iterable) else e)
+        return Array(
+            map(lambda e: Array(e).toArray if isinstance(e, Iterable) else e, self)
+        )
 
     @property
     def toChar(self):
         """
         Converts an Array of integers to chars.
         """
-        return self.map(chr)
+        return Array(map(chr, self))
 
     @property
     def toStr(self):
@@ -856,7 +901,7 @@ class Array(list):
     def flatten(self):
         """ Returns the Array collapsed into one dimension. """
         r = Array([e for s in self for e in (s if isinstance(s, Iterable) else [s])])
-        if r.forany(lambda e: isinstance(e, Iterable)):
+        if any(map(lambda e: isinstance(e, Iterable), r)):
             return r.flatten
         return r
 
@@ -866,28 +911,19 @@ class Array(list):
         return Array(range(self.size))
 
     @property
-    def zipWithIndex(self):
+    def enumerate(self):
         """ Zips the Array with its indices """
         return Array(enumerate(self))
-
-    @property
-    def unzip(self):
-        """
-        'Unzips' nested Arrays by unpacking its elements into a zip
-        """
-        if not self.forall(lambda e: isinstance(e, Iterable)):
-            raise TypeError("Array elements must support iteration")
-        return Array(zip(*self))
 
     @staticmethod
     def zeros(n):
         """ Returns a zero-filled Array of given length. """
         try:
             return Array([0] * n)
-        except Exception as e:
+        except TypeError:
             raise TypeError(
                 "{} object cannot be interpreted as an integer".format(type(n).__name__)
-            ) from e
+            ) from None
 
     @staticmethod
     def arange(*args):
@@ -918,6 +954,18 @@ class Array(list):
         """
         step = (stop - start) / max(num - bool(endpoint), 1)
         return Array(start + step * i for i in range(num))
+
+    @staticmethod
+    def logspace(start, stop, num=50, base=10, endpoint=True):
+        """
+        Returns Array spaced evenly on a log scale.
+        :param start: number
+        :param stop: number
+        :param num: int, optional
+        :param base: float, optional
+        :param endpoint: bool, optional
+        """
+        return base ** Array.linspace(start, stop, num, endpoint)
 
     def __convert(self, e):
         return Array(e) if isinstance(e, Array.__baseIterables) else e
@@ -965,6 +1013,12 @@ class Array(list):
         else:
             raise TypeError(f"Can not concatenate {type(b).__name__} to Array")
 
+    def __rpow__(self, b):
+        if isinstance(b, Array.__baseIterables):
+            self.__validate_seq(b)
+            return Array(b).pow(self)
+        return Array([b] * self.size).pow(self)
+
     def __gt__(self, e):
         return self.__operate(operator.gt, e)
 
@@ -1001,7 +1055,7 @@ class Array(list):
         return hash(self.toTuple)
 
     def __bool__(self):
-        return self.all
+        return all(self)
 
     def __setitem__(self, i, e):
         self.__validate_index(i)
