@@ -15,7 +15,7 @@ Funct.Array is available on PyPi and can be installed with pip
 ```
 $ pip install funct
 ```
-```
+```python
 >>> from funct import Array
 ```
 
