@@ -69,29 +69,35 @@ Same syntax applies for all mathematical operators; `add`, `pow`, `mod`, `gt`, `
 >>> nums[nums.mod(2) == 0]
 Array(2, 4)
 ```
-Finding idex-wise maximum of sequences of uneven length
+##### Finding idex-wise maximum of sequences of uneven length
 ```python
-#  Traditional python
->>> nums1 = [1, 2, 3, 4, 5]
->>> nums2 = [6, 5, 4, 3, 2, 1]
->>> min_ = min(min(nums1), min(nums2))
->>> out = []
->>> for i in range(max(len(nums1), len(nums2))):
-        x1 = nums1[i] if i < len(nums1) else min_
-        x2 = nums2[i] if i < len(nums2) else min_
-        out.append(max(x1, x2))
->>> out
-[6, 5, 4, 4, 5, 1]
-
-#  With Arrays
->>> nums1.zipAll(nums2, default=min_).map(max)
+>>> nums1 = Array(1, 2, 3, 4, 5)
+>>> nums2 = Array(6, 5, 4, 3, 2, 1)
+>>> nums1.zipAll(nums2, default=-float("inf").map(max)
 Array(6, 5, 4, 4, 5, 1)
 ```
-Arrays support also parallel programming.
+##### Splitting an Array based on type
+```python
+>>> arr = Array(1, 2, "a", "b")
+>>> arr.groupBy(type).getItem(1)  # group by type and select the 2nd element of the tuples
+Array(Array(1, 2), Array('a', 'b'))
+```
+
+
+Arrays provide static methods `arange`, `linspace` and `logspace` for
+creating linearly or logarithmically spaced Arrays.
+```python
+>>> Array.linspace(0, 10, 5)
+Array(0.0, 2.5, 5.0, 7.5, 10.0)
+>>> Array.logspace(0, 4, 3)
+Array(1.0, 100.0, 10000.0)
+```
+
+Arrays also support parallel computing.
 Functions applied to Arrays can be parallelized with the `parmap` and
 `parstarmap` methods.
 ```python
->>> Array(1,2,3).parmap(heavy_func)
+>>> Array(1,2,3).parmap(some_heavy_func)
 ```
 
 #### Full documentation available [here](https://Lauriat.github.io/funct/Array.html).
@@ -136,7 +142,7 @@ Notes
   `add` and `mul` methods, not with the `+` and `*` operators to avoid confusion and to
   retain the behaviour of the built-in list.
 - Inplace operations in an Array are postfixed with a underscore (e.g. `arr.add_(x)`).
-- Inplace operators are not faster than out of place operations.
+- Inplace operators are slower than out of place operations.
 - Even though Array preserves nearly the same functionality
   as the built-in list, there are a few differences in their behaviour, the most
   important of which are
