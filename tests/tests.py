@@ -38,8 +38,8 @@ class TestArray(unittest.TestCase):
         ee.clear()
         self.assertTrue(ee.isEmpty)
         self.assertEqual(ee.size, 0)
-        self.assertEqual(a.unique.size, a.size)
-        self.assertEqual(len(Array(1, 1, 2, 2).unique.toSet - {1, 2}), 0)
+        self.assertEqual(a.unique().size, a.size)
+        self.assertEqual(len(Array(1, 1, 2, 2).unique().toSet - {1, 2}), 0)
         g[0] = [1, 2]
         self.assertTrue(isinstance(next(g.toIter), Array))
         m[0][0] = 555
@@ -70,10 +70,21 @@ class TestArray(unittest.TestCase):
                 np.linspace(1.2, 2.4, 11, endpoint=False)
             )
         )
+        self.assertTrue(Array.logspace(1, 3, 2).eq(np.logspace(1, 3, 2)).all)
+        self.assertTrue(
+            Array.logspace(1.2, 5.4, 11, base=3.14, endpoint=False).equal(
+                np.logspace(1.2, 5.4, 11, base=3.14, endpoint=False)
+            )
+        )
         self.assertEqual(Array((1, 2), (4, 5)).index((4, 5)), 1)
         self.assertTrue(e.sort().equal((1, 4, 5, 99)))
         e.sort_()
         self.assertTrue(e.argsort().equal(e.range))
+        wq = Array((0, 5), (1, 3), (2, 4))
+        self.assertTrue(wq.argsortBy(lambda e: e[1]).equal((1, 2, 0)))
+        qq = Array(-1, 2, -3)
+        qq.abs_
+        self.assertTrue(qq.equal((1,2,3)))
         self.assertTrue(e.equal((1, 4, 5, 99)))
         self.assertTrue(a.reverse().equal(range(9, -1, -1)))
         self.assertTrue(e.reverse_().equal((99, 5, 4, 1)))
@@ -88,9 +99,9 @@ class TestArray(unittest.TestCase):
         f[0] += 1
         self.assertNotEqual(f[0], a[0])
         self.assertTrue(a.range.equal(range(a.size)))
-        self.assertTrue(d.zipWithIndex.map(lambda k: k[0]).equal(range(d.size)))
-        self.assertTrue(d.zipWithIndex.map(lambda k: k[1]).equal(d))
-        self.assertTrue(d.abs().equal([1, 2, 4]))
+        self.assertTrue(d.enumerate.map(lambda k: k[0]).equal(range(d.size)))
+        self.assertTrue(d.enumerate.map(lambda k: k[1]).equal(d))
+        self.assertTrue(d.abs.equal([1, 2, 4]))
         self.assertTrue(d.add(1).equal((0, -1, -3)))
         d.add_(1)
         self.assertTrue(d.eq((0, -1, -3)).all)
@@ -151,8 +162,8 @@ class TestArray(unittest.TestCase):
         self.assertTrue(a.takeWhile(lambda k: k < 3).eq([0, 1, 2]).all)
         self.assertTrue(a.dropWhile(lambda k: k < 8).eq([8, 9]).all)
         gr = l.groupBy(lambda k: k % 2)
-        self.assertTrue(gr[0][1].eq(2).all)
-        self.assertTrue(gr[1][1].eq([1, 3]).all)
+        self.assertTrue(gr[gr.map(lambda e:e[0]).index(0)][1].eq(2).all)
+        self.assertTrue(gr[gr.map(lambda e:e[0]).index(1)][1].eq([1, 3]).all)
         self.assertTrue(Array((0, 10), (3, -1)).maxBy(lambda k: k[1]).eq((0, 10)).all)
         self.assertTrue(Array((4, 2), (-1, 3)).minBy(lambda k: k[1]).eq((4, 2)).all)
         y = Array(range(5))
@@ -236,6 +247,7 @@ class TestArray(unittest.TestCase):
         self.assertTrue((Array(1) + [2, 3]).equal((1, 2, 3)))
         self.assertTrue((Array(0, 1, 2) + range(3)).equal((0, 1, 2, 0, 1, 2)))
         self.assertTrue((range(3) + Array(0, 1, 2)).equal((0, 1, 2, 0, 1, 2)))
+        self.assertEqual(Array(1, 1, 4, 3).count(lambda e: e % 2 == 0), 1)
 
     def test_errs(self):
         with self.assertRaises(ValueError):
