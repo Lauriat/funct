@@ -12,8 +12,11 @@ the same functionality and the dynamic nature of the built-in list.
 [Documentation](https://Lauriat.github.io/funct/Array.html)
 
 Funct.Array is available on PyPi and can be installed with pip
-```python
+```
 $ pip install funct
+```
+```
+>>> from funct import Array
 ```
 
 
@@ -21,8 +24,7 @@ Examples
 -------
 
 Chaining multiple functions with Arrays result in cleaner code without multiple
-nested functions.
-, e.g.
+nested functions, e.g.
 ```python
 a.zip(b).map(func1).filter(func2).forall(func3)
 
@@ -30,6 +32,7 @@ a.zip(b).map(func1).filter(func2).forall(func3)
 
 all(map(func3, filter(func2, map(func1, zip(a, b)))))
 ```
+where `a` & `b` are Arrays and `func1`, `func2` & `func3` some functions.
 
 ##### Multiplying elements in a sequence with a constant
 
@@ -108,6 +111,7 @@ Arrays can be created either with multiple arguments or by providing a sequence
 as an argument.
 
 ```python
+>>> from funct import Array
 >>> Array(1, 2, 3)
 Array(1, 2, 3)
 >>> Array([1, 2, 3])
