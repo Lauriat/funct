@@ -929,9 +929,12 @@ class Array(list):
     def arange(*args):
         """
         Returns an Array of evenly spaced values within given interval
-        :param start: number, optional
-        :param end: number
-        :param step: number, optional
+
+        Parameters
+        ----------
+        start: number, optional
+        end: number
+        step: number, optional
         """
         _len = len(args)
         if _len == 0:
@@ -947,10 +950,13 @@ class Array(list):
     def linspace(start, stop, num=50, endpoint=True):
         """
         Returns evenly spaced Array over a specified interval.
-        :param start: number
-        :param stop: number
-        :param num: int, optional
-        :param endpoint: bool, optional
+
+        Parameters
+        ----------
+        start: number
+        stop: number
+        num: int, optional
+        endpoint : bool, optional
         """
         step = (stop - start) / max(num - bool(endpoint), 1)
         return Array(start + step * i for i in range(num))
@@ -959,11 +965,14 @@ class Array(list):
     def logspace(start, stop, num=50, base=10, endpoint=True):
         """
         Returns Array spaced evenly on a log scale.
-        :param start: number
-        :param stop: number
-        :param num: int, optional
-        :param base: float, optional
-        :param endpoint: bool, optional
+
+        Parameters
+        ----------
+        start: number
+        stop: number
+        num: int, optional
+        base: float, optional
+        endpoint: bool, optional
         """
         return base ** Array.linspace(start, stop, num, endpoint)
 
