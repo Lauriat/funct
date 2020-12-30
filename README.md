@@ -88,23 +88,24 @@ Array(11, 24, 39, 56, 75)
 ```
 Same syntax applies for all mathematical operators; `add`, `pow`, `mod`, `gt`, `lt`, etc.
 
-##### Selecting even numbers
+##### Selecting values greater than some number
 ```python
 #  Traditional python
+>>> n = 2
 >>> nums1 = [1, 2, 3, 4, 5]
->>> [x for x in nums if x % 2 == 0]
-[2, 4]
+>>> [x for x in nums if x > n]
+[3, 4, 5]
 
 #  With Arrays
->>> nums[nums.mod(2) == 0]
-Array(2, 4)
+>>> nums[nums > n]
+Array(3, 4, 5)
 ```
-##### Finding idex-wise maximum of sequences of uneven length
+##### Finding idex-wise maximum of sequences
 ```python
 >>> nums1 = Array(1, 2, 3, 4, 5)
->>> nums2 = Array(6, 5, 4, 3, 2, 1)
->>> nums1.zipAll(nums2, default=-float("inf").map(max)
-Array(6, 5, 4, 4, 5, 1)
+>>> nums2 = Array(5, 4, 3, 2, 1)
+>>> nums1.zip(nums2).map(max)
+Array(5, 4, 3, 4, 5)
 ```
 ##### Splitting an Array based on type
 ```python
@@ -120,8 +121,8 @@ Functions applied to Arrays can be parallelized with the `parmap` and
 `parstarmap` methods. The same methods can be run asynchronously with the `asyncmap` and
 `asyncstarmap` methods.
 ```python
->>> Array(1, 2, 3).parmap(some_heavy_func)  # parallel
->>> Array(1, 2, 3).asyncmap(some_other_func)  # concurrent 
+>>> Array(1, 2, 3).parmap(some_heavy_func)
+>>> Array(1, 2, 3).asyncmap(some_other_func)
 ```
 
 
