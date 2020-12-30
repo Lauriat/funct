@@ -2,7 +2,7 @@ import itertools
 import math
 import multiprocessing
 import operator
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 from functools import reduce
 
 
@@ -224,7 +224,7 @@ class Array(list):
 
     def clip(self, _min, _max):
         """
-        Clip the values in the Array between the interval ('_min', '_max').
+        Clip the values in the Array between the interval (`_min`, `_max`).
         """
         return Array(map(lambda e: max(min(e, _max), _min), self))
 
@@ -527,15 +527,6 @@ class Array(list):
                 m[k] = Array([v])
         return Array(m.items())
 
-    def getItem(self, n):
-        """
-        Returns the nth element of inner Arrays from an Array of Arrays
-
-        >>> Array((1,2), (3,4)).getItem(0)
-        Array(1, 3)
-        """
-        return Array(e[n] for e in self)
-
     def maxBy(self, l):
         """ Finds the maximum value measured by a function. """
         return max(self, key=l)
@@ -564,7 +555,7 @@ class Array(list):
         Returns the indices that would sort this Array according to
         provided sorting criteria.
         """
-        return self.enumerate.sortBy(lambda e: l(e[1]), reverse=reverse).getItem(0)
+        return self.enumerate.sortBy(lambda e: l(e[1]), reverse=reverse)[:, 0]
 
     def sort(self, **kwargs):
         """ Sorts this Array. """
@@ -577,7 +568,7 @@ class Array(list):
 
     def argsort(self, reverse=False):
         """ Returns the indices that would sort this Array """
-        return self.enumerate.sortBy(lambda e: e[1], reverse=reverse).getItem(0)
+        return self.enumerate.sortBy(lambda e: e[1], reverse=reverse)[:, 0]
 
     def reverse(self):
         """ Reverses this Array. """
@@ -593,7 +584,7 @@ class Array(list):
 
     def asType(self, t):
         """
-        Converts the elements in this Array to give type.
+        Converts the elements in this Array to given type.
         """
         return Array(map(t, self))
 
@@ -989,10 +980,22 @@ class Array(list):
 
     def __validate_index(self, i):
         if not isinstance(i, (int, slice)):
-            if not all(map(lambda e: isinstance(e, (bool, int)), i)):
+            if not isinstance(i, Sequence) or not all(
+                map(lambda e: isinstance(e, (bool, int, slice)), i)
+            ):
                 raise TypeError(
-                    "Only integers, slices and integer or boolean Arrays are valid indices"
+                    "Only integers, slices and 1d integer or boolean Arrays are valid indices"
                 )
+
+    def __validate_setelem(self, i, e):
+        if isinstance(e, Iterable):
+            if len(i) != len(e):
+                raise ValueError(
+                    "Expected Array of size {}, got {}".format(len(i), len(e))
+                )
+            return iter(e)
+        else:
+            return itertools.repeat(e)
 
     def __operate(self, f, e):
         if isinstance(e, Iterable):
@@ -1066,28 +1069,45 @@ class Array(list):
     def __bool__(self):
         return all(self)
 
-    def __setitem__(self, i, e):
-        self.__validate_index(i)
-        if isinstance(i, Iterable):
-            if isinstance(e, Iterable):
-                if len(i) != len(e):
-                    raise ValueError(
-                        "Expected Array of size {}, got {}".format(len(i), len(e))
-                    )
+    def __setitem__(self, key, e):
+        self.__validate_index(key)
+        if isinstance(key, tuple):
+            if len(key) == 1:
+                key = key[0]
             else:
-                e = itertools.repeat(e)
-            for _i, _e in zip(i, e):
-                super().__setitem__(_i, _e)
-            return
-        if isinstance(e, Array.__baseIterables):
-            super().__setitem__(i, Array(e))
-            return
-        if isinstance(i, slice) and not isinstance(e, Iterable):
-            e = [e] * len(range(*i.indices(self.size)))
-        super().__setitem__(i, e)
+                if isinstance(key[0], int):
+                    self[key[0]][key[1:]] = e
+                    return
+                try:
+                    idx = range(*key[0].indices(self.size))
+                    for ic, ie in zip(idx, self.__validate_setelem(idx, e)):
+                        self[ic][key[1:]] = ie
+                except TypeError:
+                    raise IndexError("Too many indices for the Array") from None
+                return
+        if isinstance(key, int):
+            e = self.__convert(e)
+        else:
+            if isinstance(key, Sequence):
+                for _i, _e in zip(key, self.__validate_setelem(key, e)):
+                    super().__setitem__(_i, _e)
+                return
+            if not isinstance(e, Iterable):
+                e = [e] * len(range(*key.indices(self.size)))
+        super().__setitem__(key, e)
 
     def __getitem__(self, key):
         self.__validate_index(key)
+        if isinstance(key, tuple):
+            if len(key) == 1:
+                key = key[0]
+            else:
+                if isinstance(key[0], int):
+                    return self[key[0]][key[1:]]
+                try:
+                    return Array(e[key[1:]] for e in super().__getitem__(key[0]))
+                except TypeError:
+                    raise IndexError("Too many indices for the Array") from None
         if isinstance(key, int):
             return super().__getitem__(key)
         if isinstance(key, slice):
@@ -1099,5 +1119,5 @@ class Array(list):
                         self.size, len(key)
                     )
                 )
-            key = [i for i, k in enumerate(key) if k]
+            key = (i for i, k in enumerate(key) if k)
         return Array(map(super().__getitem__, key))

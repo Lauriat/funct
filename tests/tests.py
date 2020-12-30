@@ -47,7 +47,7 @@ class TestArray(unittest.TestCase):
         f = Array(range(10))
         f[:3] = 999
         self.assertTrue(f[:3].eq(999).all)
-        f[1, 2] = 123
+        f[[1, 2]] = 123
         self.assertTrue(f[:3].eq((999, 123, 123)).all)
         self.assertTrue(Array(1.1, 2.9).toInt.eq((1, 2)).all)
         self.assertTrue(Array("ab").toInt.eq((97, 98)).all)
@@ -84,7 +84,7 @@ class TestArray(unittest.TestCase):
         self.assertTrue(wq.argsortBy(lambda e: e[1]).equal((1, 2, 0)))
         qq = Array(-1, 2, -3)
         qq.abs_
-        self.assertTrue(qq.equal((1,2,3)))
+        self.assertTrue(qq.equal((1, 2, 3)))
         self.assertTrue(e.equal((1, 4, 5, 99)))
         self.assertTrue(a.reverse().equal(range(9, -1, -1)))
         self.assertTrue(e.reverse_().equal((99, 5, 4, 1)))
@@ -162,14 +162,14 @@ class TestArray(unittest.TestCase):
         self.assertTrue(a.takeWhile(lambda k: k < 3).eq([0, 1, 2]).all)
         self.assertTrue(a.dropWhile(lambda k: k < 8).eq([8, 9]).all)
         gr = l.groupBy(lambda k: k % 2)
-        self.assertTrue(gr[gr.map(lambda e:e[0]).index(0)][1].eq(2).all)
-        self.assertTrue(gr[gr.map(lambda e:e[0]).index(1)][1].eq([1, 3]).all)
+        self.assertTrue(gr[gr.map(lambda e: e[0]).index(0)][1].eq(2).all)
+        self.assertTrue(gr[gr.map(lambda e: e[0]).index(1)][1].eq([1, 3]).all)
         self.assertTrue(Array((0, 10), (3, -1)).maxBy(lambda k: k[1]).eq((0, 10)).all)
         self.assertTrue(Array((4, 2), (-1, 3)).minBy(lambda k: k[1]).eq((4, 2)).all)
         y = Array(range(5))
-        y[0, 1, 2] = 0
+        y[[0, 1, 2]] = 0
         self.assertTrue(y.eq([0, 0, 0, 3, 4]).all)
-        y[0, 1, 2] = [-1, -2, -3]
+        y[[0, 1, 2]] = [-1, -2, -3]
         self.assertTrue(y.eq([-1, -2, -3, 3, 4]).all)
         self.assertEqual(Array(1, 2, 3).minBy(lambda k: k), 1)
         self.assertEqual(Array(1, 2, 3).maxBy(lambda k: k), 3)
@@ -248,6 +248,48 @@ class TestArray(unittest.TestCase):
         self.assertTrue((Array(0, 1, 2) + range(3)).equal((0, 1, 2, 0, 1, 2)))
         self.assertTrue((range(3) + Array(0, 1, 2)).equal((0, 1, 2, 0, 1, 2)))
         self.assertEqual(Array(1, 1, 4, 3).count(lambda e: e % 2 == 0), 1)
+        md = Array((1, 2), (3, 4), (5, 6))
+        qd = Array(((1, 2), (3, 4)), ((5, 6), (7, 8)))
+        mdn = np.array(md)
+        qdn = np.array(qd)
+        self.assertTrue(md[:, 0].equal(mdn[:, 0]))
+        self.assertTrue(md[:, 1].equal(mdn[:, 1]))
+        self.assertTrue(md[0, :].equal(mdn[0, :]))
+        self.assertTrue(md[-1, :].equal(mdn[-1, :]))
+        self.assertEqual(md[-1, 1], mdn[-1, 1])
+        self.assertTrue(md[:, :].equal(mdn[:, :]))
+
+        self.assertTrue(qd[:, 0].equal(qdn[:, 0]))
+        self.assertTrue(qd[:, :, 1].equal(qdn[:, :, 1]))
+        self.assertTrue(qd[0, :].equal(qdn[0, :]))
+        self.assertTrue(qd[:, 1, :].equal(qdn[:, 1, :]))
+        self.assertTrue(qd[1:, 1, :].equal(qdn[1:, 1, :]))
+        self.assertEqual(qd[1, 1, 0], qdn[1, 1, 0])
+        self.assertTrue(qd[:, :, :].equal(qdn[:, :, :]))
+
+        md[:, 0] = [11, 12, 13]
+        mdn[:, 0] = [11, 12, 13]
+        self.assertTrue(md.equal(mdn))
+        md[1, :] = [0, 1]
+        mdn[1, :] = [0, 1]
+        self.assertTrue(md.equal(mdn))
+
+        qd[:, 0, :] = 99, 99
+        qdn[:, 0, :] = 99, 99
+        self.assertTrue(md.equal(mdn))
+        qd[1, :, 1] = 11, 12
+        qdn[1, :, 1] = 11, 12
+        self.assertTrue(md.equal(mdn))
+        qd[1, 0, 1] = 0
+        qdn[1, 0, 1] = 0
+        self.assertTrue(md.equal(mdn))
+        qd[:, :, -1] = 33
+        qdn[:, :, -1] = 33
+        self.assertTrue(md.equal(mdn))
+        qd = qd.flatten
+        qdn = qdn.ravel()
+        self.assertTrue(md[:3].equal(mdn[:3]))
+        self.assertTrue(md[3:].equal(mdn[3:]))
 
     def test_errs(self):
         with self.assertRaises(ValueError):
@@ -284,6 +326,10 @@ class TestArray(unittest.TestCase):
             "a" + Array(1, 2, 3) + "a"
         with self.assertRaises(TypeError):
             Array(1, 2, 3) + iter([22])
+        with self.assertRaises(IndexError):
+            Array(1, 2, 3)[:, 0]
+        with self.assertRaises(IndexError):
+            Array(1, 2, 3)[:, 0] = 5
 
 
 if __name__ == "__main__":
