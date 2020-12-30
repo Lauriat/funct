@@ -44,6 +44,9 @@ Array(array([0., 0., 0.]), array([0., 0., 0.])
 Array(Array(0.0, 0.0, 0.0], Array(0.0, 0.0, 0.0))
 ```
 
+Arrays provide static methods `arange`, `linspace` and `logspace` for
+creating linearly or logarithmically spaced Arrays.
+
 Examples
 -------
 
@@ -110,19 +113,11 @@ Array(6, 5, 4, 4, 5, 1)
 Array(Array(1, 2), Array('a', 'b'))
 ```
 
-
-Arrays provide static methods `arange`, `linspace` and `logspace` for
-creating linearly or logarithmically spaced Arrays.
-```python
->>> Array.linspace(0, 10, 5)
-Array(0.0, 2.5, 5.0, 7.5, 10.0)
->>> Array.logspace(0, 4, 3)
-Array(1.0, 100.0, 10000.0)
-```
+##### Multithreading/processing
 
 Arrays also support parallel and concurrent execution.
 Functions applied to Arrays can be parallelized with the `parmap` and
-`parstarmap` methods. The same methods can be run concurrently with the `asyncmap` and
+`parstarmap` methods. The same methods can be run asynchronously with the `asyncmap` and
 `asyncstarmap` methods.
 ```python
 >>> Array(1, 2, 3).parmap(some_heavy_func)  # parallel
