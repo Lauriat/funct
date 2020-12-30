@@ -1114,14 +1114,14 @@ class Array(list):
                     raise IndexError(&#34;Too many indices for the Array&#34;) from None
                 return
         if isinstance(key, int):
-            e = self.__convert(e)
-        else:
-            if isinstance(key, Sequence):
-                for _i, _e in zip(key, self.__validate_setelem(key, e)):
-                    super().__setitem__(_i, _e)
-                return
-            if not isinstance(e, Iterable):
-                e = [e] * len(range(*key.indices(self.size)))
+            super().__setitem__(key, self.__convert(e))
+            return
+        if isinstance(key, Sequence):
+            for _i, _e in zip(key, self.__validate_setelem(key, e)):
+                super().__setitem__(_i, _e)
+            return
+        if not isinstance(e, Iterable):
+            e = [e] * len(range(*key.indices(self.size)))
         super().__setitem__(key, e)
 
     def __getitem__(self, key):
@@ -2254,14 +2254,14 @@ Arrays, while other iterables will stored as Array elements.</p></div>
                     raise IndexError(&#34;Too many indices for the Array&#34;) from None
                 return
         if isinstance(key, int):
-            e = self.__convert(e)
-        else:
-            if isinstance(key, Sequence):
-                for _i, _e in zip(key, self.__validate_setelem(key, e)):
-                    super().__setitem__(_i, _e)
-                return
-            if not isinstance(e, Iterable):
-                e = [e] * len(range(*key.indices(self.size)))
+            super().__setitem__(key, self.__convert(e))
+            return
+        if isinstance(key, Sequence):
+            for _i, _e in zip(key, self.__validate_setelem(key, e)):
+                super().__setitem__(_i, _e)
+            return
+        if not isinstance(e, Iterable):
+            e = [e] * len(range(*key.indices(self.size)))
         super().__setitem__(key, e)
 
     def __getitem__(self, key):

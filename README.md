@@ -1,6 +1,6 @@
-# Funct
+# funct.Array
 
-A functional mutable sequence inheriting from Python's built-in list.
+Array is a functional mutable sequence inheriting from Python's built-in list.
 Array provides 100+ higher-order methods and more functionality to the built-in
 list, making operations on sequences simpler and one-liners neater, with
 no third party packages required.
@@ -11,7 +11,7 @@ the same functionality and the dynamic nature of the built-in list.
 
 [Documentation](https://Lauriat.github.io/funct/Array.html)
 
-Funct.Array is available on PyPi and can be installed with pip
+funct.Array is available on PyPi and can be installed with pip
 ```
 $ pip install funct
 ```
@@ -120,11 +120,13 @@ Array(0.0, 2.5, 5.0, 7.5, 10.0)
 Array(1.0, 100.0, 10000.0)
 ```
 
-Arrays also support parallel computing.
+Arrays also support parallel and concurrent execution.
 Functions applied to Arrays can be parallelized with the `parmap` and
-`parstarmap` methods.
+`parstarmap` methods. The same methods can be run concurrently with the `asyncmap` and
+`asyncstarmap` methods.
 ```python
->>> Array(1,2,3).parmap(some_heavy_func)
+>>> Array(1, 2, 3).parmap(some_heavy_func)  # parallel
+>>> Array(1, 2, 3).asyncmap(some_other_func)  # concurrent 
 ```
 
 
@@ -171,7 +173,7 @@ Array(1, 3, 5)
 ```
 Note that when indexing 'ragged' nested Arrays, multidimensional indexing may
 raise an `IndexError`, since Array does not care whether all the nested Arrays are
-the same size, as opposed to a numpy ndarray.
+the same size, as opposed to numpy ndarrays.
 
 
 #### Full documentation available [here](https://Lauriat.github.io/funct/Array.html).
