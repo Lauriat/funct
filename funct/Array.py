@@ -3,6 +3,7 @@ import math
 import multiprocessing
 import operator
 from collections.abc import Iterable, Sequence
+from concurrent.futures import ThreadPoolExecutor
 from functools import reduce
 
 
@@ -42,6 +43,19 @@ class Array(list):
         self[:] = self.__operate(operator.add, e)
         return self
 
+    def sub(self, e):
+        """
+        Element-wise subtraction with given scalar or sequence.
+        """
+        return self.__operate(operator.sub, e)
+
+    def sub_(self, e):
+        """
+        Inplace element-wise subtraction with given scalar or sequence.
+        """
+        self[:] = self.__operate(operator.sub, e)
+        return self
+
     def mul(self, e):
         """
         Element-wise multiplication with given scalar or sequence.
@@ -53,6 +67,19 @@ class Array(list):
         Inplace element-wise multiplication with given scalar or sequence.
         """
         self[:] = self.__operate(operator.mul, e)
+        return self
+
+    def div(self, e):
+        """
+        Element-wise division with given scalar or sequence.
+        """
+        return self.__operate(operator.truediv, e)
+
+    def div_(self, e):
+        """
+        Inplace element-wise division with given scalar or sequence.
+        """
+        self[:] = self.__operate(operator.truediv, e)
         return self
 
     def pow(self, e):
@@ -249,9 +276,9 @@ class Array(list):
     def diff(self, n=1):
         """ Returns the n-th discrete difference of the Array. """
         if n == 1:
-            return self[1:].add(-self[:-1])
+            return self[1:].sub(self[:-1])
         else:
-            return self[1:].add(-self[:-1]).diff(n - 1)
+            return self[1:].sub(self[:-1]).diff(n - 1)
 
     def difference(self, b):
         """
@@ -408,17 +435,37 @@ class Array(list):
         """
         return Array(itertools.starmap(l, self))
 
-    def parmap(self, l, n_processes=None):
+    def parmap(self, fun, processes=None):
         """
         Returns an Array by applying a function to
         all elements of this Array in parallel.
         """
-        with multiprocessing.Pool(processes=n_processes) as pool:
-            return Array(pool.map(l, self))
-
-    def parstarmap(self, l, processes=None):
         with multiprocessing.Pool(processes=processes) as pool:
-            return Array(pool.starmap(l, self))
+            return Array(pool.map(fun, self))
+
+    def parstarmap(self, fun, processes=None):
+        """ Parallel starmap """
+        with multiprocessing.Pool(processes=processes) as pool:
+            return Array(pool.starmap(fun, self))
+
+    def asyncmap(self, fun, workers=None, timeout=None):
+        """
+        Returns a generator by asynchronously
+        applying a function to all elements of this Array.
+        """
+        executor = ThreadPoolExecutor(max_workers=workers)
+        try:
+            return executor.map(fun, self, timeout=timeout)
+        finally:
+            executor.shutdown(wait=False)
+
+    def asyncstarmap(self, fun, workers=None, timeout=None):
+        """ Asynchronous starmap """
+        executor = ThreadPoolExecutor(max_workers=workers)
+        try:
+            return executor.map(lambda d: fun(*d), self, timeout=timeout)
+        finally:
+            executor.shutdown(wait=False)
 
     def filter(self, l):
         """ Selects elements of this Array which satisfy the predicate. """
@@ -1086,14 +1133,14 @@ class Array(list):
                     raise IndexError("Too many indices for the Array") from None
                 return
         if isinstance(key, int):
-            e = self.__convert(e)
-        else:
-            if isinstance(key, Sequence):
-                for _i, _e in zip(key, self.__validate_setelem(key, e)):
-                    super().__setitem__(_i, _e)
-                return
-            if not isinstance(e, Iterable):
-                e = [e] * len(range(*key.indices(self.size)))
+            super().__setitem__(key, self.__convert(e))
+            return
+        if isinstance(key, Sequence):
+            for _i, _e in zip(key, self.__validate_setelem(key, e)):
+                super().__setitem__(_i, _e)
+            return
+        if not isinstance(e, Iterable):
+            e = [e] * len(range(*key.indices(self.size)))
         super().__setitem__(key, e)
 
     def __getitem__(self, key):
