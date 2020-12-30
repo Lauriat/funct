@@ -30,7 +30,7 @@
 import math
 import multiprocessing
 import operator
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 from functools import reduce
 
 
@@ -252,7 +252,7 @@ class Array(list):
 
     def clip(self, _min, _max):
         &#34;&#34;&#34;
-        Clip the values in the Array between the interval (&#39;_min&#39;, &#39;_max&#39;).
+        Clip the values in the Array between the interval (`_min`, `_max`).
         &#34;&#34;&#34;
         return Array(map(lambda e: max(min(e, _max), _min), self))
 
@@ -555,15 +555,6 @@ class Array(list):
                 m[k] = Array([v])
         return Array(m.items())
 
-    def getItem(self, n):
-        &#34;&#34;&#34;
-        Returns the nth element of inner Arrays from an Array of Arrays
-
-        &gt;&gt;&gt; Array((1,2), (3,4)).getItem(0)
-        Array(1, 3)
-        &#34;&#34;&#34;
-        return Array(e[n] for e in self)
-
     def maxBy(self, l):
         &#34;&#34;&#34; Finds the maximum value measured by a function. &#34;&#34;&#34;
         return max(self, key=l)
@@ -592,7 +583,7 @@ class Array(list):
         Returns the indices that would sort this Array according to
         provided sorting criteria.
         &#34;&#34;&#34;
-        return self.enumerate.sortBy(lambda e: l(e[1]), reverse=reverse).getItem(0)
+        return self.enumerate.sortBy(lambda e: l(e[1]), reverse=reverse)[:, 0]
 
     def sort(self, **kwargs):
         &#34;&#34;&#34; Sorts this Array. &#34;&#34;&#34;
@@ -605,7 +596,7 @@ class Array(list):
 
     def argsort(self, reverse=False):
         &#34;&#34;&#34; Returns the indices that would sort this Array &#34;&#34;&#34;
-        return self.enumerate.sortBy(lambda e: e[1], reverse=reverse).getItem(0)
+        return self.enumerate.sortBy(lambda e: e[1], reverse=reverse)[:, 0]
 
     def reverse(self):
         &#34;&#34;&#34; Reverses this Array. &#34;&#34;&#34;
@@ -621,7 +612,7 @@ class Array(list):
 
     def asType(self, t):
         &#34;&#34;&#34;
-        Converts the elements in this Array to give type.
+        Converts the elements in this Array to given type.
         &#34;&#34;&#34;
         return Array(map(t, self))
 
@@ -1017,10 +1008,22 @@ class Array(list):
 
     def __validate_index(self, i):
         if not isinstance(i, (int, slice)):
-            if not all(map(lambda e: isinstance(e, (bool, int)), i)):
+            if not isinstance(i, Sequence) or not all(
+                map(lambda e: isinstance(e, (bool, int, slice)), i)
+            ):
                 raise TypeError(
-                    &#34;Only integers, slices and integer or boolean Arrays are valid indices&#34;
+                    &#34;Only integers, slices and 1d integer or boolean Arrays are valid indices&#34;
                 )
+
+    def __validate_setelem(self, i, e):
+        if isinstance(e, Iterable):
+            if len(i) != len(e):
+                raise ValueError(
+                    &#34;Expected Array of size {}, got {}&#34;.format(len(i), len(e))
+                )
+            return iter(e)
+        else:
+            return itertools.repeat(e)
 
     def __operate(self, f, e):
         if isinstance(e, Iterable):
@@ -1094,28 +1097,45 @@ class Array(list):
     def __bool__(self):
         return all(self)
 
-    def __setitem__(self, i, e):
-        self.__validate_index(i)
-        if isinstance(i, Iterable):
-            if isinstance(e, Iterable):
-                if len(i) != len(e):
-                    raise ValueError(
-                        &#34;Expected Array of size {}, got {}&#34;.format(len(i), len(e))
-                    )
+    def __setitem__(self, key, e):
+        self.__validate_index(key)
+        if isinstance(key, tuple):
+            if len(key) == 1:
+                key = key[0]
             else:
-                e = itertools.repeat(e)
-            for _i, _e in zip(i, e):
-                super().__setitem__(_i, _e)
-            return
-        if isinstance(e, Array.__baseIterables):
-            super().__setitem__(i, Array(e))
-            return
-        if isinstance(i, slice) and not isinstance(e, Iterable):
-            e = [e] * len(range(*i.indices(self.size)))
-        super().__setitem__(i, e)
+                if isinstance(key[0], int):
+                    self[key[0]][key[1:]] = e
+                    return
+                try:
+                    idx = range(*key[0].indices(self.size))
+                    for ic, ie in zip(idx, self.__validate_setelem(idx, e)):
+                        self[ic][key[1:]] = ie
+                except TypeError:
+                    raise IndexError(&#34;Too many indices for the Array&#34;) from None
+                return
+        if isinstance(key, int):
+            e = self.__convert(e)
+        else:
+            if isinstance(key, Sequence):
+                for _i, _e in zip(key, self.__validate_setelem(key, e)):
+                    super().__setitem__(_i, _e)
+                return
+            if not isinstance(e, Iterable):
+                e = [e] * len(range(*key.indices(self.size)))
+        super().__setitem__(key, e)
 
     def __getitem__(self, key):
         self.__validate_index(key)
+        if isinstance(key, tuple):
+            if len(key) == 1:
+                key = key[0]
+            else:
+                if isinstance(key[0], int):
+                    return self[key[0]][key[1:]]
+                try:
+                    return Array(e[key[1:]] for e in super().__getitem__(key[0]))
+                except TypeError:
+                    raise IndexError(&#34;Too many indices for the Array&#34;) from None
         if isinstance(key, int):
             return super().__getitem__(key)
         if isinstance(key, slice):
@@ -1127,7 +1147,7 @@ class Array(list):
                         self.size, len(key)
                     )
                 )
-            key = [i for i, k in enumerate(key) if k]
+            key = (i for i, k in enumerate(key) if k)
         return Array(map(super().__getitem__, key))</code></pre>
 </details>
 </section>
@@ -1372,7 +1392,7 @@ Arrays, while other iterables will stored as Array elements.</p></div>
 
     def clip(self, _min, _max):
         &#34;&#34;&#34;
-        Clip the values in the Array between the interval (&#39;_min&#39;, &#39;_max&#39;).
+        Clip the values in the Array between the interval (`_min`, `_max`).
         &#34;&#34;&#34;
         return Array(map(lambda e: max(min(e, _max), _min), self))
 
@@ -1675,15 +1695,6 @@ Arrays, while other iterables will stored as Array elements.</p></div>
                 m[k] = Array([v])
         return Array(m.items())
 
-    def getItem(self, n):
-        &#34;&#34;&#34;
-        Returns the nth element of inner Arrays from an Array of Arrays
-
-        &gt;&gt;&gt; Array((1,2), (3,4)).getItem(0)
-        Array(1, 3)
-        &#34;&#34;&#34;
-        return Array(e[n] for e in self)
-
     def maxBy(self, l):
         &#34;&#34;&#34; Finds the maximum value measured by a function. &#34;&#34;&#34;
         return max(self, key=l)
@@ -1712,7 +1723,7 @@ Arrays, while other iterables will stored as Array elements.</p></div>
         Returns the indices that would sort this Array according to
         provided sorting criteria.
         &#34;&#34;&#34;
-        return self.enumerate.sortBy(lambda e: l(e[1]), reverse=reverse).getItem(0)
+        return self.enumerate.sortBy(lambda e: l(e[1]), reverse=reverse)[:, 0]
 
     def sort(self, **kwargs):
         &#34;&#34;&#34; Sorts this Array. &#34;&#34;&#34;
@@ -1725,7 +1736,7 @@ Arrays, while other iterables will stored as Array elements.</p></div>
 
     def argsort(self, reverse=False):
         &#34;&#34;&#34; Returns the indices that would sort this Array &#34;&#34;&#34;
-        return self.enumerate.sortBy(lambda e: e[1], reverse=reverse).getItem(0)
+        return self.enumerate.sortBy(lambda e: e[1], reverse=reverse)[:, 0]
 
     def reverse(self):
         &#34;&#34;&#34; Reverses this Array. &#34;&#34;&#34;
@@ -1741,7 +1752,7 @@ Arrays, while other iterables will stored as Array elements.</p></div>
 
     def asType(self, t):
         &#34;&#34;&#34;
-        Converts the elements in this Array to give type.
+        Converts the elements in this Array to given type.
         &#34;&#34;&#34;
         return Array(map(t, self))
 
@@ -2137,10 +2148,22 @@ Arrays, while other iterables will stored as Array elements.</p></div>
 
     def __validate_index(self, i):
         if not isinstance(i, (int, slice)):
-            if not all(map(lambda e: isinstance(e, (bool, int)), i)):
+            if not isinstance(i, Sequence) or not all(
+                map(lambda e: isinstance(e, (bool, int, slice)), i)
+            ):
                 raise TypeError(
-                    &#34;Only integers, slices and integer or boolean Arrays are valid indices&#34;
+                    &#34;Only integers, slices and 1d integer or boolean Arrays are valid indices&#34;
                 )
+
+    def __validate_setelem(self, i, e):
+        if isinstance(e, Iterable):
+            if len(i) != len(e):
+                raise ValueError(
+                    &#34;Expected Array of size {}, got {}&#34;.format(len(i), len(e))
+                )
+            return iter(e)
+        else:
+            return itertools.repeat(e)
 
     def __operate(self, f, e):
         if isinstance(e, Iterable):
@@ -2214,28 +2237,45 @@ Arrays, while other iterables will stored as Array elements.</p></div>
     def __bool__(self):
         return all(self)
 
-    def __setitem__(self, i, e):
-        self.__validate_index(i)
-        if isinstance(i, Iterable):
-            if isinstance(e, Iterable):
-                if len(i) != len(e):
-                    raise ValueError(
-                        &#34;Expected Array of size {}, got {}&#34;.format(len(i), len(e))
-                    )
+    def __setitem__(self, key, e):
+        self.__validate_index(key)
+        if isinstance(key, tuple):
+            if len(key) == 1:
+                key = key[0]
             else:
-                e = itertools.repeat(e)
-            for _i, _e in zip(i, e):
-                super().__setitem__(_i, _e)
-            return
-        if isinstance(e, Array.__baseIterables):
-            super().__setitem__(i, Array(e))
-            return
-        if isinstance(i, slice) and not isinstance(e, Iterable):
-            e = [e] * len(range(*i.indices(self.size)))
-        super().__setitem__(i, e)
+                if isinstance(key[0], int):
+                    self[key[0]][key[1:]] = e
+                    return
+                try:
+                    idx = range(*key[0].indices(self.size))
+                    for ic, ie in zip(idx, self.__validate_setelem(idx, e)):
+                        self[ic][key[1:]] = ie
+                except TypeError:
+                    raise IndexError(&#34;Too many indices for the Array&#34;) from None
+                return
+        if isinstance(key, int):
+            e = self.__convert(e)
+        else:
+            if isinstance(key, Sequence):
+                for _i, _e in zip(key, self.__validate_setelem(key, e)):
+                    super().__setitem__(_i, _e)
+                return
+            if not isinstance(e, Iterable):
+                e = [e] * len(range(*key.indices(self.size)))
+        super().__setitem__(key, e)
 
     def __getitem__(self, key):
         self.__validate_index(key)
+        if isinstance(key, tuple):
+            if len(key) == 1:
+                key = key[0]
+            else:
+                if isinstance(key[0], int):
+                    return self[key[0]][key[1:]]
+                try:
+                    return Array(e[key[1:]] for e in super().__getitem__(key[0]))
+                except TypeError:
+                    raise IndexError(&#34;Too many indices for the Array&#34;) from None
         if isinstance(key, int):
             return super().__getitem__(key)
         if isinstance(key, slice):
@@ -2247,7 +2287,7 @@ Arrays, while other iterables will stored as Array elements.</p></div>
                         self.size, len(key)
                     )
                 )
-            key = [i for i, k in enumerate(key) if k]
+            key = (i for i, k in enumerate(key) if k)
         return Array(map(super().__getitem__, key))</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -2928,7 +2968,7 @@ Defaults to accumulated sum.</p></div>
 </summary>
 <pre><code class="python">def argsort(self, reverse=False):
     &#34;&#34;&#34; Returns the indices that would sort this Array &#34;&#34;&#34;
-    return self.enumerate.sortBy(lambda e: e[1], reverse=reverse).getItem(0)</code></pre>
+    return self.enumerate.sortBy(lambda e: e[1], reverse=reverse)[:, 0]</code></pre>
 </details>
 </dd>
 <dt id="funct.Array.Array.argsortBy"><code class="name flex">
@@ -2946,21 +2986,21 @@ provided sorting criteria.</p></div>
     Returns the indices that would sort this Array according to
     provided sorting criteria.
     &#34;&#34;&#34;
-    return self.enumerate.sortBy(lambda e: l(e[1]), reverse=reverse).getItem(0)</code></pre>
+    return self.enumerate.sortBy(lambda e: l(e[1]), reverse=reverse)[:, 0]</code></pre>
 </details>
 </dd>
 <dt id="funct.Array.Array.asType"><code class="name flex">
 <span>def <span class="ident">asType</span></span>(<span>self, t)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Converts the elements in this Array to give type.</p></div>
+<div class="desc"><p>Converts the elements in this Array to given type.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def asType(self, t):
     &#34;&#34;&#34;
-    Converts the elements in this Array to give type.
+    Converts the elements in this Array to given type.
     &#34;&#34;&#34;
     return Array(map(t, self))</code></pre>
 </details>
@@ -3103,14 +3143,14 @@ and given scalar or sequence, element-wise.</p></div>
 <span>def <span class="ident">clip</span></span>(<span>self, _min, _max)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Clip the values in the Array between the interval ('_min', '_max').</p></div>
+<div class="desc"><p>Clip the values in the Array between the interval (<code>_min</code>, <code>_max</code>).</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def clip(self, _min, _max):
     &#34;&#34;&#34;
-    Clip the values in the Array between the interval (&#39;_min&#39;, &#39;_max&#39;).
+    Clip the values in the Array between the interval (`_min`, `_max`).
     &#34;&#34;&#34;
     return Array(map(lambda e: max(min(e, _max), _min), self))</code></pre>
 </details>
@@ -3450,28 +3490,6 @@ Returns default if the index does not exist.</p></div>
         return self[key]
     except IndexError:
         return default</code></pre>
-</details>
-</dd>
-<dt id="funct.Array.Array.getItem"><code class="name flex">
-<span>def <span class="ident">getItem</span></span>(<span>self, n)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Returns the nth element of inner Arrays from an Array of Arrays</p>
-<pre><code class="language-python-repl">&gt;&gt;&gt; Array((1,2), (3,4)).getItem(0)
-Array(1, 3)
-</code></pre></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def getItem(self, n):
-    &#34;&#34;&#34;
-    Returns the nth element of inner Arrays from an Array of Arrays
-
-    &gt;&gt;&gt; Array((1,2), (3,4)).getItem(0)
-    Array(1, 3)
-    &#34;&#34;&#34;
-    return Array(e[n] for e in self)</code></pre>
 </details>
 </dd>
 <dt id="funct.Array.Array.groupBy"><code class="name flex">
@@ -4678,7 +4696,6 @@ of uneven length, missing values are filled with default.</p></div>
 <li><code><a title="funct.Array.Array.ge" href="#funct.Array.Array.ge">ge</a></code></li>
 <li><code><a title="funct.Array.Array.ge_" href="#funct.Array.Array.ge_">ge_</a></code></li>
 <li><code><a title="funct.Array.Array.get" href="#funct.Array.Array.get">get</a></code></li>
-<li><code><a title="funct.Array.Array.getItem" href="#funct.Array.Array.getItem">getItem</a></code></li>
 <li><code><a title="funct.Array.Array.groupBy" href="#funct.Array.Array.groupBy">groupBy</a></code></li>
 <li><code><a title="funct.Array.Array.gt" href="#funct.Array.Array.gt">gt</a></code></li>
 <li><code><a title="funct.Array.Array.gt_" href="#funct.Array.Array.gt_">gt_</a></code></li>

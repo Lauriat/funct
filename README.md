@@ -15,10 +15,34 @@ Funct.Array is available on PyPi and can be installed with pip
 ```
 $ pip install funct
 ```
+
+Array Creation
+-------
+Arrays can be created either with multiple arguments or by providing a sequence
+as an argument.
+
 ```python
 >>> from funct import Array
+>>> Array(1, 2, 3)
+Array(1, 2, 3)
+>>> Array([1, 2, 3])
+Array(1, 2, 3)
 ```
 
+An Array can also be initialized with the static `zeros` method or the `pad` method
+
+Python built-in sequences (including nested ones) lists, tuples and ranges are converted to
+Arrays on instantiation. However, other iterables e.g. generators and numpy ndarrays
+are converted to Arrays only if the argument consists of a single iterable. The elements
+can be converted to Arrays by calling the `toArray` method.
+```python
+>>> Array(np.zeros(3))
+Array(0.0, 0.0, 0.0)
+>>> Array(np.zeros(3), np.zeros(3))
+Array(array([0., 0., 0.]), array([0., 0., 0.])
+>>> Array(np.zeros(3), np.zeros(3)).toArray
+Array(Array(0.0, 0.0, 0.0], Array(0.0, 0.0, 0.0))
+```
 
 Examples
 -------
@@ -37,7 +61,7 @@ where `a` & `b` are Arrays and `func1`, `func2` & `func3` some functions.
 ##### Multiplying elements in a sequence with a constant
 
 ```python
-#  In traditional python we could implement it using list comprehensions as follows
+#  In traditional python the multiplication could be implemented using list comprehensions as follows
 >>> nums = [1, 2, 3, 4, 5]
 >>> [a * 10 for a in nums]
 [10, 20, 30, 40, 50]
@@ -82,7 +106,7 @@ Array(6, 5, 4, 4, 5, 1)
 ##### Splitting an Array based on type
 ```python
 >>> arr = Array(1, 2, "a", "b")
->>> arr.groupBy(type).getItem(1)  # group by type and select the 2nd element of the tuples
+>>> arr.groupBy(type)[:, 1]  # group by type and select the 2nd element of the tuples
 Array(Array(1, 2), Array('a', 'b'))
 ```
 
@@ -103,42 +127,54 @@ Functions applied to Arrays can be parallelized with the `parmap` and
 >>> Array(1,2,3).parmap(some_heavy_func)
 ```
 
-#### Full documentation available [here](https://Lauriat.github.io/funct/Array.html).
 
-Array Creation
+Indexing
 -------
-Arrays can be created either with multiple arguments or by providing a sequence
-as an argument.
+Array indexing is a combination of standard Python sequence indexing and numpy-style
+indexing.
+Array supports
+  - Standard Python indexing (single element indexing, slicing)
+  - Index arrays
+  - Boolan masking
+  - Multidimensinonal indexing
 
+### Examples
+
+##### Standard Indexing
 ```python
->>> from funct import Array
->>> Array(1, 2, 3)
-Array(1, 2, 3)
->>> Array([1, 2, 3])
-Array(1, 2, 3)
+>>> a = Array(1, 2, 3)
+>>> a[0]
+1
+>>> a[:2]
+Array(1, 2)
 ```
 
-An Array can also be initialized with the static `zeros` method or the `pad` method
+##### Index Arrays
 ```python
->>> Array.zeros(5).fill(5)
-Array(5, 5, 5, 5, 5)
->>> Array().pad(5, value=5)
-Array(5, 5, 5, 5, 5)
+>>> a = Array('a', 'b', 'c', 'd')
+>>> a[[1, 3]]
+Array('b', 'd')
 ```
 
-Python built-in sequences (including nested ones); lists, tuples and ranges are converted to
-Arrays on instantiation. However, other iterables e.g. generators and numpy ndarrays
-are converted to Arrays only if the argument consists of a single iterable. The elements
-can be converted to Arrays by calling the `toArray` method.
+##### Boolan masking
 ```python
->>> Array(np.zeros(3))
-Array(0.0, 0.0, 0.0)
->>> Array(np.zeros(3), np.zeros(3))
-Array(array([0., 0., 0.]), array([0., 0., 0.])
->>> Array(np.zeros(3), np.zeros(3)).toArray
-Array(Array(0.0, 0.0, 0.0], Array(0.0, 0.0, 0.0))
+>>> a = Array(1, 2, 3, 4)
+>>> a[[True, False, False, True]]
+Array(1, 4)
 ```
 
+##### Multidimensinonal indexing
+```python
+>>> a = Array((1, 2), (3, 4), (5, 6))
+>>> a[:, 0]
+Array(1, 3, 5)
+```
+Note that when indexing 'ragged' nested Arrays, multidimensional indexing may
+raise an `IndexError`, since Array does not care whether all the nested Arrays are
+the same size, as opposed to a numpy ndarray.
+
+
+#### Full documentation available [here](https://Lauriat.github.io/funct/Array.html).
 
 Notes
 -------
