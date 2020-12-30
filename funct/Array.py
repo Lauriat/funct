@@ -1127,8 +1127,12 @@ class Array(list):
                     return
                 try:
                     idx = range(*key[0].indices(self.size))
+                    act = []
                     for ic, ie in zip(idx, self.__validate_setelem(idx, e)):
-                        self[ic][key[1:]] = ie
+                        self[ic][key[1:]]
+                        act.append((self[ic].__setitem__, (key[1:], ie)))
+                    for f, args in act:
+                        f(*args)
                 except TypeError:
                     raise IndexError("Too many indices for the Array") from None
                 return
