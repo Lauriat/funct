@@ -180,7 +180,7 @@ class TestArray(unittest.TestCase):
         )
         self.assertTrue(Array(6, 5, 2, 1).sortBy_(lambda k: k).eq((1, 2, 5, 6)).all)
         self.assertTrue(l.asType(str).eq(["1", "2", "3"]).all)
-        self.assertTrue(l.mkString("-") == "1-2-3")
+        self.assertTrue(l.join("-") == "1-2-3")
         self.assertTrue(l.prepend(0).eq([0, 1, 2, 3]).all)
         l.prepend(0)
         self.assertTrue(l.eq([0, 0, 1, 2, 3]).all)
