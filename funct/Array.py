@@ -635,7 +635,7 @@ class Array(list):
         """
         return Array(map(t, self))
 
-    def mkString(self, delimiter=" "):
+    def join(self, delimiter=" "):
         """
         Creates a string representation of this Array
         with elements separated with 'delimiter'
@@ -698,7 +698,7 @@ class Array(list):
         return self
 
     def pad(self, n, value=0):
-        """ Pads this Array with value. Default value=0. """
+        """ Pads this Array with value. """
         try:
             return self + [value] * n
         except TypeError:
@@ -707,7 +707,7 @@ class Array(list):
             ) from None
 
     def padLeft(self, n, value=0):
-        """ Pads this Array with value. Default value=0. """
+        """ Pads this Array with value. """
         try:
             return [value] * n + self
         except TypeError:
@@ -718,7 +718,6 @@ class Array(list):
     def padTo(self, n, value=0):
         """
         Pads this Array with value until length of n is reached.
-        Default value=0.
         """
         try:
             return self + [value] * (n - self.size)
@@ -730,7 +729,6 @@ class Array(list):
     def padLeftTo(self, n, value=0):
         """
         Pads this Array with value until length of n is reached.
-        Default value=0.
         """
         try:
             return [value] * (n - self.size) + self
@@ -892,7 +890,7 @@ class Array(list):
     def toStr(self):
         """
         Creates a string representation of the Array.
-        See self.mkString for more functionality.
+        See Array.join for more functionality.
         """
         return "".join(str(v) for v in self)
 
@@ -977,9 +975,9 @@ class Array(list):
         _len = len(args)
         if _len == 0:
             raise TypeError("Expected at least one argument")
-        if _len > 3:
+        elif _len > 3:
             raise TypeError("Expected at most 3 arguments")
-        if _len == 1:
+        elif _len == 1:
             return Array(range(math.ceil(args[0])))
         start, end, step = args if _len == 3 else args + (1,)
         return Array([start + step * i for i in range(math.ceil((end - start) / step))])
@@ -1127,12 +1125,10 @@ class Array(list):
                     return
                 try:
                     idx = range(*key[0].indices(self.size))
-                    act = []
-                    for ic, ie in zip(idx, self.__validate_setelem(idx, e)):
+                    for ic in idx:
                         self[ic][key[1:]]
-                        act.append((self[ic].__setitem__, (key[1:], ie)))
-                    for f, args in act:
-                        f(*args)
+                    for ic, ie in zip(idx, self.__validate_setelem(idx, e)):
+                        self[ic][key[1:]] = ie
                 except TypeError:
                     raise IndexError("Too many indices for the Array") from None
                 return
