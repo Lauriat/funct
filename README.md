@@ -2,11 +2,12 @@
 
 Array is a functional mutable sequence inheriting from Python's built-in list.
 Array provides 100+ higher-order methods and more functionality to the built-in
-list, making operations on sequences simpler and one-liners neater, with
-no third party packages required.
+list, making operations on sequences simpler and one-liners neater
+with no third party packages required.
 
 Array provides a combination of python built-ins, features found in NumPy arrays,
-and higher-order methods common to functional languages, still preserving
+and higher-order methods common to functional languages 
+without the weird semantics of the builtins, still preserving
 the same functionality and the dynamic nature of the built-in list.
 
 [Documentation](https://Lauriat.github.io/funct/Array.html)
@@ -29,7 +30,7 @@ Array(1, 2, 3)
 Array(1, 2, 3)
 ```
 
-An Array can also be initialized with the static `zeros` method or the `pad` method
+An Array can also be initialized with the static `zeros` method or the `pad` method.
 
 Python built-in sequences (including nested ones) lists, tuples and ranges are converted to
 Arrays on instantiation. However, other iterables e.g. generators and numpy ndarrays
