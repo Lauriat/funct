@@ -148,35 +148,35 @@ class Array(list):
 
     def product(self):
         """ Returns the product of the Array elements. """
-        return self.reduce(lambda a, b: a * b)
+        return reduce(lambda a, b: a * b, self)
 
     def mean(self):
         """ Returns the average of the Array elements. """
-        return self.sum() / self.size
+        return sum(self) / self.size
 
     def average(self, weights=None):
         """ Returns the weighted average of the Array elements. """
         if weights is None:
-            return self.mean()
+            return sum(self) / self.size
         else:
-            return self.mul(weights).sum() / sum(weights)
+            return sum(self.mul(weights)) / sum(weights)
 
     def floor(self):
         """ Floors the Array elements. """
-        return Array(math.floor(e) for e in self)
+        return Array(map(math.floor, self))
 
     def floor_(self):
         """ Floors the Array elements in-place. """
-        self[:] = Array(math.floor(e) for e in self)
+        self[:] = Array(map(math.floor, self))
         return self
 
     def ceil(self):
         """ Ceils the Array elements. """
-        return Array(math.ceil(e) for e in self)
+        return Array(map(math.ceil, self))
 
     def ceil_(self):
         """ Ceils the Array elements in-place. """
-        self[:] = Array(math.ceil(e) for e in self)
+        self[:] = Array(map(math.ceil, self))
         return self
 
     def round(self, d=0):
@@ -226,11 +226,11 @@ class Array(list):
 
     def eq(self, e):
         """ Returns x == y element-wise """
-        return self.__operate(operator.eq, e)
+        return self.__eq__(e)
 
     def eq_(self, e):
         """ Returns x == y element-wise (in-place) """
-        self[:] = self.__operate(operator.eq, e)
+        self[:] = self.__eq__(e)
         return self
 
     def ne(self, e):
@@ -262,10 +262,12 @@ class Array(list):
 
     def roll(self, n):
         """ Rolls the elements of the Array. """
+        n = n % self.size
         return self[-n:] + self[:-n]
 
     def roll_(self, n):
         """ Rolls the elements of the Array in-place. """
+        n = n % self.size
         self[:] = self[-n:] + self[:-n]
         return self
 
@@ -286,7 +288,7 @@ class Array(list):
         Returns the values in this Array that are not in sequence b.
         """
         s = set(b)
-        return Array([e for e in self if e not in s])
+        return Array(e for e in self if e not in s)
 
     def setDifference(self, b):
         """
@@ -302,7 +304,7 @@ class Array(list):
         Returns the values that are both in this Array and sequence b.
         """
         s = set(b)
-        return Array([e for e in self if e in s])
+        return Array(e for e in self if e in s)
 
     def setIntersect(self, b):
         """
@@ -485,10 +487,6 @@ class Array(list):
         """
         return any(map(l, self))
 
-    def count(self, l):
-        """ Returns the number of elements that satify the predicate """
-        return sum(map(l, self))
-
     def reduce(self, l, init=None):
         """ Reduces the elements of this Array using the specified operator. """
         if init is not None:
@@ -509,7 +507,7 @@ class Array(list):
 
     def indicesWhere(self, l):
         """ Finds all the indices of the elements satisfying a predicate. """
-        return Array([i for i, v in enumerate(self) if l(v)])
+        return Array(i for i, v in enumerate(self) if l(v))
 
     def indices(self, e):
         """ Returns all the indices of provided value in this Array. """
@@ -530,7 +528,7 @@ class Array(list):
             i = self.index(c)
             v = self[:i].unsqueeze if i != 0 else Array()
             for e in self[i + 1 :].split(c):
-                if not e.isEmpty:
+                if len(e) != 0:
                     v.append(e)
             return v
         except ValueError:
@@ -541,16 +539,14 @@ class Array(list):
         if self.size % n != 0:
             raise ValueError("Split does not result in an equal division")
         d = self.size // n
-        return Array([self[d * i : d * (i + 1)] for i in range(n)])
+        return Array(self[d * i : d * (i + 1)] for i in range(n))
 
     def splitAt(self, n):
         """ Splits this Array into subarrays at specified index or indices. """
         if isinstance(n, int):
             return Array(self[:n], self[n:])
-        elif isinstance(n, Iterable):
-            n = Array(n)
-            n = Array(0, *n, self.size)
-            return Array([self[n[i] : n[i + 1]] for i in range(n.size - 1)])
+        n = Array(0, *n, self.size)
+        return Array(self[n[i] : n[i + 1]] for i in range(n.size - 1))
 
     def takeWhile(self, l):
         """ Takes the longest prefix of elements that satisfy the given predicate. """
@@ -672,20 +668,33 @@ class Array(list):
         if isinstance(e, Array.__baseIterables) and isinstance(
             i, Array.__baseIterables
         ):
+            if len(e) != len(i):
+                raise ValueError(
+                    "The lengths of the sequences must match, got {} and {}".format(
+                        len(i), len(e)
+                    )
+                )
             for ii, ei in zip(i, e):
                 a = a.insert(ii, ei)
         else:
-            super(Array, a).insert(i, e)
+            super(Array, a).insert(i, self.__convert(e))
         return a
 
     def insert_(self, i, e):
         """ Inserts element(s) (in place) before given index/indices. """
-        if isinstance(e, Array.__baseIterables):
-            for ei in e:
-                self.insert_(i, ei)
-                i += 1
+        if isinstance(e, Array.__baseIterables) and isinstance(
+            i, Array.__baseIterables
+        ):
+            if len(e) != len(i):
+                raise ValueError(
+                    "The lengths of the sequences must match, got {} and {}".format(
+                        len(i), len(e)
+                    )
+                )
+            for ii, ei in zip(i, e):
+                self.insert_(ii, ei)
         else:
-            super().insert(i, e)
+            super().insert(i, self.__convert(e))
         return self
 
     def fill(self, e):
@@ -727,9 +736,7 @@ class Array(list):
             ) from None
 
     def padLeftTo(self, n, value=0):
-        """
-        Pads this Array with value until length of n is reached.
-        """
+        """ Pads this Array with value until length of n is reached. """
         try:
             return [value] * (n - self.size) + self
         except TypeError:
@@ -754,7 +761,7 @@ class Array(list):
     def zipAll(self, *args, default=None):
         """
         Zips the sequences. If the iterables are
-        of uneven length, missing values are filled with default.
+        of uneven length, missing values are filled with default value.
         """
         return Array(itertools.zip_longest(self, *args, fillvalue=default))
 
@@ -857,9 +864,7 @@ class Array(list):
 
     @property
     def toInt(self):
-        """
-        Converts elements in this Array to integers.
-        """
+        """ Converts elements in this Array to integers. """
         try:
             return Array(map(lambda e: ord(e) if isinstance(e, str) else int(e), self))
         except TypeError:
@@ -867,9 +872,7 @@ class Array(list):
 
     @property
     def toBool(self):
-        """
-        Converts elements in this Array to booleans.
-        """
+        """ Converts elements in this Array to booleans. """
         return Array(map(bool, self))
 
     @property
@@ -881,9 +884,7 @@ class Array(list):
 
     @property
     def toChar(self):
-        """
-        Converts an Array of integers to chars.
-        """
+        """ Converts an Array of integers to chars. """
         return Array(map(chr, self))
 
     @property
@@ -936,7 +937,7 @@ class Array(list):
     @property
     def flatten(self):
         """ Returns the Array collapsed into one dimension. """
-        r = Array([e for s in self for e in (s if isinstance(s, Iterable) else [s])])
+        r = Array(e for s in self for e in (s if isinstance(s, Iterable) else [s]))
         if any(map(lambda e: isinstance(e, Iterable), r)):
             return r.flatten
         return r
@@ -980,7 +981,7 @@ class Array(list):
         elif _len == 1:
             return Array(range(math.ceil(args[0])))
         start, end, step = args if _len == 3 else args + (1,)
-        return Array([start + step * i for i in range(math.ceil((end - start) / step))])
+        return Array(start + step * i for i in range(math.ceil((end - start) / step)))
 
     @staticmethod
     def linspace(start, stop, num=50, endpoint=True):
