@@ -370,6 +370,7 @@ class Array(list):
 
     def equal(self, b):
         &#34;&#34;&#34; Returns true this Array and given sequence have the same elements. &#34;&#34;&#34;
+        self.__validate_seq(b)
         return all(self.eq(b))
 
     def remove(self, b):
@@ -478,22 +479,25 @@ class Array(list):
         with multiprocessing.Pool(processes=processes) as pool:
             return Array(pool.starmap(fun, self))
 
-    def asyncmap(self, fun, workers=None, timeout=None):
+    def asyncmap(self, fun, max_workers=None):
         &#34;&#34;&#34;
-        Returns a generator by asynchronously
-        applying a function to all elements of this Array.
+        Executes map asynchronously.
+        Returns a Future object.
         &#34;&#34;&#34;
-        executor = ThreadPoolExecutor(max_workers=workers)
+        executor = ThreadPoolExecutor(max_workers=max_workers)
         try:
-            return executor.map(fun, self, timeout=timeout)
+            return executor.submit(self.map, fun)
         finally:
             executor.shutdown(wait=False)
 
-    def asyncstarmap(self, fun, workers=None, timeout=None):
-        &#34;&#34;&#34; Asynchronous starmap &#34;&#34;&#34;
-        executor = ThreadPoolExecutor(max_workers=workers)
+    def asyncstarmap(self, fun, max_workers=None):
+        &#34;&#34;&#34;
+        Executes starmap asynchronously.
+        Returns a Future object.
+        &#34;&#34;&#34;
+        executor = ThreadPoolExecutor(max_workers=max_workers)
         try:
-            return executor.map(lambda d: fun(*d), self, timeout=timeout)
+            return executor.submit(self.starmap, fun)
         finally:
             executor.shutdown(wait=False)
 
@@ -519,8 +523,7 @@ class Array(list):
         &#34;&#34;&#34; Reduces the elements of this Array using the specified operator. &#34;&#34;&#34;
         if init is not None:
             return reduce(l, self, init)
-        else:
-            return reduce(l, self)
+        return reduce(l, self)
 
     def contains(self, e):
         &#34;&#34;&#34; Tests wheter element exists in this Array. &#34;&#34;&#34;
@@ -662,7 +665,7 @@ class Array(list):
     def join(self, delimiter=&#34; &#34;):
         &#34;&#34;&#34;
         Creates a string representation of this Array
-        with elements separated with &#39;delimiter&#39;
+        with elements separated with `delimiter`
         &#34;&#34;&#34;
         return delimiter.join(str(v) for v in self)
 
@@ -682,33 +685,15 @@ class Array(list):
 
     def extend(self, e):
         &#34;&#34;&#34; Extend this Array by appending elements from the iterable. &#34;&#34;&#34;
-        super().extend(self.__convert(e))
+        super().extend(Array(e))
         return self
 
     def extendLeft(self, e):
         &#34;&#34;&#34; Extends this Array by prepending elements from the iterable. &#34;&#34;&#34;
-        self[0:0] = e
+        self[0:0] = Array(e)
         return self
 
     def insert(self, i, e):
-        &#34;&#34;&#34; Inserts element(s) before given index/indices. &#34;&#34;&#34;
-        a = self.copy()
-        if isinstance(e, Array.__baseIterables) and isinstance(
-            i, Array.__baseIterables
-        ):
-            if len(e) != len(i):
-                raise ValueError(
-                    &#34;The lengths of the sequences must match, got {} and {}&#34;.format(
-                        len(i), len(e)
-                    )
-                )
-            for ii, ei in zip(i, e):
-                a = a.insert(ii, ei)
-        else:
-            super(Array, a).insert(i, self.__convert(e))
-        return a
-
-    def insert_(self, i, e):
         &#34;&#34;&#34; Inserts element(s) (in place) before given index/indices. &#34;&#34;&#34;
         if isinstance(e, Array.__baseIterables) and isinstance(
             i, Array.__baseIterables
@@ -720,7 +705,7 @@ class Array(list):
                     )
                 )
             for ii, ei in zip(i, e):
-                self.insert_(ii, ei)
+                self.insert(ii, ei)
         else:
             super().insert(i, self.__convert(e))
         return self
@@ -872,6 +857,11 @@ class Array(list):
     def isEmpty(self):
         &#34;&#34;&#34; Returns whether this Array is empty. &#34;&#34;&#34;
         return self.size == 0
+
+    @property
+    def nonEmpty(self):
+        &#34;&#34;&#34; Returns whether this Array is not empty. &#34;&#34;&#34;
+        return self.size != 0
 
     @property
     def isFinite(self):
@@ -1168,7 +1158,9 @@ class Array(list):
             for _i, _e in zip(key, self.__validate_setelem(key, e)):
                 super().__setitem__(_i, _e)
             return
-        if not isinstance(e, Iterable):
+        if isinstance(e, Iterable):
+            e = self.__convert(e)
+        else:
             e = [e] * len(range(*key.indices(self.size)))
         super().__setitem__(key, e)
 
@@ -1557,6 +1549,7 @@ Arrays, while other iterables will stored as Array elements.</p></div>
 
     def equal(self, b):
         &#34;&#34;&#34; Returns true this Array and given sequence have the same elements. &#34;&#34;&#34;
+        self.__validate_seq(b)
         return all(self.eq(b))
 
     def remove(self, b):
@@ -1665,22 +1658,25 @@ Arrays, while other iterables will stored as Array elements.</p></div>
         with multiprocessing.Pool(processes=processes) as pool:
             return Array(pool.starmap(fun, self))
 
-    def asyncmap(self, fun, workers=None, timeout=None):
+    def asyncmap(self, fun, max_workers=None):
         &#34;&#34;&#34;
-        Returns a generator by asynchronously
-        applying a function to all elements of this Array.
+        Executes map asynchronously.
+        Returns a Future object.
         &#34;&#34;&#34;
-        executor = ThreadPoolExecutor(max_workers=workers)
+        executor = ThreadPoolExecutor(max_workers=max_workers)
         try:
-            return executor.map(fun, self, timeout=timeout)
+            return executor.submit(self.map, fun)
         finally:
             executor.shutdown(wait=False)
 
-    def asyncstarmap(self, fun, workers=None, timeout=None):
-        &#34;&#34;&#34; Asynchronous starmap &#34;&#34;&#34;
-        executor = ThreadPoolExecutor(max_workers=workers)
+    def asyncstarmap(self, fun, max_workers=None):
+        &#34;&#34;&#34;
+        Executes starmap asynchronously.
+        Returns a Future object.
+        &#34;&#34;&#34;
+        executor = ThreadPoolExecutor(max_workers=max_workers)
         try:
-            return executor.map(lambda d: fun(*d), self, timeout=timeout)
+            return executor.submit(self.starmap, fun)
         finally:
             executor.shutdown(wait=False)
 
@@ -1706,8 +1702,7 @@ Arrays, while other iterables will stored as Array elements.</p></div>
         &#34;&#34;&#34; Reduces the elements of this Array using the specified operator. &#34;&#34;&#34;
         if init is not None:
             return reduce(l, self, init)
-        else:
-            return reduce(l, self)
+        return reduce(l, self)
 
     def contains(self, e):
         &#34;&#34;&#34; Tests wheter element exists in this Array. &#34;&#34;&#34;
@@ -1849,7 +1844,7 @@ Arrays, while other iterables will stored as Array elements.</p></div>
     def join(self, delimiter=&#34; &#34;):
         &#34;&#34;&#34;
         Creates a string representation of this Array
-        with elements separated with &#39;delimiter&#39;
+        with elements separated with `delimiter`
         &#34;&#34;&#34;
         return delimiter.join(str(v) for v in self)
 
@@ -1869,33 +1864,15 @@ Arrays, while other iterables will stored as Array elements.</p></div>
 
     def extend(self, e):
         &#34;&#34;&#34; Extend this Array by appending elements from the iterable. &#34;&#34;&#34;
-        super().extend(self.__convert(e))
+        super().extend(Array(e))
         return self
 
     def extendLeft(self, e):
         &#34;&#34;&#34; Extends this Array by prepending elements from the iterable. &#34;&#34;&#34;
-        self[0:0] = e
+        self[0:0] = Array(e)
         return self
 
     def insert(self, i, e):
-        &#34;&#34;&#34; Inserts element(s) before given index/indices. &#34;&#34;&#34;
-        a = self.copy()
-        if isinstance(e, Array.__baseIterables) and isinstance(
-            i, Array.__baseIterables
-        ):
-            if len(e) != len(i):
-                raise ValueError(
-                    &#34;The lengths of the sequences must match, got {} and {}&#34;.format(
-                        len(i), len(e)
-                    )
-                )
-            for ii, ei in zip(i, e):
-                a = a.insert(ii, ei)
-        else:
-            super(Array, a).insert(i, self.__convert(e))
-        return a
-
-    def insert_(self, i, e):
         &#34;&#34;&#34; Inserts element(s) (in place) before given index/indices. &#34;&#34;&#34;
         if isinstance(e, Array.__baseIterables) and isinstance(
             i, Array.__baseIterables
@@ -1907,7 +1884,7 @@ Arrays, while other iterables will stored as Array elements.</p></div>
                     )
                 )
             for ii, ei in zip(i, e):
-                self.insert_(ii, ei)
+                self.insert(ii, ei)
         else:
             super().insert(i, self.__convert(e))
         return self
@@ -2059,6 +2036,11 @@ Arrays, while other iterables will stored as Array elements.</p></div>
     def isEmpty(self):
         &#34;&#34;&#34; Returns whether this Array is empty. &#34;&#34;&#34;
         return self.size == 0
+
+    @property
+    def nonEmpty(self):
+        &#34;&#34;&#34; Returns whether this Array is not empty. &#34;&#34;&#34;
+        return self.size != 0
 
     @property
     def isFinite(self):
@@ -2355,7 +2337,9 @@ Arrays, while other iterables will stored as Array elements.</p></div>
             for _i, _e in zip(key, self.__validate_setelem(key, e)):
                 super().__setitem__(_i, _e)
             return
-        if not isinstance(e, Iterable):
+        if isinstance(e, Iterable):
+            e = self.__convert(e)
+        else:
             e = [e] * len(range(*key.indices(self.size)))
         super().__setitem__(key, e)
 
@@ -2774,6 +2758,19 @@ def min(self):
     return min(self)</code></pre>
 </details>
 </dd>
+<dt id="funct.Array.Array.nonEmpty"><code class="name">var <span class="ident">nonEmpty</span></code></dt>
+<dd>
+<div class="desc"><p>Returns whether this Array is not empty.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def nonEmpty(self):
+    &#34;&#34;&#34; Returns whether this Array is not empty. &#34;&#34;&#34;
+    return self.size != 0</code></pre>
+</details>
+</dd>
 <dt id="funct.Array.Array.range"><code class="name">var <span class="ident">range</span></code></dt>
 <dd>
 <div class="desc"><p>Returns the indices of the Array</p></div>
@@ -3095,41 +3092,45 @@ provided sorting criteria.</p></div>
 </details>
 </dd>
 <dt id="funct.Array.Array.asyncmap"><code class="name flex">
-<span>def <span class="ident">asyncmap</span></span>(<span>self, fun, workers=None, timeout=None)</span>
+<span>def <span class="ident">asyncmap</span></span>(<span>self, fun, max_workers=None)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Returns a generator by asynchronously
-applying a function to all elements of this Array.</p></div>
+<div class="desc"><p>Executes map asynchronously.
+Returns a Future object.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def asyncmap(self, fun, workers=None, timeout=None):
+<pre><code class="python">def asyncmap(self, fun, max_workers=None):
     &#34;&#34;&#34;
-    Returns a generator by asynchronously
-    applying a function to all elements of this Array.
+    Executes map asynchronously.
+    Returns a Future object.
     &#34;&#34;&#34;
-    executor = ThreadPoolExecutor(max_workers=workers)
+    executor = ThreadPoolExecutor(max_workers=max_workers)
     try:
-        return executor.map(fun, self, timeout=timeout)
+        return executor.submit(self.map, fun)
     finally:
         executor.shutdown(wait=False)</code></pre>
 </details>
 </dd>
 <dt id="funct.Array.Array.asyncstarmap"><code class="name flex">
-<span>def <span class="ident">asyncstarmap</span></span>(<span>self, fun, workers=None, timeout=None)</span>
+<span>def <span class="ident">asyncstarmap</span></span>(<span>self, fun, max_workers=None)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Asynchronous starmap</p></div>
+<div class="desc"><p>Executes starmap asynchronously.
+Returns a Future object.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def asyncstarmap(self, fun, workers=None, timeout=None):
-    &#34;&#34;&#34; Asynchronous starmap &#34;&#34;&#34;
-    executor = ThreadPoolExecutor(max_workers=workers)
+<pre><code class="python">def asyncstarmap(self, fun, max_workers=None):
+    &#34;&#34;&#34;
+    Executes starmap asynchronously.
+    Returns a Future object.
+    &#34;&#34;&#34;
+    executor = ThreadPoolExecutor(max_workers=max_workers)
     try:
-        return executor.map(lambda d: fun(*d), self, timeout=timeout)
+        return executor.submit(self.starmap, fun)
     finally:
         executor.shutdown(wait=False)</code></pre>
 </details>
@@ -3449,6 +3450,7 @@ Returns the values in this Array that are not in sequence b.</p></div>
 </summary>
 <pre><code class="python">def equal(self, b):
     &#34;&#34;&#34; Returns true this Array and given sequence have the same elements. &#34;&#34;&#34;
+    self.__validate_seq(b)
     return all(self.eq(b))</code></pre>
 </details>
 </dd>
@@ -3463,7 +3465,7 @@ Returns the values in this Array that are not in sequence b.</p></div>
 </summary>
 <pre><code class="python">def extend(self, e):
     &#34;&#34;&#34; Extend this Array by appending elements from the iterable. &#34;&#34;&#34;
-    super().extend(self.__convert(e))
+    super().extend(Array(e))
     return self</code></pre>
 </details>
 </dd>
@@ -3478,7 +3480,7 @@ Returns the values in this Array that are not in sequence b.</p></div>
 </summary>
 <pre><code class="python">def extendLeft(self, e):
     &#34;&#34;&#34; Extends this Array by prepending elements from the iterable. &#34;&#34;&#34;
-    self[0:0] = e
+    self[0:0] = Array(e)
     return self</code></pre>
 </details>
 </dd>
@@ -3750,40 +3752,12 @@ to given discriminator function.</p></div>
 <span>def <span class="ident">insert</span></span>(<span>self, i, e)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Inserts element(s) before given index/indices.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def insert(self, i, e):
-    &#34;&#34;&#34; Inserts element(s) before given index/indices. &#34;&#34;&#34;
-    a = self.copy()
-    if isinstance(e, Array.__baseIterables) and isinstance(
-        i, Array.__baseIterables
-    ):
-        if len(e) != len(i):
-            raise ValueError(
-                &#34;The lengths of the sequences must match, got {} and {}&#34;.format(
-                    len(i), len(e)
-                )
-            )
-        for ii, ei in zip(i, e):
-            a = a.insert(ii, ei)
-    else:
-        super(Array, a).insert(i, self.__convert(e))
-    return a</code></pre>
-</details>
-</dd>
-<dt id="funct.Array.Array.insert_"><code class="name flex">
-<span>def <span class="ident">insert_</span></span>(<span>self, i, e)</span>
-</code></dt>
-<dd>
 <div class="desc"><p>Inserts element(s) (in place) before given index/indices.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def insert_(self, i, e):
+<pre><code class="python">def insert(self, i, e):
     &#34;&#34;&#34; Inserts element(s) (in place) before given index/indices. &#34;&#34;&#34;
     if isinstance(e, Array.__baseIterables) and isinstance(
         i, Array.__baseIterables
@@ -3795,7 +3769,7 @@ to given discriminator function.</p></div>
                 )
             )
         for ii, ei in zip(i, e):
-            self.insert_(ii, ei)
+            self.insert(ii, ei)
     else:
         super().insert(i, self.__convert(e))
     return self</code></pre>
@@ -3825,7 +3799,7 @@ Returns the values that are both in this Array and sequence b.</p></div>
 </code></dt>
 <dd>
 <div class="desc"><p>Creates a string representation of this Array
-with elements separated with 'delimiter'</p></div>
+with elements separated with <code>delimiter</code></p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -3833,7 +3807,7 @@ with elements separated with 'delimiter'</p></div>
 <pre><code class="python">def join(self, delimiter=&#34; &#34;):
     &#34;&#34;&#34;
     Creates a string representation of this Array
-    with elements separated with &#39;delimiter&#39;
+    with elements separated with `delimiter`
     &#34;&#34;&#34;
     return delimiter.join(str(v) for v in self)</code></pre>
 </details>
@@ -4260,8 +4234,7 @@ or sequence of powers, element-wise.</p></div>
     &#34;&#34;&#34; Reduces the elements of this Array using the specified operator. &#34;&#34;&#34;
     if init is not None:
         return reduce(l, self, init)
-    else:
-        return reduce(l, self)</code></pre>
+    return reduce(l, self)</code></pre>
 </details>
 </dd>
 <dt id="funct.Array.Array.remove"><code class="name flex">
@@ -4898,7 +4871,6 @@ of uneven length, missing values are filled with default value.</p></div>
 <li><code><a title="funct.Array.Array.indicesWhere" href="#funct.Array.Array.indicesWhere">indicesWhere</a></code></li>
 <li><code><a title="funct.Array.Array.init" href="#funct.Array.Array.init">init</a></code></li>
 <li><code><a title="funct.Array.Array.insert" href="#funct.Array.Array.insert">insert</a></code></li>
-<li><code><a title="funct.Array.Array.insert_" href="#funct.Array.Array.insert_">insert_</a></code></li>
 <li><code><a title="funct.Array.Array.intersect" href="#funct.Array.Array.intersect">intersect</a></code></li>
 <li><code><a title="funct.Array.Array.isEmpty" href="#funct.Array.Array.isEmpty">isEmpty</a></code></li>
 <li><code><a title="funct.Array.Array.isFinite" href="#funct.Array.Array.isFinite">isFinite</a></code></li>
@@ -4924,6 +4896,7 @@ of uneven length, missing values are filled with default value.</p></div>
 <li><code><a title="funct.Array.Array.mul_" href="#funct.Array.Array.mul_">mul_</a></code></li>
 <li><code><a title="funct.Array.Array.ne" href="#funct.Array.Array.ne">ne</a></code></li>
 <li><code><a title="funct.Array.Array.ne_" href="#funct.Array.Array.ne_">ne_</a></code></li>
+<li><code><a title="funct.Array.Array.nonEmpty" href="#funct.Array.Array.nonEmpty">nonEmpty</a></code></li>
 <li><code><a title="funct.Array.Array.nunique" href="#funct.Array.Array.nunique">nunique</a></code></li>
 <li><code><a title="funct.Array.Array.pad" href="#funct.Array.Array.pad">pad</a></code></li>
 <li><code><a title="funct.Array.Array.padLeft" href="#funct.Array.Array.padLeft">padLeft</a></code></li>
