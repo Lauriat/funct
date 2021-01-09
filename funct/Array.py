@@ -342,6 +342,7 @@ class Array(list):
 
     def equal(self, b):
         """ Returns true this Array and given sequence have the same elements. """
+        self.__validate_seq(b)
         return all(self.eq(b))
 
     def remove(self, b):
@@ -450,22 +451,25 @@ class Array(list):
         with multiprocessing.Pool(processes=processes) as pool:
             return Array(pool.starmap(fun, self))
 
-    def asyncmap(self, fun, workers=None, timeout=None):
+    def asyncmap(self, fun, max_workers=None):
         """
-        Returns a generator by asynchronously
-        applying a function to all elements of this Array.
+        Executes map asynchronously.
+        Returns a Future object.
         """
-        executor = ThreadPoolExecutor(max_workers=workers)
+        executor = ThreadPoolExecutor(max_workers=max_workers)
         try:
-            return executor.map(fun, self, timeout=timeout)
+            return executor.submit(self.map, fun)
         finally:
             executor.shutdown(wait=False)
 
-    def asyncstarmap(self, fun, workers=None, timeout=None):
-        """ Asynchronous starmap """
-        executor = ThreadPoolExecutor(max_workers=workers)
+    def asyncstarmap(self, fun, max_workers=None):
+        """
+        Executes starmap asynchronously.
+        Returns a Future object.
+        """
+        executor = ThreadPoolExecutor(max_workers=max_workers)
         try:
-            return executor.map(lambda d: fun(*d), self, timeout=timeout)
+            return executor.submit(self.starmap, fun)
         finally:
             executor.shutdown(wait=False)
 

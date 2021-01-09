@@ -34,6 +34,9 @@ class TestArray(unittest.TestCase):
         self.assertTrue(a.tail.eq(range(1, 10)).all)
         self.assertTrue(not a.isEmpty)
         self.assertTrue(Array().isEmpty)
+        self.assertTrue(l.map(testfun).equal((1, 2, 0)))
+        self.assertTrue(l.parmap(testfun).equal((1, 2, 0)))
+        self.assertTrue(l.asyncmap(testfun).result().equal((1, 2, 0)))
         ee = Array(3, 3, 33)
         ee.clear()
         self.assertTrue(ee.isEmpty)
@@ -333,6 +336,10 @@ class TestArray(unittest.TestCase):
             Array(1, 2, 3)[:, 0]
         with self.assertRaises(IndexError):
             Array(1, 2, 3)[:, 0] = 5
+
+
+def testfun(x):
+    return x % 3
 
 
 if __name__ == "__main__":
