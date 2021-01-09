@@ -495,8 +495,7 @@ class Array(list):
         """ Reduces the elements of this Array using the specified operator. """
         if init is not None:
             return reduce(l, self, init)
-        else:
-            return reduce(l, self)
+        return reduce(l, self)
 
     def contains(self, e):
         """ Tests wheter element exists in this Array. """
@@ -638,7 +637,7 @@ class Array(list):
     def join(self, delimiter=" "):
         """
         Creates a string representation of this Array
-        with elements separated with 'delimiter'
+        with elements separated with `delimiter`
         """
         return delimiter.join(str(v) for v in self)
 
@@ -658,33 +657,15 @@ class Array(list):
 
     def extend(self, e):
         """ Extend this Array by appending elements from the iterable. """
-        super().extend(self.__convert(e))
+        super().extend(Array(e))
         return self
 
     def extendLeft(self, e):
         """ Extends this Array by prepending elements from the iterable. """
-        self[0:0] = e
+        self[0:0] = Array(e)
         return self
 
     def insert(self, i, e):
-        """ Inserts element(s) before given index/indices. """
-        a = self.copy()
-        if isinstance(e, Array.__baseIterables) and isinstance(
-            i, Array.__baseIterables
-        ):
-            if len(e) != len(i):
-                raise ValueError(
-                    "The lengths of the sequences must match, got {} and {}".format(
-                        len(i), len(e)
-                    )
-                )
-            for ii, ei in zip(i, e):
-                a = a.insert(ii, ei)
-        else:
-            super(Array, a).insert(i, self.__convert(e))
-        return a
-
-    def insert_(self, i, e):
         """ Inserts element(s) (in place) before given index/indices. """
         if isinstance(e, Array.__baseIterables) and isinstance(
             i, Array.__baseIterables
@@ -696,7 +677,7 @@ class Array(list):
                     )
                 )
             for ii, ei in zip(i, e):
-                self.insert_(ii, ei)
+                self.insert(ii, ei)
         else:
             super().insert(i, self.__convert(e))
         return self
@@ -848,6 +829,11 @@ class Array(list):
     def isEmpty(self):
         """ Returns whether this Array is empty. """
         return self.size == 0
+
+    @property
+    def nonEmpty(self):
+        """ Returns whether this Array is not empty. """
+        return self.size != 0
 
     @property
     def isFinite(self):
@@ -1144,7 +1130,9 @@ class Array(list):
             for _i, _e in zip(key, self.__validate_setelem(key, e)):
                 super().__setitem__(_i, _e)
             return
-        if not isinstance(e, Iterable):
+        if isinstance(e, Iterable):
+            e = self.__convert(e)
+        else:
             e = [e] * len(range(*key.indices(self.size)))
         super().__setitem__(key, e)
 
