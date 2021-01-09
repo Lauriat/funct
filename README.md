@@ -168,7 +168,7 @@ Array(1, 4)
 >>> a[:, 0]
 Array(1, 3, 5)
 ```
-Note that when indexing 'ragged' nested Arrays, multidimensional indexing may
+Note that when indexing 'ragged' nested Arrays multidimensional indexing may
 raise an `IndexError`, since Array does not care whether all the nested Arrays are
 the same size, as opposed to numpy ndarrays.
 
@@ -180,7 +180,9 @@ Notes
 - Mathematical operations such as addition or multiplication can be done with the
   `add` and `mul` methods, not with the `+` and `*` operators to avoid confusion and to
   retain the behaviour of the built-in list.
-- Inplace operations in an Array are postfixed with a underscore (e.g. `arr.add_(x)`).
+- Inplace operations are postfixed with a underscore (e.g. `arr.abs_`). However,
+  methods for adding elements to Arrays (`append`, `extend`, `insert`, etc.) are inplace
+  by default.
 - Inplace operators are slower than out of place operations.
 - Even though Array preserves nearly the same functionality
   as the built-in list, there are a few differences in their behaviour, the most
