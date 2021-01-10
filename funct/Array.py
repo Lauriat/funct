@@ -2,6 +2,7 @@ import itertools
 import math
 import multiprocessing
 import operator
+import warnings
 from collections.abc import Iterable, Sequence
 from concurrent.futures import ThreadPoolExecutor
 from functools import reduce
@@ -1101,6 +1102,11 @@ class Array(list):
         return hash(self.toTuple)
 
     def __bool__(self):
+        if self.__len__() == 0:
+            warnings.warn(
+                "The truth value of an empty Array is ambiguous. Use `Array.nonEmpty` to check that Array is not empty",
+                UserWarning,
+            )
         return all(self)
 
     def __setitem__(self, key, e):
