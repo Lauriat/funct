@@ -5,7 +5,7 @@ with open("README.md", "r") as f:
 
 setuptools.setup(
     name="Funct",
-    version="0.9",
+    version="0.9.1",
     author="Lauri Tuominen",
     author_email="lauri@port6.io",
     description="Functional Python Sequence",

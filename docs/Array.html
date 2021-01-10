@@ -170,6 +170,15 @@ class Array(list):
         self[:] = self | e
         return self
 
+    def abs(self):
+        &#34;&#34;&#34; Element-wise absolute value. &#34;&#34;&#34;
+        return Array(map(abs, self))
+
+    def abs_(self):
+        &#34;&#34;&#34; Inplace element-wise absolute value. &#34;&#34;&#34;
+        self[:] = self.abs()
+        return self
+
     def sum(self):
         &#34;&#34;&#34; Returns the sum of the Array elements. &#34;&#34;&#34;
         return sum(self)
@@ -777,17 +786,6 @@ class Array(list):
         of uneven length, missing values are filled with default value.
         &#34;&#34;&#34;
         return Array(itertools.zip_longest(self, *args, fillvalue=default))
-
-    @property
-    def abs(self):
-        &#34;&#34;&#34; Element-wise absolute value. &#34;&#34;&#34;
-        return Array(map(abs, self))
-
-    @property
-    def abs_(self):
-        &#34;&#34;&#34; Inplace element-wise absolute value. &#34;&#34;&#34;
-        self[:] = self.abs
-        return self
 
     @property
     def all(self):
@@ -1349,6 +1347,15 @@ Arrays, while other iterables will stored as Array elements.</p></div>
         self[:] = self | e
         return self
 
+    def abs(self):
+        &#34;&#34;&#34; Element-wise absolute value. &#34;&#34;&#34;
+        return Array(map(abs, self))
+
+    def abs_(self):
+        &#34;&#34;&#34; Inplace element-wise absolute value. &#34;&#34;&#34;
+        self[:] = self.abs()
+        return self
+
     def sum(self):
         &#34;&#34;&#34; Returns the sum of the Array elements. &#34;&#34;&#34;
         return sum(self)
@@ -1958,17 +1965,6 @@ Arrays, while other iterables will stored as Array elements.</p></div>
         return Array(itertools.zip_longest(self, *args, fillvalue=default))
 
     @property
-    def abs(self):
-        &#34;&#34;&#34; Element-wise absolute value. &#34;&#34;&#34;
-        return Array(map(abs, self))
-
-    @property
-    def abs_(self):
-        &#34;&#34;&#34; Inplace element-wise absolute value. &#34;&#34;&#34;
-        self[:] = self.abs
-        return self
-
-    @property
     def all(self):
         &#34;&#34;&#34; Returns true if bool(e) is True for all elements in this Array. &#34;&#34;&#34;
         return all(self)
@@ -2512,33 +2508,6 @@ def zeros(n):
 </dl>
 <h3>Instance variables</h3>
 <dl>
-<dt id="funct.Array.Array.abs"><code class="name">var <span class="ident">abs</span></code></dt>
-<dd>
-<div class="desc"><p>Element-wise absolute value.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@property
-def abs(self):
-    &#34;&#34;&#34; Element-wise absolute value. &#34;&#34;&#34;
-    return Array(map(abs, self))</code></pre>
-</details>
-</dd>
-<dt id="funct.Array.Array.abs_"><code class="name">var <span class="ident">abs_</span></code></dt>
-<dd>
-<div class="desc"><p>Inplace element-wise absolute value.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@property
-def abs_(self):
-    &#34;&#34;&#34; Inplace element-wise absolute value. &#34;&#34;&#34;
-    self[:] = self.abs
-    return self</code></pre>
-</details>
-</dd>
 <dt id="funct.Array.Array.all"><code class="name">var <span class="ident">all</span></code></dt>
 <dd>
 <div class="desc"><p>Returns true if bool(e) is True for all elements in this Array.</p></div>
@@ -2975,6 +2944,35 @@ def unsqueeze(self):
 </dl>
 <h3>Methods</h3>
 <dl>
+<dt id="funct.Array.Array.abs"><code class="name flex">
+<span>def <span class="ident">abs</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Element-wise absolute value.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def abs(self):
+    &#34;&#34;&#34; Element-wise absolute value. &#34;&#34;&#34;
+    return Array(map(abs, self))</code></pre>
+</details>
+</dd>
+<dt id="funct.Array.Array.abs_"><code class="name flex">
+<span>def <span class="ident">abs_</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Inplace element-wise absolute value.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def abs_(self):
+    &#34;&#34;&#34; Inplace element-wise absolute value. &#34;&#34;&#34;
+    self[:] = self.abs()
+    return self</code></pre>
+</details>
+</dd>
 <dt id="funct.Array.Array.accumulate"><code class="name flex">
 <span>def <span class="ident">accumulate</span></span>(<span>self, l=&lt;built-in function add&gt;)</span>
 </code></dt>
