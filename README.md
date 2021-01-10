@@ -6,7 +6,7 @@ list, making operations on sequences simpler and one-liners neater
 with no third party packages required.
 
 Array provides a combination of python built-ins, features found in NumPy arrays,
-and higher-order methods common to functional languages 
+and higher-order methods common to functional languages
 without the weird semantics of the builtins, still preserving
 the same functionality and the dynamic nature of the built-in list.
 
@@ -42,7 +42,7 @@ Array(0.0, 0.0, 0.0)
 >>> Array(np.zeros(3), np.zeros(3))
 Array(array([0., 0., 0.]), array([0., 0., 0.])
 >>> Array(np.zeros(3), np.zeros(3)).toArray
-Array(Array(0.0, 0.0, 0.0], Array(0.0, 0.0, 0.0))
+Array(Array(0.0, 0.0, 0.0), Array(0.0, 0.0, 0.0))
 ```
 
 Arrays provide static methods `arange`, `linspace` and `logspace` for
@@ -80,7 +80,7 @@ Array(10, 20, 30, 40, 50)
 ```python
 #  Traditional python
 >>> nums2 = [11, 12, 13, 14, 15]
->>> [a * b for a, b in zip(nums, nums2]
+>>> [a * b for a, b in zip(nums, nums2)]
 [11, 24, 39, 56, 75]
 
 #  With Arrays
@@ -190,6 +190,3 @@ Notes
     - `==` (`__eq__`) Returns element-wise comparison.
     - `bool` (`__bool__`) Returns whether all elements evaluate to True.
     - Arrays are hashable. Note that this is implemented by using the Array's tuple representation in `__hash__`.
-
-
-
