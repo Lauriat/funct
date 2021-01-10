@@ -86,7 +86,7 @@ class TestArray(unittest.TestCase):
         wq = Array((0, 5), (1, 3), (2, 4))
         self.assertTrue(wq.argsortBy(lambda e: e[1]).equal((1, 2, 0)))
         qq = Array(-1, 2, -3)
-        qq.abs_
+        qq.abs_()
         self.assertTrue(qq.equal((1, 2, 3)))
         self.assertTrue(e.equal((1, 4, 5, 99)))
         self.assertTrue(a.reverse().equal(range(9, -1, -1)))
@@ -104,7 +104,7 @@ class TestArray(unittest.TestCase):
         self.assertTrue(a.range.equal(range(a.size)))
         self.assertTrue(d.enumerate.map(lambda k: k[0]).equal(range(d.size)))
         self.assertTrue(d.enumerate.map(lambda k: k[1]).equal(d))
-        self.assertTrue(d.abs.equal([1, 2, 4]))
+        self.assertTrue(d.abs().equal([1, 2, 4]))
         self.assertTrue(d.add(1).equal((0, -1, -3)))
         d.add_(1)
         self.assertTrue(d.eq((0, -1, -3)).all)

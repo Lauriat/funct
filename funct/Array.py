@@ -142,6 +142,15 @@ class Array(list):
         self[:] = self | e
         return self
 
+    def abs(self):
+        """ Element-wise absolute value. """
+        return Array(map(abs, self))
+
+    def abs_(self):
+        """ Inplace element-wise absolute value. """
+        self[:] = self.abs()
+        return self
+
     def sum(self):
         """ Returns the sum of the Array elements. """
         return sum(self)
@@ -749,17 +758,6 @@ class Array(list):
         of uneven length, missing values are filled with default value.
         """
         return Array(itertools.zip_longest(self, *args, fillvalue=default))
-
-    @property
-    def abs(self):
-        """ Element-wise absolute value. """
-        return Array(map(abs, self))
-
-    @property
-    def abs_(self):
-        """ Inplace element-wise absolute value. """
-        self[:] = self.abs
-        return self
 
     @property
     def all(self):
