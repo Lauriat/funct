@@ -134,8 +134,8 @@ indexing.
 Array supports
   - Standard Python indexing (single element indexing, slicing)
   - Index arrays
-  - Boolan masking
-  - Multidimensinonal indexing
+  - Boolean masking
+  - Multidimensional indexing
 
 ### Examples
 
@@ -155,14 +155,14 @@ Array(1, 2)
 Array('b', 'd')
 ```
 
-##### Boolan masking
+##### Boolean masking
 ```python
 >>> a = Array(1, 2, 3, 4)
 >>> a[[True, False, False, True]]
 Array(1, 4)
 ```
 
-##### Multidimensinonal indexing
+##### Multidimensional indexing
 ```python
 >>> a = Array((1, 2), (3, 4), (5, 6))
 >>> a[:, 0]
