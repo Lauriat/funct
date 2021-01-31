@@ -589,6 +589,15 @@ class Array(list):
         n = Array(0, *n, self.size)
         return Array(self[n[i] : n[i + 1]] for i in range(n.size - 1))
 
+    def chunks(self, n, droplast=False):
+        &#34;&#34;&#34;
+        Splits this Array into chunks of size n.
+        If droplast is True, drops the last subarray if the split
+        results in an inequal division.
+        &#34;&#34;&#34;
+        fun = int if droplast else math.ceil
+        return Array(self[i * n : (i + 1) * n] for i in range(fun(self.size / n)))
+
     def takeWhile(self, l):
         &#34;&#34;&#34; Takes the longest prefix of elements that satisfy the given predicate. &#34;&#34;&#34;
         return Array(itertools.takewhile(l, self))
@@ -1770,6 +1779,15 @@ Arrays, while other iterables will stored as Array elements.</p></div>
             return Array(self[:n], self[n:])
         n = Array(0, *n, self.size)
         return Array(self[n[i] : n[i + 1]] for i in range(n.size - 1))
+
+    def chunks(self, n, droplast=False):
+        &#34;&#34;&#34;
+        Splits this Array into chunks of size n.
+        If droplast is True, drops the last subarray if the split
+        results in an inequal division.
+        &#34;&#34;&#34;
+        fun = int if droplast else math.ceil
+        return Array(self[i * n : (i + 1) * n] for i in range(fun(self.size / n)))
 
     def takeWhile(self, l):
         &#34;&#34;&#34; Takes the longest prefix of elements that satisfy the given predicate. &#34;&#34;&#34;
@@ -3276,6 +3294,27 @@ and given scalar or sequence, element-wise.</p></div>
     &#34;&#34;&#34; Ceils the Array elements in-place. &#34;&#34;&#34;
     self[:] = Array(map(math.ceil, self))
     return self</code></pre>
+</details>
+</dd>
+<dt id="funct.Array.Array.chunks"><code class="name flex">
+<span>def <span class="ident">chunks</span></span>(<span>self, n, droplast=False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Splits this Array into chunks of size n.
+If droplast is True, drops the last subarray if the split
+results in an inequal division.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def chunks(self, n, droplast=False):
+    &#34;&#34;&#34;
+    Splits this Array into chunks of size n.
+    If droplast is True, drops the last subarray if the split
+    results in an inequal division.
+    &#34;&#34;&#34;
+    fun = int if droplast else math.ceil
+    return Array(self[i * n : (i + 1) * n] for i in range(fun(self.size / n)))</code></pre>
 </details>
 </dd>
 <dt id="funct.Array.Array.clip"><code class="name flex">
@@ -4844,6 +4883,7 @@ of uneven length, missing values are filled with default value.</p></div>
 <li><code><a title="funct.Array.Array.cat" href="#funct.Array.Array.cat">cat</a></code></li>
 <li><code><a title="funct.Array.Array.ceil" href="#funct.Array.Array.ceil">ceil</a></code></li>
 <li><code><a title="funct.Array.Array.ceil_" href="#funct.Array.Array.ceil_">ceil_</a></code></li>
+<li><code><a title="funct.Array.Array.chunks" href="#funct.Array.Array.chunks">chunks</a></code></li>
 <li><code><a title="funct.Array.Array.clip" href="#funct.Array.Array.clip">clip</a></code></li>
 <li><code><a title="funct.Array.Array.clip_" href="#funct.Array.Array.clip_">clip_</a></code></li>
 <li><code><a title="funct.Array.Array.contains" href="#funct.Array.Array.contains">contains</a></code></li>

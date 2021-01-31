@@ -561,6 +561,15 @@ class Array(list):
         n = Array(0, *n, self.size)
         return Array(self[n[i] : n[i + 1]] for i in range(n.size - 1))
 
+    def chunks(self, n, droplast=False):
+        """
+        Splits this Array into chunks of size n.
+        If droplast is True, drops the last subarray if the split
+        results in an inequal division.
+        """
+        fun = int if droplast else math.ceil
+        return Array(self[i * n : (i + 1) * n] for i in range(fun(self.size / n)))
+
     def takeWhile(self, l):
         """ Takes the longest prefix of elements that satisfy the given predicate. """
         return Array(itertools.takewhile(l, self))
