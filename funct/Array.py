@@ -856,30 +856,24 @@ class Array(list):
         """
         return Array(itertools.zip_longest(self, *args, fillvalue=default))
 
-    @property
     def all(self):
         """ Returns true if bool(e) is True for all elements in this Array. """
         return all(self)
 
-    @property
     def any(self):
         """ Returns true if bool(e) is True for any element e in this Array. """
         return any(self)
 
-    @property
-    def max(self):
-        return max(self)
+    def max(self, **kwargs):
+        return max(self, **kwargs)
 
-    @property
     def argmax(self):
         """ Returns the index of the maximum value """
         return self.enumerate.maxBy(lambda e: e[1])[0]
 
-    @property
-    def min(self):
-        return min(self)
+    def min(self, **kwargs):
+        return min(self, **kwargs)
 
-    @property
     def argmin(self):
         """ Returns the index of the minimum value """
         return self.enumerate.minBy(lambda e: e[1])[0]
@@ -901,7 +895,6 @@ class Array(list):
         """ Selects the last element of this Array. """
         return self[-1]
 
-    @property
     def lastOption(self, default=None):
         """
         Selects the last element of this Array if it has one,
@@ -929,7 +922,6 @@ class Array(list):
         """ Returns whether this Array is not empty. """
         return self.size != 0
 
-    @property
     def isFinite(self):
         """
         Tests element-wise whether the elements are neither infinity nor NaN.
@@ -946,7 +938,6 @@ class Array(list):
         """ Number of elements in this Array. """
         return self.__len__()
 
-    @property
     def toInt(self):
         """ Converts elements in this Array to integers. """
         try:
@@ -954,24 +945,20 @@ class Array(list):
         except TypeError:
             raise TypeError("Expected an Array of numbers or characters") from None
 
-    @property
     def toBool(self):
         """ Converts elements in this Array to booleans. """
         return Array(map(bool, self))
 
-    @property
     def toArray(self):
         """ Converts all iterables in the Array to Arrays """
         return Array(
-            map(lambda e: Array(e).toArray if isinstance(e, Iterable) else e, self)
+            map(lambda e: Array(e).toArray() if isinstance(e, Iterable) else e, self)
         )
 
-    @property
     def toChar(self):
         """ Converts an Array of integers to chars. """
         return Array(map(chr, self))
 
-    @property
     def toStr(self):
         """
         Creates a string representation of the Array.
@@ -979,23 +966,19 @@ class Array(list):
         """
         return "".join(str(v) for v in self)
 
-    @property
     def toTuple(self):
         """ Returns a copy of the Array as an tuple. """
         return tuple(self.copy())
 
-    @property
     def toSet(self):
         """ Returns set of the Array elements. Order is not preserved. """
         return set(self)
 
-    @property
     def toIter(self):
         """ Returns an iterator for the Array."""
         for e in self:
             yield e
 
-    @property
     def toDict(self):
         """ Creates a dictionary from an Array of Arrays / tuples. """
         return dict(self)
@@ -1006,7 +989,7 @@ class Array(list):
         Returns the Array with the same elements, but with
         outermost singleton dimension removed (if exists).
         """
-        if isinstance(self.headOption, Array.__baseIterables) and self.length == 1:
+        if isinstance(self.headOption(), Array.__baseIterables) and self.length == 1:
             return self[0]
         else:
             return self
@@ -1211,7 +1194,7 @@ class Array(list):
         return Array(map(operator.inv, self))
 
     def __hash__(self):
-        return hash(self.toTuple)
+        return hash(self.toTuple())
 
     def __bool__(self):
         if self.__len__() == 0:

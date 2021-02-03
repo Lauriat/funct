@@ -884,30 +884,24 @@ class Array(list):
         &#34;&#34;&#34;
         return Array(itertools.zip_longest(self, *args, fillvalue=default))
 
-    @property
     def all(self):
         &#34;&#34;&#34; Returns true if bool(e) is True for all elements in this Array. &#34;&#34;&#34;
         return all(self)
 
-    @property
     def any(self):
         &#34;&#34;&#34; Returns true if bool(e) is True for any element e in this Array. &#34;&#34;&#34;
         return any(self)
 
-    @property
-    def max(self):
-        return max(self)
+    def max(self, **kwargs):
+        return max(self, **kwargs)
 
-    @property
     def argmax(self):
         &#34;&#34;&#34; Returns the index of the maximum value &#34;&#34;&#34;
         return self.enumerate.maxBy(lambda e: e[1])[0]
 
-    @property
-    def min(self):
-        return min(self)
+    def min(self, **kwargs):
+        return min(self, **kwargs)
 
-    @property
     def argmin(self):
         &#34;&#34;&#34; Returns the index of the minimum value &#34;&#34;&#34;
         return self.enumerate.minBy(lambda e: e[1])[0]
@@ -929,7 +923,6 @@ class Array(list):
         &#34;&#34;&#34; Selects the last element of this Array. &#34;&#34;&#34;
         return self[-1]
 
-    @property
     def lastOption(self, default=None):
         &#34;&#34;&#34;
         Selects the last element of this Array if it has one,
@@ -957,7 +950,6 @@ class Array(list):
         &#34;&#34;&#34; Returns whether this Array is not empty. &#34;&#34;&#34;
         return self.size != 0
 
-    @property
     def isFinite(self):
         &#34;&#34;&#34;
         Tests element-wise whether the elements are neither infinity nor NaN.
@@ -974,7 +966,6 @@ class Array(list):
         &#34;&#34;&#34; Number of elements in this Array. &#34;&#34;&#34;
         return self.__len__()
 
-    @property
     def toInt(self):
         &#34;&#34;&#34; Converts elements in this Array to integers. &#34;&#34;&#34;
         try:
@@ -982,24 +973,20 @@ class Array(list):
         except TypeError:
             raise TypeError(&#34;Expected an Array of numbers or characters&#34;) from None
 
-    @property
     def toBool(self):
         &#34;&#34;&#34; Converts elements in this Array to booleans. &#34;&#34;&#34;
         return Array(map(bool, self))
 
-    @property
     def toArray(self):
         &#34;&#34;&#34; Converts all iterables in the Array to Arrays &#34;&#34;&#34;
         return Array(
-            map(lambda e: Array(e).toArray if isinstance(e, Iterable) else e, self)
+            map(lambda e: Array(e).toArray() if isinstance(e, Iterable) else e, self)
         )
 
-    @property
     def toChar(self):
         &#34;&#34;&#34; Converts an Array of integers to chars. &#34;&#34;&#34;
         return Array(map(chr, self))
 
-    @property
     def toStr(self):
         &#34;&#34;&#34;
         Creates a string representation of the Array.
@@ -1007,23 +994,19 @@ class Array(list):
         &#34;&#34;&#34;
         return &#34;&#34;.join(str(v) for v in self)
 
-    @property
     def toTuple(self):
         &#34;&#34;&#34; Returns a copy of the Array as an tuple. &#34;&#34;&#34;
         return tuple(self.copy())
 
-    @property
     def toSet(self):
         &#34;&#34;&#34; Returns set of the Array elements. Order is not preserved. &#34;&#34;&#34;
         return set(self)
 
-    @property
     def toIter(self):
         &#34;&#34;&#34; Returns an iterator for the Array.&#34;&#34;&#34;
         for e in self:
             yield e
 
-    @property
     def toDict(self):
         &#34;&#34;&#34; Creates a dictionary from an Array of Arrays / tuples. &#34;&#34;&#34;
         return dict(self)
@@ -1034,7 +1017,7 @@ class Array(list):
         Returns the Array with the same elements, but with
         outermost singleton dimension removed (if exists).
         &#34;&#34;&#34;
-        if isinstance(self.headOption, Array.__baseIterables) and self.length == 1:
+        if isinstance(self.headOption(), Array.__baseIterables) and self.length == 1:
             return self[0]
         else:
             return self
@@ -1239,7 +1222,7 @@ class Array(list):
         return Array(map(operator.inv, self))
 
     def __hash__(self):
-        return hash(self.toTuple)
+        return hash(self.toTuple())
 
     def __bool__(self):
         if self.__len__() == 0:
@@ -2183,30 +2166,24 @@ Arrays, while other iterables will stored as Array elements.</p></div>
         &#34;&#34;&#34;
         return Array(itertools.zip_longest(self, *args, fillvalue=default))
 
-    @property
     def all(self):
         &#34;&#34;&#34; Returns true if bool(e) is True for all elements in this Array. &#34;&#34;&#34;
         return all(self)
 
-    @property
     def any(self):
         &#34;&#34;&#34; Returns true if bool(e) is True for any element e in this Array. &#34;&#34;&#34;
         return any(self)
 
-    @property
-    def max(self):
-        return max(self)
+    def max(self, **kwargs):
+        return max(self, **kwargs)
 
-    @property
     def argmax(self):
         &#34;&#34;&#34; Returns the index of the maximum value &#34;&#34;&#34;
         return self.enumerate.maxBy(lambda e: e[1])[0]
 
-    @property
-    def min(self):
-        return min(self)
+    def min(self, **kwargs):
+        return min(self, **kwargs)
 
-    @property
     def argmin(self):
         &#34;&#34;&#34; Returns the index of the minimum value &#34;&#34;&#34;
         return self.enumerate.minBy(lambda e: e[1])[0]
@@ -2228,7 +2205,6 @@ Arrays, while other iterables will stored as Array elements.</p></div>
         &#34;&#34;&#34; Selects the last element of this Array. &#34;&#34;&#34;
         return self[-1]
 
-    @property
     def lastOption(self, default=None):
         &#34;&#34;&#34;
         Selects the last element of this Array if it has one,
@@ -2256,7 +2232,6 @@ Arrays, while other iterables will stored as Array elements.</p></div>
         &#34;&#34;&#34; Returns whether this Array is not empty. &#34;&#34;&#34;
         return self.size != 0
 
-    @property
     def isFinite(self):
         &#34;&#34;&#34;
         Tests element-wise whether the elements are neither infinity nor NaN.
@@ -2273,7 +2248,6 @@ Arrays, while other iterables will stored as Array elements.</p></div>
         &#34;&#34;&#34; Number of elements in this Array. &#34;&#34;&#34;
         return self.__len__()
 
-    @property
     def toInt(self):
         &#34;&#34;&#34; Converts elements in this Array to integers. &#34;&#34;&#34;
         try:
@@ -2281,24 +2255,20 @@ Arrays, while other iterables will stored as Array elements.</p></div>
         except TypeError:
             raise TypeError(&#34;Expected an Array of numbers or characters&#34;) from None
 
-    @property
     def toBool(self):
         &#34;&#34;&#34; Converts elements in this Array to booleans. &#34;&#34;&#34;
         return Array(map(bool, self))
 
-    @property
     def toArray(self):
         &#34;&#34;&#34; Converts all iterables in the Array to Arrays &#34;&#34;&#34;
         return Array(
-            map(lambda e: Array(e).toArray if isinstance(e, Iterable) else e, self)
+            map(lambda e: Array(e).toArray() if isinstance(e, Iterable) else e, self)
         )
 
-    @property
     def toChar(self):
         &#34;&#34;&#34; Converts an Array of integers to chars. &#34;&#34;&#34;
         return Array(map(chr, self))
 
-    @property
     def toStr(self):
         &#34;&#34;&#34;
         Creates a string representation of the Array.
@@ -2306,23 +2276,19 @@ Arrays, while other iterables will stored as Array elements.</p></div>
         &#34;&#34;&#34;
         return &#34;&#34;.join(str(v) for v in self)
 
-    @property
     def toTuple(self):
         &#34;&#34;&#34; Returns a copy of the Array as an tuple. &#34;&#34;&#34;
         return tuple(self.copy())
 
-    @property
     def toSet(self):
         &#34;&#34;&#34; Returns set of the Array elements. Order is not preserved. &#34;&#34;&#34;
         return set(self)
 
-    @property
     def toIter(self):
         &#34;&#34;&#34; Returns an iterator for the Array.&#34;&#34;&#34;
         for e in self:
             yield e
 
-    @property
     def toDict(self):
         &#34;&#34;&#34; Creates a dictionary from an Array of Arrays / tuples. &#34;&#34;&#34;
         return dict(self)
@@ -2333,7 +2299,7 @@ Arrays, while other iterables will stored as Array elements.</p></div>
         Returns the Array with the same elements, but with
         outermost singleton dimension removed (if exists).
         &#34;&#34;&#34;
-        if isinstance(self.headOption, Array.__baseIterables) and self.length == 1:
+        if isinstance(self.headOption(), Array.__baseIterables) and self.length == 1:
             return self[0]
         else:
             return self
@@ -2538,7 +2504,7 @@ Arrays, while other iterables will stored as Array elements.</p></div>
         return Array(map(operator.inv, self))
 
     def __hash__(self):
-        return hash(self.toTuple)
+        return hash(self.toTuple())
 
     def __bool__(self):
         if self.__len__() == 0:
@@ -2748,58 +2714,6 @@ def zeros(n):
 </dl>
 <h3>Instance variables</h3>
 <dl>
-<dt id="funct.Array.Array.all"><code class="name">var <span class="ident">all</span></code></dt>
-<dd>
-<div class="desc"><p>Returns true if bool(e) is True for all elements in this Array.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@property
-def all(self):
-    &#34;&#34;&#34; Returns true if bool(e) is True for all elements in this Array. &#34;&#34;&#34;
-    return all(self)</code></pre>
-</details>
-</dd>
-<dt id="funct.Array.Array.any"><code class="name">var <span class="ident">any</span></code></dt>
-<dd>
-<div class="desc"><p>Returns true if bool(e) is True for any element e in this Array.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@property
-def any(self):
-    &#34;&#34;&#34; Returns true if bool(e) is True for any element e in this Array. &#34;&#34;&#34;
-    return any(self)</code></pre>
-</details>
-</dd>
-<dt id="funct.Array.Array.argmax"><code class="name">var <span class="ident">argmax</span></code></dt>
-<dd>
-<div class="desc"><p>Returns the index of the maximum value</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@property
-def argmax(self):
-    &#34;&#34;&#34; Returns the index of the maximum value &#34;&#34;&#34;
-    return self.enumerate.maxBy(lambda e: e[1])[0]</code></pre>
-</details>
-</dd>
-<dt id="funct.Array.Array.argmin"><code class="name">var <span class="ident">argmin</span></code></dt>
-<dd>
-<div class="desc"><p>Returns the index of the minimum value</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@property
-def argmin(self):
-    &#34;&#34;&#34; Returns the index of the minimum value &#34;&#34;&#34;
-    return self.enumerate.minBy(lambda e: e[1])[0]</code></pre>
-</details>
-</dd>
 <dt id="funct.Array.Array.enumerate"><code class="name">var <span class="ident">enumerate</span></code></dt>
 <dd>
 <div class="desc"><p>Zips the Array with its indices</p></div>
@@ -2868,21 +2782,6 @@ def isEmpty(self):
     return self.size == 0</code></pre>
 </details>
 </dd>
-<dt id="funct.Array.Array.isFinite"><code class="name">var <span class="ident">isFinite</span></code></dt>
-<dd>
-<div class="desc"><p>Tests element-wise whether the elements are neither infinity nor NaN.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@property
-def isFinite(self):
-    &#34;&#34;&#34;
-    Tests element-wise whether the elements are neither infinity nor NaN.
-    &#34;&#34;&#34;
-    return Array(map(math.isfinite, self))</code></pre>
-</details>
-</dd>
 <dt id="funct.Array.Array.last"><code class="name">var <span class="ident">last</span></code></dt>
 <dd>
 <div class="desc"><p>Selects the last element of this Array.</p></div>
@@ -2896,23 +2795,6 @@ def last(self):
     return self[-1]</code></pre>
 </details>
 </dd>
-<dt id="funct.Array.Array.lastOption"><code class="name">var <span class="ident">lastOption</span></code></dt>
-<dd>
-<div class="desc"><p>Selects the last element of this Array if it has one,
-otherwise returns default.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@property
-def lastOption(self, default=None):
-    &#34;&#34;&#34;
-    Selects the last element of this Array if it has one,
-    otherwise returns default.
-    &#34;&#34;&#34;
-    return self.get(-1, default)</code></pre>
-</details>
-</dd>
 <dt id="funct.Array.Array.length"><code class="name">var <span class="ident">length</span></code></dt>
 <dd>
 <div class="desc"><p>Number of elements in this Array.</p></div>
@@ -2924,30 +2806,6 @@ def lastOption(self, default=None):
 def length(self):
     &#34;&#34;&#34; Number of elements in this Array. &#34;&#34;&#34;
     return self.__len__()</code></pre>
-</details>
-</dd>
-<dt id="funct.Array.Array.max"><code class="name">var <span class="ident">max</span></code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@property
-def max(self):
-    return max(self)</code></pre>
-</details>
-</dd>
-<dt id="funct.Array.Array.min"><code class="name">var <span class="ident">min</span></code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@property
-def min(self):
-    return min(self)</code></pre>
 </details>
 </dd>
 <dt id="funct.Array.Array.nonEmpty"><code class="name">var <span class="ident">nonEmpty</span></code></dt>
@@ -3003,7 +2861,7 @@ def squeeze(self):
     Returns the Array with the same elements, but with
     outermost singleton dimension removed (if exists).
     &#34;&#34;&#34;
-    if isinstance(self.headOption, Array.__baseIterables) and self.length == 1:
+    if isinstance(self.headOption(), Array.__baseIterables) and self.length == 1:
         return self[0]
     else:
         return self</code></pre>
@@ -3020,133 +2878,6 @@ def squeeze(self):
 def tail(self):
     &#34;&#34;&#34; Selects the rest of this Array without its first element. &#34;&#34;&#34;
     return self[1:]</code></pre>
-</details>
-</dd>
-<dt id="funct.Array.Array.toArray"><code class="name">var <span class="ident">toArray</span></code></dt>
-<dd>
-<div class="desc"><p>Converts all iterables in the Array to Arrays</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@property
-def toArray(self):
-    &#34;&#34;&#34; Converts all iterables in the Array to Arrays &#34;&#34;&#34;
-    return Array(
-        map(lambda e: Array(e).toArray if isinstance(e, Iterable) else e, self)
-    )</code></pre>
-</details>
-</dd>
-<dt id="funct.Array.Array.toBool"><code class="name">var <span class="ident">toBool</span></code></dt>
-<dd>
-<div class="desc"><p>Converts elements in this Array to booleans.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@property
-def toBool(self):
-    &#34;&#34;&#34; Converts elements in this Array to booleans. &#34;&#34;&#34;
-    return Array(map(bool, self))</code></pre>
-</details>
-</dd>
-<dt id="funct.Array.Array.toChar"><code class="name">var <span class="ident">toChar</span></code></dt>
-<dd>
-<div class="desc"><p>Converts an Array of integers to chars.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@property
-def toChar(self):
-    &#34;&#34;&#34; Converts an Array of integers to chars. &#34;&#34;&#34;
-    return Array(map(chr, self))</code></pre>
-</details>
-</dd>
-<dt id="funct.Array.Array.toDict"><code class="name">var <span class="ident">toDict</span></code></dt>
-<dd>
-<div class="desc"><p>Creates a dictionary from an Array of Arrays / tuples.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@property
-def toDict(self):
-    &#34;&#34;&#34; Creates a dictionary from an Array of Arrays / tuples. &#34;&#34;&#34;
-    return dict(self)</code></pre>
-</details>
-</dd>
-<dt id="funct.Array.Array.toInt"><code class="name">var <span class="ident">toInt</span></code></dt>
-<dd>
-<div class="desc"><p>Converts elements in this Array to integers.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@property
-def toInt(self):
-    &#34;&#34;&#34; Converts elements in this Array to integers. &#34;&#34;&#34;
-    try:
-        return Array(map(lambda e: ord(e) if isinstance(e, str) else int(e), self))
-    except TypeError:
-        raise TypeError(&#34;Expected an Array of numbers or characters&#34;) from None</code></pre>
-</details>
-</dd>
-<dt id="funct.Array.Array.toIter"><code class="name">var <span class="ident">toIter</span></code></dt>
-<dd>
-<div class="desc"><p>Returns an iterator for the Array.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@property
-def toIter(self):
-    &#34;&#34;&#34; Returns an iterator for the Array.&#34;&#34;&#34;
-    for e in self:
-        yield e</code></pre>
-</details>
-</dd>
-<dt id="funct.Array.Array.toSet"><code class="name">var <span class="ident">toSet</span></code></dt>
-<dd>
-<div class="desc"><p>Returns set of the Array elements. Order is not preserved.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@property
-def toSet(self):
-    &#34;&#34;&#34; Returns set of the Array elements. Order is not preserved. &#34;&#34;&#34;
-    return set(self)</code></pre>
-</details>
-</dd>
-<dt id="funct.Array.Array.toStr"><code class="name">var <span class="ident">toStr</span></code></dt>
-<dd>
-<div class="desc"><p>Creates a string representation of the Array.
-See Array.join for more functionality.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@property
-def toStr(self):
-    &#34;&#34;&#34;
-    Creates a string representation of the Array.
-    See Array.join for more functionality.
-    &#34;&#34;&#34;
-    return &#34;&#34;.join(str(v) for v in self)</code></pre>
-</details>
-</dd>
-<dt id="funct.Array.Array.toTuple"><code class="name">var <span class="ident">toTuple</span></code></dt>
-<dd>
-<div class="desc"><p>Returns a copy of the Array as an tuple.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@property
-def toTuple(self):
-    &#34;&#34;&#34; Returns a copy of the Array as an tuple. &#34;&#34;&#34;
-    return tuple(self.copy())</code></pre>
 </details>
 </dd>
 <dt id="funct.Array.Array.unsqueeze"><code class="name">var <span class="ident">unsqueeze</span></code></dt>
@@ -3252,6 +2983,34 @@ Defaults to accumulated sum.</p></div>
     return self</code></pre>
 </details>
 </dd>
+<dt id="funct.Array.Array.all"><code class="name flex">
+<span>def <span class="ident">all</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Returns true if bool(e) is True for all elements in this Array.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def all(self):
+    &#34;&#34;&#34; Returns true if bool(e) is True for all elements in this Array. &#34;&#34;&#34;
+    return all(self)</code></pre>
+</details>
+</dd>
+<dt id="funct.Array.Array.any"><code class="name flex">
+<span>def <span class="ident">any</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Returns true if bool(e) is True for any element e in this Array.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def any(self):
+    &#34;&#34;&#34; Returns true if bool(e) is True for any element e in this Array. &#34;&#34;&#34;
+    return any(self)</code></pre>
+</details>
+</dd>
 <dt id="funct.Array.Array.append"><code class="name flex">
 <span>def <span class="ident">append</span></span>(<span>self, e)</span>
 </code></dt>
@@ -3267,6 +3026,34 @@ Defaults to accumulated sum.</p></div>
     &#34;&#34;&#34;
     super().append(self.__convert(e))
     return self</code></pre>
+</details>
+</dd>
+<dt id="funct.Array.Array.argmax"><code class="name flex">
+<span>def <span class="ident">argmax</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Returns the index of the maximum value</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def argmax(self):
+    &#34;&#34;&#34; Returns the index of the maximum value &#34;&#34;&#34;
+    return self.enumerate.maxBy(lambda e: e[1])[0]</code></pre>
+</details>
+</dd>
+<dt id="funct.Array.Array.argmin"><code class="name flex">
+<span>def <span class="ident">argmin</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Returns the index of the minimum value</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def argmin(self):
+    &#34;&#34;&#34; Returns the index of the minimum value &#34;&#34;&#34;
+    return self.enumerate.minBy(lambda e: e[1])[0]</code></pre>
 </details>
 </dd>
 <dt id="funct.Array.Array.argsort"><code class="name flex">
@@ -4081,6 +3868,22 @@ Returns the values that are both in this Array and sequence b.</p></div>
     return Array(e for e in self if e in s)</code></pre>
 </details>
 </dd>
+<dt id="funct.Array.Array.isFinite"><code class="name flex">
+<span>def <span class="ident">isFinite</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Tests element-wise whether the elements are neither infinity nor NaN.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def isFinite(self):
+    &#34;&#34;&#34;
+    Tests element-wise whether the elements are neither infinity nor NaN.
+    &#34;&#34;&#34;
+    return Array(map(math.isfinite, self))</code></pre>
+</details>
+</dd>
 <dt id="funct.Array.Array.join"><code class="name flex">
 <span>def <span class="ident">join</span></span>(<span>self, delimiter=' ')</span>
 </code></dt>
@@ -4097,6 +3900,24 @@ with elements separated with <code>delimiter</code></p></div>
     with elements separated with `delimiter`
     &#34;&#34;&#34;
     return delimiter.join(str(v) for v in self)</code></pre>
+</details>
+</dd>
+<dt id="funct.Array.Array.lastOption"><code class="name flex">
+<span>def <span class="ident">lastOption</span></span>(<span>self, default=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Selects the last element of this Array if it has one,
+otherwise returns default.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def lastOption(self, default=None):
+    &#34;&#34;&#34;
+    Selects the last element of this Array if it has one,
+    otherwise returns default.
+    &#34;&#34;&#34;
+    return self.get(-1, default)</code></pre>
 </details>
 </dd>
 <dt id="funct.Array.Array.le"><code class="name flex">
@@ -4178,6 +3999,19 @@ with elements separated with <code>delimiter</code></p></div>
     return Array(a)</code></pre>
 </details>
 </dd>
+<dt id="funct.Array.Array.max"><code class="name flex">
+<span>def <span class="ident">max</span></span>(<span>self, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def max(self, **kwargs):
+    return max(self, **kwargs)</code></pre>
+</details>
+</dd>
 <dt id="funct.Array.Array.maxBy"><code class="name flex">
 <span>def <span class="ident">maxBy</span></span>(<span>self, l)</span>
 </code></dt>
@@ -4204,6 +4038,19 @@ with elements separated with <code>delimiter</code></p></div>
 <pre><code class="python">def mean(self):
     &#34;&#34;&#34; Returns the average of the Array elements. &#34;&#34;&#34;
     return sum(self) / self.size</code></pre>
+</details>
+</dd>
+<dt id="funct.Array.Array.min"><code class="name flex">
+<span>def <span class="ident">min</span></span>(<span>self, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def min(self, **kwargs):
+    return min(self, **kwargs)</code></pre>
 </details>
 </dd>
 <dt id="funct.Array.Array.minBy"><code class="name flex">
@@ -5019,6 +4866,142 @@ to this Array with itertools.starmap</p></div>
 <pre><code class="python">def takeWhile(self, l):
     &#34;&#34;&#34; Takes the longest prefix of elements that satisfy the given predicate. &#34;&#34;&#34;
     return Array(itertools.takewhile(l, self))</code></pre>
+</details>
+</dd>
+<dt id="funct.Array.Array.toArray"><code class="name flex">
+<span>def <span class="ident">toArray</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Converts all iterables in the Array to Arrays</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def toArray(self):
+    &#34;&#34;&#34; Converts all iterables in the Array to Arrays &#34;&#34;&#34;
+    return Array(
+        map(lambda e: Array(e).toArray() if isinstance(e, Iterable) else e, self)
+    )</code></pre>
+</details>
+</dd>
+<dt id="funct.Array.Array.toBool"><code class="name flex">
+<span>def <span class="ident">toBool</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Converts elements in this Array to booleans.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def toBool(self):
+    &#34;&#34;&#34; Converts elements in this Array to booleans. &#34;&#34;&#34;
+    return Array(map(bool, self))</code></pre>
+</details>
+</dd>
+<dt id="funct.Array.Array.toChar"><code class="name flex">
+<span>def <span class="ident">toChar</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Converts an Array of integers to chars.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def toChar(self):
+    &#34;&#34;&#34; Converts an Array of integers to chars. &#34;&#34;&#34;
+    return Array(map(chr, self))</code></pre>
+</details>
+</dd>
+<dt id="funct.Array.Array.toDict"><code class="name flex">
+<span>def <span class="ident">toDict</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Creates a dictionary from an Array of Arrays / tuples.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def toDict(self):
+    &#34;&#34;&#34; Creates a dictionary from an Array of Arrays / tuples. &#34;&#34;&#34;
+    return dict(self)</code></pre>
+</details>
+</dd>
+<dt id="funct.Array.Array.toInt"><code class="name flex">
+<span>def <span class="ident">toInt</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Converts elements in this Array to integers.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def toInt(self):
+    &#34;&#34;&#34; Converts elements in this Array to integers. &#34;&#34;&#34;
+    try:
+        return Array(map(lambda e: ord(e) if isinstance(e, str) else int(e), self))
+    except TypeError:
+        raise TypeError(&#34;Expected an Array of numbers or characters&#34;) from None</code></pre>
+</details>
+</dd>
+<dt id="funct.Array.Array.toIter"><code class="name flex">
+<span>def <span class="ident">toIter</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Returns an iterator for the Array.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def toIter(self):
+    &#34;&#34;&#34; Returns an iterator for the Array.&#34;&#34;&#34;
+    for e in self:
+        yield e</code></pre>
+</details>
+</dd>
+<dt id="funct.Array.Array.toSet"><code class="name flex">
+<span>def <span class="ident">toSet</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Returns set of the Array elements. Order is not preserved.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def toSet(self):
+    &#34;&#34;&#34; Returns set of the Array elements. Order is not preserved. &#34;&#34;&#34;
+    return set(self)</code></pre>
+</details>
+</dd>
+<dt id="funct.Array.Array.toStr"><code class="name flex">
+<span>def <span class="ident">toStr</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Creates a string representation of the Array.
+See Array.join for more functionality.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def toStr(self):
+    &#34;&#34;&#34;
+    Creates a string representation of the Array.
+    See Array.join for more functionality.
+    &#34;&#34;&#34;
+    return &#34;&#34;.join(str(v) for v in self)</code></pre>
+</details>
+</dd>
+<dt id="funct.Array.Array.toTuple"><code class="name flex">
+<span>def <span class="ident">toTuple</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Returns a copy of the Array as an tuple.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def toTuple(self):
+    &#34;&#34;&#34; Returns a copy of the Array as an tuple. &#34;&#34;&#34;
+    return tuple(self.copy())</code></pre>
 </details>
 </dd>
 <dt id="funct.Array.Array.union"><code class="name flex">
