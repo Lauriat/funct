@@ -180,10 +180,11 @@ Notes
 - Mathematical operations such as addition or multiplication can be done with the
   `add` and `mul` methods, not with the `+` and `*` operators to avoid confusion and to
   retain the behaviour of the built-in list.
-- Inplace operations are postfixed with a underscore (e.g. `arr.abs_`). However,
+- Inplace operations are postfixed with an underscore (e.g. `arr.abs_`). However,
   methods for adding elements to Arrays (`append`, `extend`, `insert`, etc.) are inplace
-  by default.
-- Inplace operators are slower than out of place operations.
+  by default. (**Note:** To be changed. In the next release the operations are inplace
+  if `inplace=True` is passed to the methods.)
+- Inplace operators are generally faster than out of place operations.
 - Even though Array preserves nearly the same functionality
   as the built-in list, there are a few differences in their behaviour, the most
   important of which are
