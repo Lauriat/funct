@@ -41,7 +41,7 @@ can be converted to Arrays by calling the `toArray` method.
 Array(0.0, 0.0, 0.0)
 >>> Array(np.zeros(3), np.zeros(3))
 Array(array([0., 0., 0.]), array([0., 0., 0.])
->>> Array(np.zeros(3), np.zeros(3)).toArray
+>>> Array(np.zeros(3), np.zeros(3)).toArray()
 Array(Array(0.0, 0.0, 0.0), Array(0.0, 0.0, 0.0))
 ```
 
