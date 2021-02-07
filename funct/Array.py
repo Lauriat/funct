@@ -1004,8 +1004,12 @@ class Array(list):
     @property
     def flatten(self):
         """ Returns the Array collapsed into one dimension. """
-        r = Array(e for s in self for e in (s if isinstance(s, Iterable) else [s]))
-        if any(map(lambda e: isinstance(e, Iterable), r)):
+        r = Array(
+            e
+            for s in self
+            for e in (s if isinstance(s, Array.__baseIterables) else [s])
+        )
+        if any(map(lambda e: isinstance(e, Array.__baseIterables), r)):
             return r.flatten
         return r
 

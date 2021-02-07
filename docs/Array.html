@@ -1032,8 +1032,12 @@ class Array(list):
     @property
     def flatten(self):
         &#34;&#34;&#34; Returns the Array collapsed into one dimension. &#34;&#34;&#34;
-        r = Array(e for s in self for e in (s if isinstance(s, Iterable) else [s]))
-        if any(map(lambda e: isinstance(e, Iterable), r)):
+        r = Array(
+            e
+            for s in self
+            for e in (s if isinstance(s, Array.__baseIterables) else [s])
+        )
+        if any(map(lambda e: isinstance(e, Array.__baseIterables), r)):
             return r.flatten
         return r
 
@@ -2314,8 +2318,12 @@ Arrays, while other iterables will stored as Array elements.</p></div>
     @property
     def flatten(self):
         &#34;&#34;&#34; Returns the Array collapsed into one dimension. &#34;&#34;&#34;
-        r = Array(e for s in self for e in (s if isinstance(s, Iterable) else [s]))
-        if any(map(lambda e: isinstance(e, Iterable), r)):
+        r = Array(
+            e
+            for s in self
+            for e in (s if isinstance(s, Array.__baseIterables) else [s])
+        )
+        if any(map(lambda e: isinstance(e, Array.__baseIterables), r)):
             return r.flatten
         return r
 
@@ -2737,8 +2745,12 @@ def enumerate(self):
 <pre><code class="python">@property
 def flatten(self):
     &#34;&#34;&#34; Returns the Array collapsed into one dimension. &#34;&#34;&#34;
-    r = Array(e for s in self for e in (s if isinstance(s, Iterable) else [s]))
-    if any(map(lambda e: isinstance(e, Iterable), r)):
+    r = Array(
+        e
+        for s in self
+        for e in (s if isinstance(s, Array.__baseIterables) else [s])
+    )
+    if any(map(lambda e: isinstance(e, Array.__baseIterables), r)):
         return r.flatten
     return r</code></pre>
 </details>
