@@ -275,17 +275,12 @@ class ASeq:
         &#34;&#34;&#34;
         return Aiter(A.itertools.zip_longest(self, *args, fillvalue=default))
 
-    @property
-    def head_(self):
-        &#34;&#34;&#34; Returns the first element of the iterator. &#34;&#34;&#34;
-        return next(self)
-
-    def head_option_(self, default=None):
+    def next_(self, *args):
         &#34;&#34;&#34;
         Returns the first element of the iterator if
         it has one, otherwise returns `default`.
         &#34;&#34;&#34;
-        return next(self, default)
+        return next(self, *args)
 
     @property
     def enumerate_(self):
@@ -643,17 +638,12 @@ class Aiter(ASeq, AFunc):
         &#34;&#34;&#34;
         return Aiter(A.itertools.zip_longest(self, *args, fillvalue=default))
 
-    @property
-    def head_(self):
-        &#34;&#34;&#34; Returns the first element of the iterator. &#34;&#34;&#34;
-        return next(self)
-
-    def head_option_(self, default=None):
+    def next_(self, *args):
         &#34;&#34;&#34;
         Returns the first element of the iterator if
         it has one, otherwise returns `default`.
         &#34;&#34;&#34;
-        return next(self, default)
+        return next(self, *args)
 
     @property
     def enumerate_(self):
@@ -694,19 +684,6 @@ class Aiter(ASeq, AFunc):
 def enumerate_(self):
     &#34;&#34;&#34; Zips the iterator with its indices &#34;&#34;&#34;
     return Aenum(self)</code></pre>
-</details>
-</dd>
-<dt id="funct.lazy.ASeq.head_"><code class="name">var <span class="ident">head_</span></code></dt>
-<dd>
-<div class="desc"><p>Returns the first element of the iterator.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@property
-def head_(self):
-    &#34;&#34;&#34; Returns the first element of the iterator. &#34;&#34;&#34;
-    return next(self)</code></pre>
 </details>
 </dd>
 </dl>
@@ -1091,24 +1068,6 @@ holds for any element of the iterable.</p></div>
     return self.__lazy_operate(operator.gt, e)</code></pre>
 </details>
 </dd>
-<dt id="funct.lazy.ASeq.head_option_"><code class="name flex">
-<span>def <span class="ident">head_option_</span></span>(<span>self, default=None)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Returns the first element of the iterator if
-it has one, otherwise returns <code>default</code>.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def head_option_(self, default=None):
-    &#34;&#34;&#34;
-    Returns the first element of the iterator if
-    it has one, otherwise returns `default`.
-    &#34;&#34;&#34;
-    return next(self, default)</code></pre>
-</details>
-</dd>
 <dt id="funct.lazy.ASeq.int_"><code class="name flex">
 <span>def <span class="ident">int_</span></span>(<span>self)</span>
 </code></dt>
@@ -1284,6 +1243,24 @@ and given scalar or sequence, element-wise.</p></div>
 <pre><code class="python">def ne_(self, e):
     &#34;&#34;&#34; Computes x != y element-wise &#34;&#34;&#34;
     return self.__lazy_operate(operator.ne, e)</code></pre>
+</details>
+</dd>
+<dt id="funct.lazy.ASeq.next_"><code class="name flex">
+<span>def <span class="ident">next_</span></span>(<span>self, *args)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Returns the first element of the iterator if
+it has one, otherwise returns <code>default</code>.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def next_(self, *args):
+    &#34;&#34;&#34;
+    Returns the first element of the iterator if
+    it has one, otherwise returns `default`.
+    &#34;&#34;&#34;
+    return next(self, *args)</code></pre>
 </details>
 </dd>
 <dt id="funct.lazy.ASeq.pow_"><code class="name flex">
@@ -1536,8 +1513,6 @@ defaults to zero) and a value yielded by the iterable argument.</p>
 <li><code><a title="funct.lazy.ASeq.foreach_" href="#funct.lazy.ASeq.foreach_">foreach_</a></code></li>
 <li><code><a title="funct.lazy.ASeq.ge_" href="#funct.lazy.ASeq.ge_">ge_</a></code></li>
 <li><code><a title="funct.lazy.ASeq.gt_" href="#funct.lazy.ASeq.gt_">gt_</a></code></li>
-<li><code><a title="funct.lazy.ASeq.head_" href="#funct.lazy.ASeq.head_">head_</a></code></li>
-<li><code><a title="funct.lazy.ASeq.head_option_" href="#funct.lazy.ASeq.head_option_">head_option_</a></code></li>
 <li><code><a title="funct.lazy.ASeq.int_" href="#funct.lazy.ASeq.int_">int_</a></code></li>
 <li><code><a title="funct.lazy.ASeq.isfinite_" href="#funct.lazy.ASeq.isfinite_">isfinite_</a></code></li>
 <li><code><a title="funct.lazy.ASeq.le_" href="#funct.lazy.ASeq.le_">le_</a></code></li>
@@ -1548,6 +1523,7 @@ defaults to zero) and a value yielded by the iterable argument.</p>
 <li><code><a title="funct.lazy.ASeq.mod_" href="#funct.lazy.ASeq.mod_">mod_</a></code></li>
 <li><code><a title="funct.lazy.ASeq.mul_" href="#funct.lazy.ASeq.mul_">mul_</a></code></li>
 <li><code><a title="funct.lazy.ASeq.ne_" href="#funct.lazy.ASeq.ne_">ne_</a></code></li>
+<li><code><a title="funct.lazy.ASeq.next_" href="#funct.lazy.ASeq.next_">next_</a></code></li>
 <li><code><a title="funct.lazy.ASeq.pow_" href="#funct.lazy.ASeq.pow_">pow_</a></code></li>
 <li><code><a title="funct.lazy.ASeq.product_" href="#funct.lazy.ASeq.product_">product_</a></code></li>
 <li><code><a title="funct.lazy.ASeq.reduce_" href="#funct.lazy.ASeq.reduce_">reduce_</a></code></li>
@@ -1615,8 +1591,6 @@ is true. If function is None, return the items that are true.</p></div>
 <li><code><a title="funct.lazy.ASeq.foreach_" href="#funct.lazy.ASeq.foreach_">foreach_</a></code></li>
 <li><code><a title="funct.lazy.ASeq.ge_" href="#funct.lazy.ASeq.ge_">ge_</a></code></li>
 <li><code><a title="funct.lazy.ASeq.gt_" href="#funct.lazy.ASeq.gt_">gt_</a></code></li>
-<li><code><a title="funct.lazy.ASeq.head_" href="#funct.lazy.ASeq.head_">head_</a></code></li>
-<li><code><a title="funct.lazy.ASeq.head_option_" href="#funct.lazy.ASeq.head_option_">head_option_</a></code></li>
 <li><code><a title="funct.lazy.ASeq.int_" href="#funct.lazy.ASeq.int_">int_</a></code></li>
 <li><code><a title="funct.lazy.ASeq.isfinite_" href="#funct.lazy.ASeq.isfinite_">isfinite_</a></code></li>
 <li><code><a title="funct.lazy.ASeq.le_" href="#funct.lazy.ASeq.le_">le_</a></code></li>
@@ -1627,6 +1601,7 @@ is true. If function is None, return the items that are true.</p></div>
 <li><code><a title="funct.lazy.ASeq.mod_" href="#funct.lazy.ASeq.mod_">mod_</a></code></li>
 <li><code><a title="funct.lazy.ASeq.mul_" href="#funct.lazy.ASeq.mul_">mul_</a></code></li>
 <li><code><a title="funct.lazy.ASeq.ne_" href="#funct.lazy.ASeq.ne_">ne_</a></code></li>
+<li><code><a title="funct.lazy.ASeq.next_" href="#funct.lazy.ASeq.next_">next_</a></code></li>
 <li><code><a title="funct.lazy.ASeq.pow_" href="#funct.lazy.ASeq.pow_">pow_</a></code></li>
 <li><code><a title="funct.lazy.ASeq.product_" href="#funct.lazy.ASeq.product_">product_</a></code></li>
 <li><code><a title="funct.lazy.ASeq.reduce_" href="#funct.lazy.ASeq.reduce_">reduce_</a></code></li>
@@ -1700,8 +1675,6 @@ is true. If function is None, return the items that are true.</p></div>
 <li><code><a title="funct.lazy.ASeq.foreach_" href="#funct.lazy.ASeq.foreach_">foreach_</a></code></li>
 <li><code><a title="funct.lazy.ASeq.ge_" href="#funct.lazy.ASeq.ge_">ge_</a></code></li>
 <li><code><a title="funct.lazy.ASeq.gt_" href="#funct.lazy.ASeq.gt_">gt_</a></code></li>
-<li><code><a title="funct.lazy.ASeq.head_" href="#funct.lazy.ASeq.head_">head_</a></code></li>
-<li><code><a title="funct.lazy.ASeq.head_option_" href="#funct.lazy.ASeq.head_option_">head_option_</a></code></li>
 <li><code><a title="funct.lazy.ASeq.int_" href="#funct.lazy.ASeq.int_">int_</a></code></li>
 <li><code><a title="funct.lazy.ASeq.isfinite_" href="#funct.lazy.ASeq.isfinite_">isfinite_</a></code></li>
 <li><code><a title="funct.lazy.ASeq.le_" href="#funct.lazy.ASeq.le_">le_</a></code></li>
@@ -1712,6 +1685,7 @@ is true. If function is None, return the items that are true.</p></div>
 <li><code><a title="funct.lazy.ASeq.mod_" href="#funct.lazy.ASeq.mod_">mod_</a></code></li>
 <li><code><a title="funct.lazy.ASeq.mul_" href="#funct.lazy.ASeq.mul_">mul_</a></code></li>
 <li><code><a title="funct.lazy.ASeq.ne_" href="#funct.lazy.ASeq.ne_">ne_</a></code></li>
+<li><code><a title="funct.lazy.ASeq.next_" href="#funct.lazy.ASeq.next_">next_</a></code></li>
 <li><code><a title="funct.lazy.ASeq.pow_" href="#funct.lazy.ASeq.pow_">pow_</a></code></li>
 <li><code><a title="funct.lazy.ASeq.product_" href="#funct.lazy.ASeq.product_">product_</a></code></li>
 <li><code><a title="funct.lazy.ASeq.reduce_" href="#funct.lazy.ASeq.reduce_">reduce_</a></code></li>
@@ -1780,8 +1754,6 @@ Stops when the shortest iterable is exhausted.</p></div>
 <li><code><a title="funct.lazy.ASeq.foreach_" href="#funct.lazy.ASeq.foreach_">foreach_</a></code></li>
 <li><code><a title="funct.lazy.ASeq.ge_" href="#funct.lazy.ASeq.ge_">ge_</a></code></li>
 <li><code><a title="funct.lazy.ASeq.gt_" href="#funct.lazy.ASeq.gt_">gt_</a></code></li>
-<li><code><a title="funct.lazy.ASeq.head_" href="#funct.lazy.ASeq.head_">head_</a></code></li>
-<li><code><a title="funct.lazy.ASeq.head_option_" href="#funct.lazy.ASeq.head_option_">head_option_</a></code></li>
 <li><code><a title="funct.lazy.ASeq.int_" href="#funct.lazy.ASeq.int_">int_</a></code></li>
 <li><code><a title="funct.lazy.ASeq.isfinite_" href="#funct.lazy.ASeq.isfinite_">isfinite_</a></code></li>
 <li><code><a title="funct.lazy.ASeq.le_" href="#funct.lazy.ASeq.le_">le_</a></code></li>
@@ -1792,6 +1764,7 @@ Stops when the shortest iterable is exhausted.</p></div>
 <li><code><a title="funct.lazy.ASeq.mod_" href="#funct.lazy.ASeq.mod_">mod_</a></code></li>
 <li><code><a title="funct.lazy.ASeq.mul_" href="#funct.lazy.ASeq.mul_">mul_</a></code></li>
 <li><code><a title="funct.lazy.ASeq.ne_" href="#funct.lazy.ASeq.ne_">ne_</a></code></li>
+<li><code><a title="funct.lazy.ASeq.next_" href="#funct.lazy.ASeq.next_">next_</a></code></li>
 <li><code><a title="funct.lazy.ASeq.pow_" href="#funct.lazy.ASeq.pow_">pow_</a></code></li>
 <li><code><a title="funct.lazy.ASeq.product_" href="#funct.lazy.ASeq.product_">product_</a></code></li>
 <li><code><a title="funct.lazy.ASeq.reduce_" href="#funct.lazy.ASeq.reduce_">reduce_</a></code></li>
@@ -1871,8 +1844,6 @@ shortest argument is exhausted.</p></div>
 <li><code><a title="funct.lazy.ASeq.foreach_" href="#funct.lazy.ASeq.foreach_">foreach_</a></code></li>
 <li><code><a title="funct.lazy.ASeq.ge_" href="#funct.lazy.ASeq.ge_">ge_</a></code></li>
 <li><code><a title="funct.lazy.ASeq.gt_" href="#funct.lazy.ASeq.gt_">gt_</a></code></li>
-<li><code><a title="funct.lazy.ASeq.head_" href="#funct.lazy.ASeq.head_">head_</a></code></li>
-<li><code><a title="funct.lazy.ASeq.head_option_" href="#funct.lazy.ASeq.head_option_">head_option_</a></code></li>
 <li><code><a title="funct.lazy.ASeq.int_" href="#funct.lazy.ASeq.int_">int_</a></code></li>
 <li><code><a title="funct.lazy.ASeq.isfinite_" href="#funct.lazy.ASeq.isfinite_">isfinite_</a></code></li>
 <li><code><a title="funct.lazy.ASeq.le_" href="#funct.lazy.ASeq.le_">le_</a></code></li>
@@ -1883,6 +1854,7 @@ shortest argument is exhausted.</p></div>
 <li><code><a title="funct.lazy.ASeq.mod_" href="#funct.lazy.ASeq.mod_">mod_</a></code></li>
 <li><code><a title="funct.lazy.ASeq.mul_" href="#funct.lazy.ASeq.mul_">mul_</a></code></li>
 <li><code><a title="funct.lazy.ASeq.ne_" href="#funct.lazy.ASeq.ne_">ne_</a></code></li>
+<li><code><a title="funct.lazy.ASeq.next_" href="#funct.lazy.ASeq.next_">next_</a></code></li>
 <li><code><a title="funct.lazy.ASeq.pow_" href="#funct.lazy.ASeq.pow_">pow_</a></code></li>
 <li><code><a title="funct.lazy.ASeq.product_" href="#funct.lazy.ASeq.product_">product_</a></code></li>
 <li><code><a title="funct.lazy.ASeq.reduce_" href="#funct.lazy.ASeq.reduce_">reduce_</a></code></li>
@@ -1950,8 +1922,6 @@ shortest argument is exhausted.</p></div>
 <li><code><a title="funct.lazy.ASeq.foreach_" href="#funct.lazy.ASeq.foreach_">foreach_</a></code></li>
 <li><code><a title="funct.lazy.ASeq.ge_" href="#funct.lazy.ASeq.ge_">ge_</a></code></li>
 <li><code><a title="funct.lazy.ASeq.gt_" href="#funct.lazy.ASeq.gt_">gt_</a></code></li>
-<li><code><a title="funct.lazy.ASeq.head_" href="#funct.lazy.ASeq.head_">head_</a></code></li>
-<li><code><a title="funct.lazy.ASeq.head_option_" href="#funct.lazy.ASeq.head_option_">head_option_</a></code></li>
 <li><code><a title="funct.lazy.ASeq.int_" href="#funct.lazy.ASeq.int_">int_</a></code></li>
 <li><code><a title="funct.lazy.ASeq.isfinite_" href="#funct.lazy.ASeq.isfinite_">isfinite_</a></code></li>
 <li><code><a title="funct.lazy.ASeq.le_" href="#funct.lazy.ASeq.le_">le_</a></code></li>
@@ -1964,6 +1934,7 @@ shortest argument is exhausted.</p></div>
 <li><code><a title="funct.lazy.ASeq.mod_" href="#funct.lazy.ASeq.mod_">mod_</a></code></li>
 <li><code><a title="funct.lazy.ASeq.mul_" href="#funct.lazy.ASeq.mul_">mul_</a></code></li>
 <li><code><a title="funct.lazy.ASeq.ne_" href="#funct.lazy.ASeq.ne_">ne_</a></code></li>
+<li><code><a title="funct.lazy.ASeq.next_" href="#funct.lazy.ASeq.next_">next_</a></code></li>
 <li><code><a title="funct.lazy.ASeq.pow_" href="#funct.lazy.ASeq.pow_">pow_</a></code></li>
 <li><code><a title="funct.lazy.ASeq.product_" href="#funct.lazy.ASeq.product_">product_</a></code></li>
 <li><code><a title="funct.lazy.ASeq.reduce_" href="#funct.lazy.ASeq.reduce_">reduce_</a></code></li>

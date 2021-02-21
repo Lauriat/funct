@@ -396,10 +396,6 @@ class Array(list, L.ASeq):
         func: Callable
         Executor: Executor, optional (concurrent.futures.ThreadPoolExecutor, concurrent.futures.ProcessPoolExecutor)
         &#34;&#34;&#34;
-        if not all(hasattr(Executor, attr) for attr in (&#34;__enter__&#34;, &#34;submit&#34;)):
-            raise ValueError(
-                f&#34;Expected Executor for Executor argument, got {type(Executor)}&#34;
-            )
         with Executor() as executor:
             return executor.submit(self.starmap, func)
 
@@ -1483,10 +1479,6 @@ Arrays, while other iterables will stored as Array elements.</p></div>
         func: Callable
         Executor: Executor, optional (concurrent.futures.ThreadPoolExecutor, concurrent.futures.ProcessPoolExecutor)
         &#34;&#34;&#34;
-        if not all(hasattr(Executor, attr) for attr in (&#34;__enter__&#34;, &#34;submit&#34;)):
-            raise ValueError(
-                f&#34;Expected Executor for Executor argument, got {type(Executor)}&#34;
-            )
         with Executor() as executor:
             return executor.submit(self.starmap, func)
 
@@ -2752,10 +2744,6 @@ Returns a Future object.</p>
     func: Callable
     Executor: Executor, optional (concurrent.futures.ThreadPoolExecutor, concurrent.futures.ProcessPoolExecutor)
     &#34;&#34;&#34;
-    if not all(hasattr(Executor, attr) for attr in (&#34;__enter__&#34;, &#34;submit&#34;)):
-        raise ValueError(
-            f&#34;Expected Executor for Executor argument, got {type(Executor)}&#34;
-        )
     with Executor() as executor:
         return executor.submit(self.starmap, func)</code></pre>
 </details>
@@ -4367,8 +4355,6 @@ of uneven length, missing values are filled with default value.</p></div>
 <li><code><a title="funct.lazy.ASeq.foreach_" href="lazy.html#funct.lazy.ASeq.foreach_">foreach_</a></code></li>
 <li><code><a title="funct.lazy.ASeq.ge_" href="lazy.html#funct.lazy.ASeq.ge_">ge_</a></code></li>
 <li><code><a title="funct.lazy.ASeq.gt_" href="lazy.html#funct.lazy.ASeq.gt_">gt_</a></code></li>
-<li><code><a title="funct.lazy.ASeq.head_" href="lazy.html#funct.lazy.ASeq.head_">head_</a></code></li>
-<li><code><a title="funct.lazy.ASeq.head_option_" href="lazy.html#funct.lazy.ASeq.head_option_">head_option_</a></code></li>
 <li><code><a title="funct.lazy.ASeq.int_" href="lazy.html#funct.lazy.ASeq.int_">int_</a></code></li>
 <li><code><a title="funct.lazy.ASeq.isfinite_" href="lazy.html#funct.lazy.ASeq.isfinite_">isfinite_</a></code></li>
 <li><code><a title="funct.lazy.ASeq.le_" href="lazy.html#funct.lazy.ASeq.le_">le_</a></code></li>
@@ -4379,6 +4365,7 @@ of uneven length, missing values are filled with default value.</p></div>
 <li><code><a title="funct.lazy.ASeq.mod_" href="lazy.html#funct.lazy.ASeq.mod_">mod_</a></code></li>
 <li><code><a title="funct.lazy.ASeq.mul_" href="lazy.html#funct.lazy.ASeq.mul_">mul_</a></code></li>
 <li><code><a title="funct.lazy.ASeq.ne_" href="lazy.html#funct.lazy.ASeq.ne_">ne_</a></code></li>
+<li><code><a title="funct.lazy.ASeq.next_" href="lazy.html#funct.lazy.ASeq.next_">next_</a></code></li>
 <li><code><a title="funct.lazy.ASeq.pow_" href="lazy.html#funct.lazy.ASeq.pow_">pow_</a></code></li>
 <li><code><a title="funct.lazy.ASeq.product_" href="lazy.html#funct.lazy.ASeq.product_">product_</a></code></li>
 <li><code><a title="funct.lazy.ASeq.reduce_" href="lazy.html#funct.lazy.ASeq.reduce_">reduce_</a></code></li>
