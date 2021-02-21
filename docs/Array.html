@@ -26,7 +26,9 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">import itertools
+<pre><code class="python">import funct.lazy as L
+
+import itertools
 import math
 import multiprocessing
 import operator
@@ -36,31 +38,16 @@ from concurrent.futures import ThreadPoolExecutor
 from functools import reduce
 
 
-warnings.warn(
-    &#34;Array will switch to more pythonic naming convention&#34;
-    + &#34; (e.g.  splitTo -&gt; split_to) and change certain properties to methods&#34;
-    + &#34; (e.g.  min, max, all, to_dict) in the next release.&#34;,
-    FutureWarning,
-)
-
-warn = lambda: (
-    warnings.warn(
-        &#34;Methods postfixed with an underscore will denote lazily evaluated methods in the next release. Use inplace=True instad.&#34;,
-        FutureWarning,
-    )
-)
-
-
-class Array(list):
+class Array(list, L.ASeq):
     &#34;&#34;&#34;
     A functional mutable sequence
     inheriting from the built-in list.
     &#34;&#34;&#34;
 
+    __slots__ = []
     __baseIterables = (list, range, tuple)
 
     def __init__(self, *args):
-
         &#34;&#34;&#34;
         Constructs an Array from arguments.
         Nested lists, tuples and range objects are converted to
@@ -80,27 +67,11 @@ class Array(list):
         &#34;&#34;&#34;
         return self.__operate(operator.add, e, inplace)
 
-    def add_(self, e):
-        &#34;&#34;&#34;
-        Inplace element-wise addition with given scalar or sequence.
-        &#34;&#34;&#34;
-        warn()
-        self[:] = self.__operate(operator.add, e, True)
-        return self
-
     def sub(self, e, inplace=False):
         &#34;&#34;&#34;
         Element-wise subtraction with given scalar or sequence.
         &#34;&#34;&#34;
         return self.__operate(operator.sub, e, inplace)
-
-    def sub_(self, e):
-        &#34;&#34;&#34;
-        Inplace element-wise subtraction with given scalar or sequence.
-        &#34;&#34;&#34;
-        warn()
-        self[:] = self.__operate(operator.sub, e, True)
-        return self
 
     def mul(self, e, inplace=False):
         &#34;&#34;&#34;
@@ -108,27 +79,11 @@ class Array(list):
         &#34;&#34;&#34;
         return self.__operate(operator.mul, e, inplace)
 
-    def mul_(self, e):
-        &#34;&#34;&#34;
-        Inplace element-wise multiplication with given scalar or sequence.
-        &#34;&#34;&#34;
-        warn()
-        self[:] = self.__operate(operator.mul, e, True)
-        return self
-
     def div(self, e, inplace=False):
         &#34;&#34;&#34;
         Element-wise division with given scalar or sequence.
         &#34;&#34;&#34;
         return self.__operate(operator.truediv, e, inplace)
-
-    def div_(self, e):
-        &#34;&#34;&#34;
-        Inplace element-wise division with given scalar or sequence.
-        &#34;&#34;&#34;
-        warn()
-        self[:] = self.__operate(operator.truediv, e, True)
-        return self
 
     def pow(self, e, inplace=False):
         &#34;&#34;&#34;
@@ -137,15 +92,6 @@ class Array(list):
         &#34;&#34;&#34;
         return self.__operate(operator.pow, e, inplace)
 
-    def pow_(self, e):
-        &#34;&#34;&#34;
-        Raises elements (in-place) of this Array to given power,
-        or sequence of powers, element-wise.
-        &#34;&#34;&#34;
-        warn()
-        self[:] = self.__operate(operator.pow, e, True)
-        return self
-
     def mod(self, e, inplace=False):
         &#34;&#34;&#34;
         Computes the remainder between elements in this Array
@@ -153,46 +99,19 @@ class Array(list):
         &#34;&#34;&#34;
         return self.__operate(operator.mod, e, inplace)
 
-    def mod_(self, e):
-        &#34;&#34;&#34;
-        Computes (in-place) the remainder between elements in this Array
-        and given scalar or sequence, element-wise.
-        &#34;&#34;&#34;
-        warn()
-        self[:] = self.__operate(operator.mod, e, True)
-        return self
-
-    def bitwiseAnd(self, e, inplace=False):
+    def bitwise_and(self, e, inplace=False):
         &#34;&#34;&#34;
         Computes the bit-wise AND between elements in this Array
         and given scalar or sequence, element-wise.
         &#34;&#34;&#34;
         return self.__operate(operator.and_, e, inplace)
 
-    def bitwiseAnd_(self, e):
-        &#34;&#34;&#34;
-        Computes (in-place) the bit-wise AND between elements in this Array
-        and given scalar or sequence, element-wise.
-        &#34;&#34;&#34;
-        warn()
-        self[:] = self.__operate(operator.and_, e, True)
-        return self
-
-    def bitwiseOr(self, e, inplace=False):
+    def bitwise_or(self, e, inplace=False):
         &#34;&#34;&#34;
         Computes the bit-wise OR between elements in this Array
         and given scalar or sequence, element-wise.
         &#34;&#34;&#34;
         return self.__operate(operator.or_, e, inplace)
-
-    def bitwiseOr_(self, e):
-        &#34;&#34;&#34;
-        Computes (in-place) the bit-wise OR between elements in this Array
-        and given scalar or sequence, element-wise.
-        &#34;&#34;&#34;
-        warn()
-        self[:] = self.__operate(operator.or_, e, True)
-        return self
 
     def abs(self, inplace=False):
         &#34;&#34;&#34; Element-wise absolute value. &#34;&#34;&#34;
@@ -200,12 +119,6 @@ class Array(list):
         if inplace:
             return self.__setinplace(a, inplace)
         return Array(a)
-
-    def abs_(self):
-        &#34;&#34;&#34; Inplace element-wise absolute value. &#34;&#34;&#34;
-        self[:] = self.abs()
-        warn()
-        return self
 
     def sum(self, start=0):
         &#34;&#34;&#34; Returns the sum of the Array elements. &#34;&#34;&#34;
@@ -224,6 +137,7 @@ class Array(list):
         if weights is None:
             return sum(self) / self.size
         else:
+            self.__validate_seq(weights)
             return sum(self.mul(weights)) / sum(weights)
 
     def floor(self, inplace=False):
@@ -233,24 +147,12 @@ class Array(list):
             return self.__setinplace(a, inplace)
         return Array(a)
 
-    def floor_(self):
-        &#34;&#34;&#34; Floors the Array elements in-place. &#34;&#34;&#34;
-        warn()
-        self[:] = Array(map(math.floor, self))
-        return self
-
     def ceil(self, inplace=False):
         &#34;&#34;&#34; Ceils the Array elements. &#34;&#34;&#34;
         a = map(math.ceil, self)
         if inplace:
             return self.__setinplace(a, inplace)
         return Array(a)
-
-    def ceil_(self):
-        &#34;&#34;&#34; Ceils the Array elements in-place. &#34;&#34;&#34;
-        warn()
-        self[:] = Array(map(math.ceil, self))
-        return self
 
     def round(self, d=0, inplace=False):
         &#34;&#34;&#34; Rounds the Array to the given number of decimals. &#34;&#34;&#34;
@@ -259,78 +161,36 @@ class Array(list):
             return self.__setinplace(a, inplace)
         return Array(a)
 
-    def round_(self, d=0):
-        &#34;&#34;&#34; Rounds the Array in-place to the given number of decimals. &#34;&#34;&#34;
-        warn()
-        self[:] = Array(map(lambda e: round(e, d), self))
-        return self
-
     def gt(self, e, inplace=False):
         &#34;&#34;&#34; Returns x &gt; y element-wise &#34;&#34;&#34;
         return self.__operate(operator.gt, e, inplace)
-
-    def gt_(self, e):
-        &#34;&#34;&#34; Returns x &gt; y element-wise (in-place) &#34;&#34;&#34;
-        warn()
-        self[:] = self.__gt__(e)
-        return self
 
     def ge(self, e, inplace=False):
         &#34;&#34;&#34; Returns x &gt;= y element-wise &#34;&#34;&#34;
         return self.__operate(operator.ge, e, inplace)
 
-    def ge_(self, e):
-        &#34;&#34;&#34; Returns x &gt;= y element-wise (in-place) &#34;&#34;&#34;
-        warn()
-        self[:] = self.__ge__(e)
-        return self
-
     def lt(self, e, inplace=False):
         &#34;&#34;&#34; Returns x &lt; y element-wise &#34;&#34;&#34;
         return self.__operate(operator.lt, e, inplace)
-
-    def lt_(self, e):
-        &#34;&#34;&#34; Returns x &lt; y element-wise (in-place) &#34;&#34;&#34;
-        warn()
-        self[:] = self.__lt__(e)
-        return self
 
     def le(self, e, inplace=False):
         &#34;&#34;&#34; Returns x &lt;= y element-wise &#34;&#34;&#34;
         return self.__operate(operator.le, e, inplace)
 
-    def le_(self, e):
-        &#34;&#34;&#34; Returns x &lt;= y element-wise (in-place) &#34;&#34;&#34;
-        warn()
-        self[:] = self.__le__(e)
-        return self
-
     def eq(self, e, inplace=False):
         &#34;&#34;&#34; Returns x == y element-wise &#34;&#34;&#34;
         return self.__operate(operator.eq, e, inplace)
-
-    def eq_(self, e):
-        &#34;&#34;&#34; Returns x == y element-wise (in-place) &#34;&#34;&#34;
-        warn()
-        self[:] = self.__eq__(e)
-        return self
 
     def ne(self, e, inplace=False):
         &#34;&#34;&#34; Returns x != y element-wise &#34;&#34;&#34;
         return self.__operate(operator.ne, e, inplace)
 
-    def ne_(self, e):
-        &#34;&#34;&#34; Returns x != y element-wise (in-place) &#34;&#34;&#34;
-        warn()
-        self[:] = self.__ne__(e)
-        return self
-
-    def accumulate(self, l=operator.add):
+    def accumulate(self, func=operator.add):
         &#34;&#34;&#34;
         Returns accumulated Array of elements using provided function.
         Defaults to accumulated sum.
         &#34;&#34;&#34;
-        return Array(itertools.accumulate(self, l))
+        return Array(itertools.accumulate(self, func))
 
     def clip(self, _min, _max, inplace=False):
         &#34;&#34;&#34;
@@ -341,12 +201,6 @@ class Array(list):
             return self.__setinplace(a, inplace)
         return Array(a)
 
-    def clip_(self, _min, _max):
-        &#34;&#34;&#34; Clip the values in the Array in-place. &#34;&#34;&#34;
-        warn()
-        self[:] = Array(map(lambda e: max(min(e, _max), _min), self))
-        return self
-
     def roll(self, n, inplace=False):
         &#34;&#34;&#34; Rolls the elements of the Array. &#34;&#34;&#34;
         n = n % self.size
@@ -354,13 +208,6 @@ class Array(list):
         if inplace:
             return self.__setinplace(a, inplace)
         return a
-
-    def roll_(self, n):
-        &#34;&#34;&#34; Rolls the elements of the Array in-place. &#34;&#34;&#34;
-        warn()
-        n = n % self.size
-        self[:] = self[-n:] + self[:-n]
-        return self
 
     def cat(self, b):
         &#34;&#34;&#34; Concatenates a sequence to this Array. &#34;&#34;&#34;
@@ -381,7 +228,7 @@ class Array(list):
         s = set(b)
         return Array(e for e in self if e not in s)
 
-    def setDifference(self, b):
+    def setdifference(self, b):
         &#34;&#34;&#34;
         Difference between this Array and another iterable.
         Returns the unique values in this Array that are not in sequence b.
@@ -397,7 +244,7 @@ class Array(list):
         s = set(b)
         return Array(e for e in self if e in s)
 
-    def setIntersect(self, b):
+    def setintersect(self, b):
         &#34;&#34;&#34;
         Intersection between this Array and another iterable.
         Returns the unique values that are both in this Array and sequence b.
@@ -412,7 +259,7 @@ class Array(list):
         &#34;&#34;&#34;
         return self + b
 
-    def setUnion(self, b):
+    def setunion(self, b):
         &#34;&#34;&#34;
         Union of this Array and another iterable.
         Returns the unique values that are in either this Array or sequence b.
@@ -433,7 +280,8 @@ class Array(list):
 
     def equal(self, b):
         &#34;&#34;&#34; Returns true this Array and given sequence have the same elements. &#34;&#34;&#34;
-        self.__validate_seq(b)
+        if len(self) != len(b):
+            return False
         return all(self.eq(b))
 
     def remove(self, b, inplace=False):
@@ -446,17 +294,7 @@ class Array(list):
             super(Array, a).remove(b)
         return a
 
-    def remove_(self, b):
-        &#34;&#34;&#34; Removes first occurence(s) of the value(s) in-place. &#34;&#34;&#34;
-        warn()
-        if isinstance(b, Iterable):
-            for i in b:
-                super().remove(i)
-        else:
-            super().remove(b)
-        return self
-
-    def removeByIndex(self, b, inplace=False):
+    def remove_by_index(self, b, inplace=False):
         &#34;&#34;&#34; Removes the value at specified index or indices. &#34;&#34;&#34;
         a = self if inplace else self.copy()
         if isinstance(b, Iterable):
@@ -482,32 +320,6 @@ class Array(list):
                 ) from None
         return a
 
-    def removeByIndex_(self, b):
-        &#34;&#34;&#34; Removes the value at specified index or indices in-place. &#34;&#34;&#34;
-        warn()
-        if isinstance(b, Iterable):
-            try:
-                c = 0
-                for i in b:
-                    self.pop(i - c)
-                    c += 1
-            except TypeError:
-                raise TypeError(
-                    &#34;{} object cannot be interpreted as an integer&#34;.format(
-                        type(i).__name__
-                    )
-                ) from None
-        else:
-            try:
-                self.pop(b)
-            except TypeError:
-                raise TypeError(
-                    &#34;{} object cannot be interpreted as an integer&#34;.format(
-                        type(b).__name__
-                    )
-                ) from None
-        return self
-
     def get(self, key, default=None):
         &#34;&#34;&#34;
         Safe method for getting elements in the Array.
@@ -518,95 +330,122 @@ class Array(list):
         except IndexError:
             return default
 
-    def map(self, l, inplace=False):
+    def map(self, func, inplace=False):
         &#34;&#34;&#34;
         Returns an Array by applying provided function to all elements of this Array.
         &#34;&#34;&#34;
-        a = map(l, self)
+        a = map(func, self)
         if inplace:
             return self.__setinplace(a, inplace)
         return Array(a)
 
-    def starmap(self, l):
+    def starmap(self, func):
         &#34;&#34;&#34;
         Returns an Array by applying provided function
         to this Array with itertools.starmap
         &#34;&#34;&#34;
-        return Array(itertools.starmap(l, self))
+        return Array(itertools.starmap(func, self))
 
-    def parmap(self, fun, processes=None):
+    def parmap(self, func, processes=None, Pool=multiprocessing.Pool):
         &#34;&#34;&#34;
         Returns an Array by applying a function to
         all elements of this Array in parallel.
+
+        Parameters
+        ----------
+        func: Callable
+        processes: int, optional
+        Pool: Pool, optional (multiprocessing.Pool, multiprocessing.pool.ThreadPool)
         &#34;&#34;&#34;
-        with multiprocessing.Pool(processes=processes) as pool:
-            return Array(pool.map(fun, self))
+        with Pool(processes=processes) as pool:
+            return Array(pool.map(func, self))
 
-    def parstarmap(self, fun, processes=None):
-        &#34;&#34;&#34; Parallel starmap &#34;&#34;&#34;
-        with multiprocessing.Pool(processes=processes) as pool:
-            return Array(pool.starmap(fun, self))
+    def parstarmap(self, func, processes=None, Pool=multiprocessing.Pool):
+        &#34;&#34;&#34;
+        Parallel starmap
 
-    def asyncmap(self, fun):
+        Parameters
+        ----------
+        func: Callable
+        processes: int, optional
+        Pool: Pool, optional (multiprocessing.Pool, multiprocessing.pool.ThreadPool)
+        &#34;&#34;&#34;
+        with Pool(processes=processes) as pool:
+            return Array(pool.starmap(func, self))
+
+    def asyncmap(self, func, Executor=ThreadPoolExecutor):
         &#34;&#34;&#34;
         Executes map asynchronously.
         Returns a Future object.
-        &#34;&#34;&#34;
-        executor = ThreadPoolExecutor()
-        try:
-            return executor.submit(self.map, fun)
-        finally:
-            executor.shutdown(wait=False)
 
-    def asyncstarmap(self, fun):
+        Parameters
+        ----------
+        func: Callable
+        Executor: Executor, optional (concurrent.futures.ThreadPoolExecutor, concurrent.futures.ProcessPoolExecutor)
+        &#34;&#34;&#34;
+        with Executor() as executor:
+            return executor.submit(self.map, func)
+
+    def asyncstarmap(self, func, Executor=ThreadPoolExecutor):
         &#34;&#34;&#34;
         Executes starmap asynchronously.
         Returns a Future object.
+
+        Parameters
+        ----------
+        func: Callable
+        Executor: Executor, optional (concurrent.futures.ThreadPoolExecutor, concurrent.futures.ProcessPoolExecutor)
         &#34;&#34;&#34;
-        executor = ThreadPoolExecutor()
-        try:
-            return executor.submit(self.starmap, fun)
-        finally:
-            executor.shutdown(wait=False)
+        if not all(hasattr(Executor, attr) for attr in (&#34;__enter__&#34;, &#34;submit&#34;)):
+            raise ValueError(
+                f&#34;Expected Executor for Executor argument, got {type(Executor)}&#34;
+            )
+        with Executor() as executor:
+            return executor.submit(self.starmap, func)
 
-    def filter(self, l):
+    def filter(self, func):
         &#34;&#34;&#34; Selects elements of this Array which satisfy the predicate. &#34;&#34;&#34;
-        return Array(filter(l, self))
+        return Array(filter(func, self))
 
-    def forall(self, l):
+    def forall(self, func):
         &#34;&#34;&#34;
         Returns whether the specified predicate
         holds for all elements of this Array.
         &#34;&#34;&#34;
-        return all(map(l, self))
+        return all(map(func, self))
 
-    def forany(self, l):
+    def forany(self, func):
         &#34;&#34;&#34;
         Returns whether the specified predicate
         holds for any element of this Array.
         &#34;&#34;&#34;
-        return any(map(l, self))
+        return any(map(func, self))
 
-    def reduce(self, l, init=None):
+    def foreach(self, func):
+        &#34;&#34;&#34; Applies `func` to each element of the Array. &#34;&#34;&#34;
+        for e in self:
+            func(e)
+
+    def reduce(self, func, init=None):
         &#34;&#34;&#34; Reduces the elements of this Array using the specified operator. &#34;&#34;&#34;
         if init is not None:
-            return reduce(l, self, init)
-        return reduce(l, self)
+            return reduce(func, self, init)
+        return reduce(func, self)
 
     def contains(self, e):
         &#34;&#34;&#34; Tests whether element exists in this Array. &#34;&#34;&#34;
         return e in self
 
-    def indexWhere(self, l):
+    def index_where(self, func):
         &#34;&#34;&#34; Finds the index of the first element satisfying a predicate. &#34;&#34;&#34;
         for i, v in enumerate(self):
-            if l(v):
+            if func(v):
                 return i
         raise ValueError(&#34;No matches&#34;)
 
-    def indicesWhere(self, l):
+    def indices_where(self, func):
         &#34;&#34;&#34; Finds all the indices of the elements satisfying a predicate. &#34;&#34;&#34;
-        return Array(i for i, v in enumerate(self) if l(v))
+        return Array(i for i, v in enumerate(self) if func(v))
 
     def indices(self, e):
         &#34;&#34;&#34; Returns all the indices of provided value in this Array. &#34;&#34;&#34;
@@ -633,14 +472,14 @@ class Array(list):
         except ValueError:
             return self.unsqueeze
 
-    def splitTo(self, n):
+    def split_to(self, n):
         &#34;&#34;&#34; Splits this Array to n equal length subarrays &#34;&#34;&#34;
         if self.size % n != 0:
             raise ValueError(&#34;Split does not result in an equal division&#34;)
         d = self.size // n
         return Array(self[d * i : d * (i + 1)] for i in range(n))
 
-    def splitAt(self, n):
+    def split_at(self, n):
         &#34;&#34;&#34; Splits this Array into subarrays at specified index or indices. &#34;&#34;&#34;
         if isinstance(n, int):
             return Array(self[:n], self[n:])
@@ -667,62 +506,48 @@ class Array(list):
         end = (self.size - size + 1) if drop_last else self.size
         return Array(self[i : i + size] for i in range(0, end, stride))
 
-    def takeWhile(self, l):
+    def takewhile(self, func):
         &#34;&#34;&#34; Takes the longest prefix of elements that satisfy the given predicate. &#34;&#34;&#34;
-        return Array(itertools.takewhile(l, self))
+        return Array(itertools.takewhile(func, self))
 
-    def dropWhile(self, l):
+    def dropwhile(self, func):
         &#34;&#34;&#34; Drops the longest prefix of elements that satisfy the given predicate. &#34;&#34;&#34;
-        return Array(itertools.dropwhile(l, self))
+        return Array(itertools.dropwhile(func, self))
 
-    def groupBy(self, l):
+    def groupby(self, func):
         &#34;&#34;&#34;
         Groups this Array into an Array of Array-tuples according
         to given discriminator function.
         &#34;&#34;&#34;
-        m = {}
-        for v in self:
-            k = l(v)
-            if k in m:
-                m[k].append(v)
-            else:
-                m[k] = Array([v])
-        return Array(m.items())
+        return Array(
+            (e, Array(g)) for e, g in itertools.groupby(sorted(self, key=func), func)
+        )
 
-    def maxBy(self, l):
+    def maxby(self, func, **kwargs):
         &#34;&#34;&#34; Finds the maximum value measured by a function. &#34;&#34;&#34;
-        return max(self, key=l)
+        return max(self, key=func, **kwargs)
 
-    def minBy(self, l):
+    def minby(self, func, **kwargs):
         &#34;&#34;&#34; Finds the minimum value measured by a function. &#34;&#34;&#34;
-        return min(self, key=l)
+        return min(self, key=func, **kwargs)
 
-    def sortBy(self, l, reverse=False, inplace=False):
+    def sortby(self, func, reverse=False, inplace=False):
         &#34;&#34;&#34;
         Sorts this Array according to a function
         defining the sorting criteria.
         &#34;&#34;&#34;
         if inplace:
             self.__validate_bool_arg(inplace, &#34;inplace&#34;)
-            super().sort(key=l, reverse=reverse)
+            super().sort(key=func, reverse=reverse)
             return self
-        return Array(sorted(self, key=l, reverse=reverse))
+        return Array(sorted(self, key=func, reverse=reverse))
 
-    def sortBy_(self, l, reverse=False):
-        &#34;&#34;&#34;
-        Sorts this Array in place according to a function
-        defining the sorting criteria.
-        &#34;&#34;&#34;
-        warn()
-        super().sort(key=l, reverse=reverse)
-        return self
-
-    def argsortBy(self, l, reverse=False):
+    def argsortby(self, func, reverse=False):
         &#34;&#34;&#34;
         Returns the indices that would sort this Array according to
         provided sorting criteria.
         &#34;&#34;&#34;
-        return self.enumerate.sortBy(lambda e: l(e[1]), reverse=reverse)[:, 0]
+        return self.enumerate.sortby(lambda e: func(e[1]), reverse=reverse)[:, 0]
 
     def sort(self, inplace=False, **kwargs):
         &#34;&#34;&#34; Sorts this Array. &#34;&#34;&#34;
@@ -732,15 +557,9 @@ class Array(list):
             return self
         return Array(sorted(self, **kwargs))
 
-    def sort_(self, **kwargs):
-        &#34;&#34;&#34; Sorts this Array in place. &#34;&#34;&#34;
-        warn()
-        super().sort(**kwargs)
-        return self
-
     def argsort(self, reverse=False):
         &#34;&#34;&#34; Returns the indices that would sort this Array &#34;&#34;&#34;
-        return self.enumerate.sortBy(lambda e: e[1], reverse=reverse)[:, 0]
+        return self.enumerate.sortby(lambda e: e[1], reverse=reverse)[:, 0]
 
     def reverse(self, inplace=False):
         &#34;&#34;&#34; Reverses this Array. &#34;&#34;&#34;
@@ -750,16 +569,10 @@ class Array(list):
             return self
         return Array(reversed(self))
 
-    def reverse_(self):
-        &#34;&#34;&#34; Reverses this Array in-place. &#34;&#34;&#34;
-        warn()
-        super().reverse()
-        return self
-
     def copy(self):
         return Array(super().copy())
 
-    def asType(self, t):
+    def astype(self, t):
         &#34;&#34;&#34;
         Converts the elements in this Array to given type.
         &#34;&#34;&#34;
@@ -791,7 +604,7 @@ class Array(list):
         super().extend(Array(e))
         return self
 
-    def extendLeft(self, e):
+    def extendleft(self, e):
         &#34;&#34;&#34; Extends this Array by prepending elements from the iterable. &#34;&#34;&#34;
         self[0:0] = Array(e)
         return self
@@ -819,12 +632,6 @@ class Array(list):
             return self.__setinplace(e, inplace)
         return Array([e] * self.size)
 
-    def fill_(self, e):
-        &#34;&#34;&#34; Replaces (in place) all elements of this Array with given object. &#34;&#34;&#34;
-        warn()
-        self[:] = e
-        return self
-
     def pad(self, n, value=0):
         &#34;&#34;&#34; Pads this Array with value. &#34;&#34;&#34;
         try:
@@ -834,7 +641,7 @@ class Array(list):
                 &#34;{} object cannot be interpreted as an integer&#34;.format(type(n).__name__)
             ) from None
 
-    def padLeft(self, n, value=0):
+    def padleft(self, n, value=0):
         &#34;&#34;&#34; Pads this Array with value. &#34;&#34;&#34;
         try:
             return [value] * n + self
@@ -843,7 +650,7 @@ class Array(list):
                 &#34;{} object cannot be interpreted as an integer&#34;.format(type(n).__name__)
             ) from None
 
-    def padTo(self, n, value=0):
+    def pad_to(self, n, value=0):
         &#34;&#34;&#34;
         Pads this Array with value until length of n is reached.
         &#34;&#34;&#34;
@@ -854,7 +661,7 @@ class Array(list):
                 &#34;{} object cannot be interpreted as an integer&#34;.format(type(n).__name__)
             ) from None
 
-    def padLeftTo(self, n, value=0):
+    def padleft_to(self, n, value=0):
         &#34;&#34;&#34; Pads this Array with value until length of n is reached. &#34;&#34;&#34;
         try:
             return [value] * (n - self.size) + self
@@ -877,7 +684,7 @@ class Array(list):
             raise TypeError(&#34;Array elements must support iteration&#34;)
         return Array(zip(*self))
 
-    def zipAll(self, *args, default=None):
+    def zip_all(self, *args, default=None):
         &#34;&#34;&#34;
         Zips the sequences. If the iterables are
         of uneven length, missing values are filled with default value.
@@ -897,21 +704,21 @@ class Array(list):
 
     def argmax(self):
         &#34;&#34;&#34; Returns the index of the maximum value &#34;&#34;&#34;
-        return self.enumerate.maxBy(lambda e: e[1])[0]
+        return max(self.enumerate, key=lambda e: e[1])[0]
 
     def min(self, **kwargs):
         return min(self, **kwargs)
 
     def argmin(self):
         &#34;&#34;&#34; Returns the index of the minimum value &#34;&#34;&#34;
-        return self.enumerate.minBy(lambda e: e[1])[0]
+        return min(self.enumerate, key=lambda e: e[1])[0]
 
     @property
     def head(self):
         &#34;&#34;&#34; Selects the first element of this Array. &#34;&#34;&#34;
         return self[0]
 
-    def headOption(self, default=None):
+    def head_option(self, default=None):
         &#34;&#34;&#34;
         Selects the first element of this Array if it has one,
         otherwise returns default.
@@ -923,7 +730,7 @@ class Array(list):
         &#34;&#34;&#34; Selects the last element of this Array. &#34;&#34;&#34;
         return self[-1]
 
-    def lastOption(self, default=None):
+    def last_option(self, default=None):
         &#34;&#34;&#34;
         Selects the last element of this Array if it has one,
         otherwise returns default.
@@ -941,16 +748,16 @@ class Array(list):
         return self[1:]
 
     @property
-    def isEmpty(self):
+    def isempty(self):
         &#34;&#34;&#34; Returns whether this Array is empty. &#34;&#34;&#34;
         return self.size == 0
 
     @property
-    def nonEmpty(self):
+    def nonempty(self):
         &#34;&#34;&#34; Returns whether this Array is not empty. &#34;&#34;&#34;
         return self.size != 0
 
-    def isFinite(self):
+    def isfinite(self):
         &#34;&#34;&#34;
         Tests element-wise whether the elements are neither infinity nor NaN.
         &#34;&#34;&#34;
@@ -966,48 +773,46 @@ class Array(list):
         &#34;&#34;&#34; Number of elements in this Array. &#34;&#34;&#34;
         return self.__len__()
 
-    def toInt(self):
+    def int(self):
         &#34;&#34;&#34; Converts elements in this Array to integers. &#34;&#34;&#34;
         try:
             return Array(map(lambda e: ord(e) if isinstance(e, str) else int(e), self))
         except TypeError:
             raise TypeError(&#34;Expected an Array of numbers or characters&#34;) from None
 
-    def toBool(self):
+    def float(self):
+        &#34;&#34;&#34; Converts elements in this Array to floats. &#34;&#34;&#34;
+        return Array(map(float, self))
+
+    def bool(self):
         &#34;&#34;&#34; Converts elements in this Array to booleans. &#34;&#34;&#34;
         return Array(map(bool, self))
 
-    def toArray(self):
-        &#34;&#34;&#34; Converts all iterables in the Array to Arrays &#34;&#34;&#34;
-        return Array(
-            map(lambda e: Array(e).toArray() if isinstance(e, Iterable) else e, self)
-        )
-
-    def toChar(self):
+    def char(self):
         &#34;&#34;&#34; Converts an Array of integers to chars. &#34;&#34;&#34;
         return Array(map(chr, self))
 
-    def toStr(self):
+    def to_str(self):
         &#34;&#34;&#34;
         Creates a string representation of the Array.
         See Array.join for more functionality.
         &#34;&#34;&#34;
         return &#34;&#34;.join(str(v) for v in self)
 
-    def toTuple(self):
+    def to_tuple(self):
         &#34;&#34;&#34; Returns a copy of the Array as an tuple. &#34;&#34;&#34;
         return tuple(self.copy())
 
-    def toSet(self):
+    def to_set(self):
         &#34;&#34;&#34; Returns set of the Array elements. Order is not preserved. &#34;&#34;&#34;
         return set(self)
 
-    def toIter(self):
+    def to_iter(self):
         &#34;&#34;&#34; Returns an iterator for the Array.&#34;&#34;&#34;
         for e in self:
             yield e
 
-    def toDict(self):
+    def to_dict(self):
         &#34;&#34;&#34; Creates a dictionary from an Array of Arrays / tuples. &#34;&#34;&#34;
         return dict(self)
 
@@ -1017,7 +822,7 @@ class Array(list):
         Returns the Array with the same elements, but with
         outermost singleton dimension removed (if exists).
         &#34;&#34;&#34;
-        if isinstance(self.headOption(), Array.__baseIterables) and self.length == 1:
+        if isinstance(self.head_option(), Array.__baseIterables) and self.length == 1:
             return self[0]
         else:
             return self
@@ -1094,6 +899,7 @@ class Array(list):
         num: int, optional
         endpoint : bool, optional
         &#34;&#34;&#34;
+        Array.__validate_bool_arg(None, endpoint, &#34;endpoint&#34;)
         step = (stop - start) / max(num - bool(endpoint), 1)
         return Array(start + step * i for i in range(num))
 
@@ -1110,18 +916,11 @@ class Array(list):
         base: float, optional
         endpoint: bool, optional
         &#34;&#34;&#34;
+        Array.__validate_bool_arg(None, endpoint, &#34;endpoint&#34;)
         return base ** Array.linspace(start, stop, num, endpoint)
 
     def __convert(self, e):
         return Array(e) if isinstance(e, Array.__baseIterables) else e
-
-    def __validate_seq(self, e):
-        if len(e) != self.size:
-            raise ValueError(
-                &#34;The lengths of the sequences must match, got {} and {}&#34;.format(
-                    self.size, len(e)
-                )
-            )
 
     def __validate_index(self, i):
         if not isinstance(i, (int, slice)):
@@ -1142,6 +941,14 @@ class Array(list):
         else:
             return itertools.repeat(e)
 
+    def __validate_seq(self, e):
+        if len(e) != self.size:
+            raise ValueError(
+                &#34;The lengths of the sequences must match, got {} and {}&#34;.format(
+                    self.size, len(e)
+                )
+            )
+
     def __validate_bool_arg(self, value, name):
         if not isinstance(value, bool):
             raise ValueError(f&#34;Expected type bool for {name} argument&#34;)
@@ -1153,7 +960,6 @@ class Array(list):
 
     def __map(self, f, e):
         if isinstance(e, Iterable):
-            self.__validate_seq(e)
             return map(f, self, e)
         return map(f, self, itertools.repeat(e))
 
@@ -1187,9 +993,11 @@ class Array(list):
         else:
             raise TypeError(f&#34;Can not concatenate {type(b).__name__} to Array&#34;)
 
+    def __pow__(self, b):
+        return self.pow(b)
+
     def __rpow__(self, b):
         if isinstance(b, Array.__baseIterables):
-            self.__validate_seq(b)
             return Array(b).pow(self)
         return Array([b] * self.size).pow(self)
 
@@ -1226,7 +1034,7 @@ class Array(list):
         return Array(map(operator.inv, self))
 
     def __hash__(self):
-        return hash(self.toTuple())
+        return hash(self.to_tuple())
 
     def __bool__(self):
         if self.__len__() == 0:
@@ -1299,26 +1107,6 @@ class Array(list):
 <section>
 </section>
 <section>
-<h2 class="section-title" id="header-functions">Functions</h2>
-<dl>
-<dt id="funct.Array.warn"><code class="name flex">
-<span>def <span class="ident">warn</span></span>(<span>)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">warn = lambda: (
-    warnings.warn(
-        &#34;Methods postfixed with an underscore will denote lazily evaluated methods in the next release. Use inplace=True instad.&#34;,
-        FutureWarning,
-    )
-)</code></pre>
-</details>
-</dd>
-</dl>
 </section>
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
@@ -1337,16 +1125,16 @@ Arrays, while other iterables will stored as Array elements.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class Array(list):
+<pre><code class="python">class Array(list, L.ASeq):
     &#34;&#34;&#34;
     A functional mutable sequence
     inheriting from the built-in list.
     &#34;&#34;&#34;
 
+    __slots__ = []
     __baseIterables = (list, range, tuple)
 
     def __init__(self, *args):
-
         &#34;&#34;&#34;
         Constructs an Array from arguments.
         Nested lists, tuples and range objects are converted to
@@ -1366,27 +1154,11 @@ Arrays, while other iterables will stored as Array elements.</p></div>
         &#34;&#34;&#34;
         return self.__operate(operator.add, e, inplace)
 
-    def add_(self, e):
-        &#34;&#34;&#34;
-        Inplace element-wise addition with given scalar or sequence.
-        &#34;&#34;&#34;
-        warn()
-        self[:] = self.__operate(operator.add, e, True)
-        return self
-
     def sub(self, e, inplace=False):
         &#34;&#34;&#34;
         Element-wise subtraction with given scalar or sequence.
         &#34;&#34;&#34;
         return self.__operate(operator.sub, e, inplace)
-
-    def sub_(self, e):
-        &#34;&#34;&#34;
-        Inplace element-wise subtraction with given scalar or sequence.
-        &#34;&#34;&#34;
-        warn()
-        self[:] = self.__operate(operator.sub, e, True)
-        return self
 
     def mul(self, e, inplace=False):
         &#34;&#34;&#34;
@@ -1394,27 +1166,11 @@ Arrays, while other iterables will stored as Array elements.</p></div>
         &#34;&#34;&#34;
         return self.__operate(operator.mul, e, inplace)
 
-    def mul_(self, e):
-        &#34;&#34;&#34;
-        Inplace element-wise multiplication with given scalar or sequence.
-        &#34;&#34;&#34;
-        warn()
-        self[:] = self.__operate(operator.mul, e, True)
-        return self
-
     def div(self, e, inplace=False):
         &#34;&#34;&#34;
         Element-wise division with given scalar or sequence.
         &#34;&#34;&#34;
         return self.__operate(operator.truediv, e, inplace)
-
-    def div_(self, e):
-        &#34;&#34;&#34;
-        Inplace element-wise division with given scalar or sequence.
-        &#34;&#34;&#34;
-        warn()
-        self[:] = self.__operate(operator.truediv, e, True)
-        return self
 
     def pow(self, e, inplace=False):
         &#34;&#34;&#34;
@@ -1423,15 +1179,6 @@ Arrays, while other iterables will stored as Array elements.</p></div>
         &#34;&#34;&#34;
         return self.__operate(operator.pow, e, inplace)
 
-    def pow_(self, e):
-        &#34;&#34;&#34;
-        Raises elements (in-place) of this Array to given power,
-        or sequence of powers, element-wise.
-        &#34;&#34;&#34;
-        warn()
-        self[:] = self.__operate(operator.pow, e, True)
-        return self
-
     def mod(self, e, inplace=False):
         &#34;&#34;&#34;
         Computes the remainder between elements in this Array
@@ -1439,46 +1186,19 @@ Arrays, while other iterables will stored as Array elements.</p></div>
         &#34;&#34;&#34;
         return self.__operate(operator.mod, e, inplace)
 
-    def mod_(self, e):
-        &#34;&#34;&#34;
-        Computes (in-place) the remainder between elements in this Array
-        and given scalar or sequence, element-wise.
-        &#34;&#34;&#34;
-        warn()
-        self[:] = self.__operate(operator.mod, e, True)
-        return self
-
-    def bitwiseAnd(self, e, inplace=False):
+    def bitwise_and(self, e, inplace=False):
         &#34;&#34;&#34;
         Computes the bit-wise AND between elements in this Array
         and given scalar or sequence, element-wise.
         &#34;&#34;&#34;
         return self.__operate(operator.and_, e, inplace)
 
-    def bitwiseAnd_(self, e):
-        &#34;&#34;&#34;
-        Computes (in-place) the bit-wise AND between elements in this Array
-        and given scalar or sequence, element-wise.
-        &#34;&#34;&#34;
-        warn()
-        self[:] = self.__operate(operator.and_, e, True)
-        return self
-
-    def bitwiseOr(self, e, inplace=False):
+    def bitwise_or(self, e, inplace=False):
         &#34;&#34;&#34;
         Computes the bit-wise OR between elements in this Array
         and given scalar or sequence, element-wise.
         &#34;&#34;&#34;
         return self.__operate(operator.or_, e, inplace)
-
-    def bitwiseOr_(self, e):
-        &#34;&#34;&#34;
-        Computes (in-place) the bit-wise OR between elements in this Array
-        and given scalar or sequence, element-wise.
-        &#34;&#34;&#34;
-        warn()
-        self[:] = self.__operate(operator.or_, e, True)
-        return self
 
     def abs(self, inplace=False):
         &#34;&#34;&#34; Element-wise absolute value. &#34;&#34;&#34;
@@ -1486,12 +1206,6 @@ Arrays, while other iterables will stored as Array elements.</p></div>
         if inplace:
             return self.__setinplace(a, inplace)
         return Array(a)
-
-    def abs_(self):
-        &#34;&#34;&#34; Inplace element-wise absolute value. &#34;&#34;&#34;
-        self[:] = self.abs()
-        warn()
-        return self
 
     def sum(self, start=0):
         &#34;&#34;&#34; Returns the sum of the Array elements. &#34;&#34;&#34;
@@ -1510,6 +1224,7 @@ Arrays, while other iterables will stored as Array elements.</p></div>
         if weights is None:
             return sum(self) / self.size
         else:
+            self.__validate_seq(weights)
             return sum(self.mul(weights)) / sum(weights)
 
     def floor(self, inplace=False):
@@ -1519,24 +1234,12 @@ Arrays, while other iterables will stored as Array elements.</p></div>
             return self.__setinplace(a, inplace)
         return Array(a)
 
-    def floor_(self):
-        &#34;&#34;&#34; Floors the Array elements in-place. &#34;&#34;&#34;
-        warn()
-        self[:] = Array(map(math.floor, self))
-        return self
-
     def ceil(self, inplace=False):
         &#34;&#34;&#34; Ceils the Array elements. &#34;&#34;&#34;
         a = map(math.ceil, self)
         if inplace:
             return self.__setinplace(a, inplace)
         return Array(a)
-
-    def ceil_(self):
-        &#34;&#34;&#34; Ceils the Array elements in-place. &#34;&#34;&#34;
-        warn()
-        self[:] = Array(map(math.ceil, self))
-        return self
 
     def round(self, d=0, inplace=False):
         &#34;&#34;&#34; Rounds the Array to the given number of decimals. &#34;&#34;&#34;
@@ -1545,78 +1248,36 @@ Arrays, while other iterables will stored as Array elements.</p></div>
             return self.__setinplace(a, inplace)
         return Array(a)
 
-    def round_(self, d=0):
-        &#34;&#34;&#34; Rounds the Array in-place to the given number of decimals. &#34;&#34;&#34;
-        warn()
-        self[:] = Array(map(lambda e: round(e, d), self))
-        return self
-
     def gt(self, e, inplace=False):
         &#34;&#34;&#34; Returns x &gt; y element-wise &#34;&#34;&#34;
         return self.__operate(operator.gt, e, inplace)
-
-    def gt_(self, e):
-        &#34;&#34;&#34; Returns x &gt; y element-wise (in-place) &#34;&#34;&#34;
-        warn()
-        self[:] = self.__gt__(e)
-        return self
 
     def ge(self, e, inplace=False):
         &#34;&#34;&#34; Returns x &gt;= y element-wise &#34;&#34;&#34;
         return self.__operate(operator.ge, e, inplace)
 
-    def ge_(self, e):
-        &#34;&#34;&#34; Returns x &gt;= y element-wise (in-place) &#34;&#34;&#34;
-        warn()
-        self[:] = self.__ge__(e)
-        return self
-
     def lt(self, e, inplace=False):
         &#34;&#34;&#34; Returns x &lt; y element-wise &#34;&#34;&#34;
         return self.__operate(operator.lt, e, inplace)
-
-    def lt_(self, e):
-        &#34;&#34;&#34; Returns x &lt; y element-wise (in-place) &#34;&#34;&#34;
-        warn()
-        self[:] = self.__lt__(e)
-        return self
 
     def le(self, e, inplace=False):
         &#34;&#34;&#34; Returns x &lt;= y element-wise &#34;&#34;&#34;
         return self.__operate(operator.le, e, inplace)
 
-    def le_(self, e):
-        &#34;&#34;&#34; Returns x &lt;= y element-wise (in-place) &#34;&#34;&#34;
-        warn()
-        self[:] = self.__le__(e)
-        return self
-
     def eq(self, e, inplace=False):
         &#34;&#34;&#34; Returns x == y element-wise &#34;&#34;&#34;
         return self.__operate(operator.eq, e, inplace)
-
-    def eq_(self, e):
-        &#34;&#34;&#34; Returns x == y element-wise (in-place) &#34;&#34;&#34;
-        warn()
-        self[:] = self.__eq__(e)
-        return self
 
     def ne(self, e, inplace=False):
         &#34;&#34;&#34; Returns x != y element-wise &#34;&#34;&#34;
         return self.__operate(operator.ne, e, inplace)
 
-    def ne_(self, e):
-        &#34;&#34;&#34; Returns x != y element-wise (in-place) &#34;&#34;&#34;
-        warn()
-        self[:] = self.__ne__(e)
-        return self
-
-    def accumulate(self, l=operator.add):
+    def accumulate(self, func=operator.add):
         &#34;&#34;&#34;
         Returns accumulated Array of elements using provided function.
         Defaults to accumulated sum.
         &#34;&#34;&#34;
-        return Array(itertools.accumulate(self, l))
+        return Array(itertools.accumulate(self, func))
 
     def clip(self, _min, _max, inplace=False):
         &#34;&#34;&#34;
@@ -1627,12 +1288,6 @@ Arrays, while other iterables will stored as Array elements.</p></div>
             return self.__setinplace(a, inplace)
         return Array(a)
 
-    def clip_(self, _min, _max):
-        &#34;&#34;&#34; Clip the values in the Array in-place. &#34;&#34;&#34;
-        warn()
-        self[:] = Array(map(lambda e: max(min(e, _max), _min), self))
-        return self
-
     def roll(self, n, inplace=False):
         &#34;&#34;&#34; Rolls the elements of the Array. &#34;&#34;&#34;
         n = n % self.size
@@ -1640,13 +1295,6 @@ Arrays, while other iterables will stored as Array elements.</p></div>
         if inplace:
             return self.__setinplace(a, inplace)
         return a
-
-    def roll_(self, n):
-        &#34;&#34;&#34; Rolls the elements of the Array in-place. &#34;&#34;&#34;
-        warn()
-        n = n % self.size
-        self[:] = self[-n:] + self[:-n]
-        return self
 
     def cat(self, b):
         &#34;&#34;&#34; Concatenates a sequence to this Array. &#34;&#34;&#34;
@@ -1667,7 +1315,7 @@ Arrays, while other iterables will stored as Array elements.</p></div>
         s = set(b)
         return Array(e for e in self if e not in s)
 
-    def setDifference(self, b):
+    def setdifference(self, b):
         &#34;&#34;&#34;
         Difference between this Array and another iterable.
         Returns the unique values in this Array that are not in sequence b.
@@ -1683,7 +1331,7 @@ Arrays, while other iterables will stored as Array elements.</p></div>
         s = set(b)
         return Array(e for e in self if e in s)
 
-    def setIntersect(self, b):
+    def setintersect(self, b):
         &#34;&#34;&#34;
         Intersection between this Array and another iterable.
         Returns the unique values that are both in this Array and sequence b.
@@ -1698,7 +1346,7 @@ Arrays, while other iterables will stored as Array elements.</p></div>
         &#34;&#34;&#34;
         return self + b
 
-    def setUnion(self, b):
+    def setunion(self, b):
         &#34;&#34;&#34;
         Union of this Array and another iterable.
         Returns the unique values that are in either this Array or sequence b.
@@ -1719,7 +1367,8 @@ Arrays, while other iterables will stored as Array elements.</p></div>
 
     def equal(self, b):
         &#34;&#34;&#34; Returns true this Array and given sequence have the same elements. &#34;&#34;&#34;
-        self.__validate_seq(b)
+        if len(self) != len(b):
+            return False
         return all(self.eq(b))
 
     def remove(self, b, inplace=False):
@@ -1732,17 +1381,7 @@ Arrays, while other iterables will stored as Array elements.</p></div>
             super(Array, a).remove(b)
         return a
 
-    def remove_(self, b):
-        &#34;&#34;&#34; Removes first occurence(s) of the value(s) in-place. &#34;&#34;&#34;
-        warn()
-        if isinstance(b, Iterable):
-            for i in b:
-                super().remove(i)
-        else:
-            super().remove(b)
-        return self
-
-    def removeByIndex(self, b, inplace=False):
+    def remove_by_index(self, b, inplace=False):
         &#34;&#34;&#34; Removes the value at specified index or indices. &#34;&#34;&#34;
         a = self if inplace else self.copy()
         if isinstance(b, Iterable):
@@ -1768,32 +1407,6 @@ Arrays, while other iterables will stored as Array elements.</p></div>
                 ) from None
         return a
 
-    def removeByIndex_(self, b):
-        &#34;&#34;&#34; Removes the value at specified index or indices in-place. &#34;&#34;&#34;
-        warn()
-        if isinstance(b, Iterable):
-            try:
-                c = 0
-                for i in b:
-                    self.pop(i - c)
-                    c += 1
-            except TypeError:
-                raise TypeError(
-                    &#34;{} object cannot be interpreted as an integer&#34;.format(
-                        type(i).__name__
-                    )
-                ) from None
-        else:
-            try:
-                self.pop(b)
-            except TypeError:
-                raise TypeError(
-                    &#34;{} object cannot be interpreted as an integer&#34;.format(
-                        type(b).__name__
-                    )
-                ) from None
-        return self
-
     def get(self, key, default=None):
         &#34;&#34;&#34;
         Safe method for getting elements in the Array.
@@ -1804,95 +1417,122 @@ Arrays, while other iterables will stored as Array elements.</p></div>
         except IndexError:
             return default
 
-    def map(self, l, inplace=False):
+    def map(self, func, inplace=False):
         &#34;&#34;&#34;
         Returns an Array by applying provided function to all elements of this Array.
         &#34;&#34;&#34;
-        a = map(l, self)
+        a = map(func, self)
         if inplace:
             return self.__setinplace(a, inplace)
         return Array(a)
 
-    def starmap(self, l):
+    def starmap(self, func):
         &#34;&#34;&#34;
         Returns an Array by applying provided function
         to this Array with itertools.starmap
         &#34;&#34;&#34;
-        return Array(itertools.starmap(l, self))
+        return Array(itertools.starmap(func, self))
 
-    def parmap(self, fun, processes=None):
+    def parmap(self, func, processes=None, Pool=multiprocessing.Pool):
         &#34;&#34;&#34;
         Returns an Array by applying a function to
         all elements of this Array in parallel.
+
+        Parameters
+        ----------
+        func: Callable
+        processes: int, optional
+        Pool: Pool, optional (multiprocessing.Pool, multiprocessing.pool.ThreadPool)
         &#34;&#34;&#34;
-        with multiprocessing.Pool(processes=processes) as pool:
-            return Array(pool.map(fun, self))
+        with Pool(processes=processes) as pool:
+            return Array(pool.map(func, self))
 
-    def parstarmap(self, fun, processes=None):
-        &#34;&#34;&#34; Parallel starmap &#34;&#34;&#34;
-        with multiprocessing.Pool(processes=processes) as pool:
-            return Array(pool.starmap(fun, self))
+    def parstarmap(self, func, processes=None, Pool=multiprocessing.Pool):
+        &#34;&#34;&#34;
+        Parallel starmap
 
-    def asyncmap(self, fun):
+        Parameters
+        ----------
+        func: Callable
+        processes: int, optional
+        Pool: Pool, optional (multiprocessing.Pool, multiprocessing.pool.ThreadPool)
+        &#34;&#34;&#34;
+        with Pool(processes=processes) as pool:
+            return Array(pool.starmap(func, self))
+
+    def asyncmap(self, func, Executor=ThreadPoolExecutor):
         &#34;&#34;&#34;
         Executes map asynchronously.
         Returns a Future object.
-        &#34;&#34;&#34;
-        executor = ThreadPoolExecutor()
-        try:
-            return executor.submit(self.map, fun)
-        finally:
-            executor.shutdown(wait=False)
 
-    def asyncstarmap(self, fun):
+        Parameters
+        ----------
+        func: Callable
+        Executor: Executor, optional (concurrent.futures.ThreadPoolExecutor, concurrent.futures.ProcessPoolExecutor)
+        &#34;&#34;&#34;
+        with Executor() as executor:
+            return executor.submit(self.map, func)
+
+    def asyncstarmap(self, func, Executor=ThreadPoolExecutor):
         &#34;&#34;&#34;
         Executes starmap asynchronously.
         Returns a Future object.
+
+        Parameters
+        ----------
+        func: Callable
+        Executor: Executor, optional (concurrent.futures.ThreadPoolExecutor, concurrent.futures.ProcessPoolExecutor)
         &#34;&#34;&#34;
-        executor = ThreadPoolExecutor()
-        try:
-            return executor.submit(self.starmap, fun)
-        finally:
-            executor.shutdown(wait=False)
+        if not all(hasattr(Executor, attr) for attr in (&#34;__enter__&#34;, &#34;submit&#34;)):
+            raise ValueError(
+                f&#34;Expected Executor for Executor argument, got {type(Executor)}&#34;
+            )
+        with Executor() as executor:
+            return executor.submit(self.starmap, func)
 
-    def filter(self, l):
+    def filter(self, func):
         &#34;&#34;&#34; Selects elements of this Array which satisfy the predicate. &#34;&#34;&#34;
-        return Array(filter(l, self))
+        return Array(filter(func, self))
 
-    def forall(self, l):
+    def forall(self, func):
         &#34;&#34;&#34;
         Returns whether the specified predicate
         holds for all elements of this Array.
         &#34;&#34;&#34;
-        return all(map(l, self))
+        return all(map(func, self))
 
-    def forany(self, l):
+    def forany(self, func):
         &#34;&#34;&#34;
         Returns whether the specified predicate
         holds for any element of this Array.
         &#34;&#34;&#34;
-        return any(map(l, self))
+        return any(map(func, self))
 
-    def reduce(self, l, init=None):
+    def foreach(self, func):
+        &#34;&#34;&#34; Applies `func` to each element of the Array. &#34;&#34;&#34;
+        for e in self:
+            func(e)
+
+    def reduce(self, func, init=None):
         &#34;&#34;&#34; Reduces the elements of this Array using the specified operator. &#34;&#34;&#34;
         if init is not None:
-            return reduce(l, self, init)
-        return reduce(l, self)
+            return reduce(func, self, init)
+        return reduce(func, self)
 
     def contains(self, e):
         &#34;&#34;&#34; Tests whether element exists in this Array. &#34;&#34;&#34;
         return e in self
 
-    def indexWhere(self, l):
+    def index_where(self, func):
         &#34;&#34;&#34; Finds the index of the first element satisfying a predicate. &#34;&#34;&#34;
         for i, v in enumerate(self):
-            if l(v):
+            if func(v):
                 return i
         raise ValueError(&#34;No matches&#34;)
 
-    def indicesWhere(self, l):
+    def indices_where(self, func):
         &#34;&#34;&#34; Finds all the indices of the elements satisfying a predicate. &#34;&#34;&#34;
-        return Array(i for i, v in enumerate(self) if l(v))
+        return Array(i for i, v in enumerate(self) if func(v))
 
     def indices(self, e):
         &#34;&#34;&#34; Returns all the indices of provided value in this Array. &#34;&#34;&#34;
@@ -1919,14 +1559,14 @@ Arrays, while other iterables will stored as Array elements.</p></div>
         except ValueError:
             return self.unsqueeze
 
-    def splitTo(self, n):
+    def split_to(self, n):
         &#34;&#34;&#34; Splits this Array to n equal length subarrays &#34;&#34;&#34;
         if self.size % n != 0:
             raise ValueError(&#34;Split does not result in an equal division&#34;)
         d = self.size // n
         return Array(self[d * i : d * (i + 1)] for i in range(n))
 
-    def splitAt(self, n):
+    def split_at(self, n):
         &#34;&#34;&#34; Splits this Array into subarrays at specified index or indices. &#34;&#34;&#34;
         if isinstance(n, int):
             return Array(self[:n], self[n:])
@@ -1953,62 +1593,48 @@ Arrays, while other iterables will stored as Array elements.</p></div>
         end = (self.size - size + 1) if drop_last else self.size
         return Array(self[i : i + size] for i in range(0, end, stride))
 
-    def takeWhile(self, l):
+    def takewhile(self, func):
         &#34;&#34;&#34; Takes the longest prefix of elements that satisfy the given predicate. &#34;&#34;&#34;
-        return Array(itertools.takewhile(l, self))
+        return Array(itertools.takewhile(func, self))
 
-    def dropWhile(self, l):
+    def dropwhile(self, func):
         &#34;&#34;&#34; Drops the longest prefix of elements that satisfy the given predicate. &#34;&#34;&#34;
-        return Array(itertools.dropwhile(l, self))
+        return Array(itertools.dropwhile(func, self))
 
-    def groupBy(self, l):
+    def groupby(self, func):
         &#34;&#34;&#34;
         Groups this Array into an Array of Array-tuples according
         to given discriminator function.
         &#34;&#34;&#34;
-        m = {}
-        for v in self:
-            k = l(v)
-            if k in m:
-                m[k].append(v)
-            else:
-                m[k] = Array([v])
-        return Array(m.items())
+        return Array(
+            (e, Array(g)) for e, g in itertools.groupby(sorted(self, key=func), func)
+        )
 
-    def maxBy(self, l):
+    def maxby(self, func, **kwargs):
         &#34;&#34;&#34; Finds the maximum value measured by a function. &#34;&#34;&#34;
-        return max(self, key=l)
+        return max(self, key=func, **kwargs)
 
-    def minBy(self, l):
+    def minby(self, func, **kwargs):
         &#34;&#34;&#34; Finds the minimum value measured by a function. &#34;&#34;&#34;
-        return min(self, key=l)
+        return min(self, key=func, **kwargs)
 
-    def sortBy(self, l, reverse=False, inplace=False):
+    def sortby(self, func, reverse=False, inplace=False):
         &#34;&#34;&#34;
         Sorts this Array according to a function
         defining the sorting criteria.
         &#34;&#34;&#34;
         if inplace:
             self.__validate_bool_arg(inplace, &#34;inplace&#34;)
-            super().sort(key=l, reverse=reverse)
+            super().sort(key=func, reverse=reverse)
             return self
-        return Array(sorted(self, key=l, reverse=reverse))
+        return Array(sorted(self, key=func, reverse=reverse))
 
-    def sortBy_(self, l, reverse=False):
-        &#34;&#34;&#34;
-        Sorts this Array in place according to a function
-        defining the sorting criteria.
-        &#34;&#34;&#34;
-        warn()
-        super().sort(key=l, reverse=reverse)
-        return self
-
-    def argsortBy(self, l, reverse=False):
+    def argsortby(self, func, reverse=False):
         &#34;&#34;&#34;
         Returns the indices that would sort this Array according to
         provided sorting criteria.
         &#34;&#34;&#34;
-        return self.enumerate.sortBy(lambda e: l(e[1]), reverse=reverse)[:, 0]
+        return self.enumerate.sortby(lambda e: func(e[1]), reverse=reverse)[:, 0]
 
     def sort(self, inplace=False, **kwargs):
         &#34;&#34;&#34; Sorts this Array. &#34;&#34;&#34;
@@ -2018,15 +1644,9 @@ Arrays, while other iterables will stored as Array elements.</p></div>
             return self
         return Array(sorted(self, **kwargs))
 
-    def sort_(self, **kwargs):
-        &#34;&#34;&#34; Sorts this Array in place. &#34;&#34;&#34;
-        warn()
-        super().sort(**kwargs)
-        return self
-
     def argsort(self, reverse=False):
         &#34;&#34;&#34; Returns the indices that would sort this Array &#34;&#34;&#34;
-        return self.enumerate.sortBy(lambda e: e[1], reverse=reverse)[:, 0]
+        return self.enumerate.sortby(lambda e: e[1], reverse=reverse)[:, 0]
 
     def reverse(self, inplace=False):
         &#34;&#34;&#34; Reverses this Array. &#34;&#34;&#34;
@@ -2036,16 +1656,10 @@ Arrays, while other iterables will stored as Array elements.</p></div>
             return self
         return Array(reversed(self))
 
-    def reverse_(self):
-        &#34;&#34;&#34; Reverses this Array in-place. &#34;&#34;&#34;
-        warn()
-        super().reverse()
-        return self
-
     def copy(self):
         return Array(super().copy())
 
-    def asType(self, t):
+    def astype(self, t):
         &#34;&#34;&#34;
         Converts the elements in this Array to given type.
         &#34;&#34;&#34;
@@ -2077,7 +1691,7 @@ Arrays, while other iterables will stored as Array elements.</p></div>
         super().extend(Array(e))
         return self
 
-    def extendLeft(self, e):
+    def extendleft(self, e):
         &#34;&#34;&#34; Extends this Array by prepending elements from the iterable. &#34;&#34;&#34;
         self[0:0] = Array(e)
         return self
@@ -2105,12 +1719,6 @@ Arrays, while other iterables will stored as Array elements.</p></div>
             return self.__setinplace(e, inplace)
         return Array([e] * self.size)
 
-    def fill_(self, e):
-        &#34;&#34;&#34; Replaces (in place) all elements of this Array with given object. &#34;&#34;&#34;
-        warn()
-        self[:] = e
-        return self
-
     def pad(self, n, value=0):
         &#34;&#34;&#34; Pads this Array with value. &#34;&#34;&#34;
         try:
@@ -2120,7 +1728,7 @@ Arrays, while other iterables will stored as Array elements.</p></div>
                 &#34;{} object cannot be interpreted as an integer&#34;.format(type(n).__name__)
             ) from None
 
-    def padLeft(self, n, value=0):
+    def padleft(self, n, value=0):
         &#34;&#34;&#34; Pads this Array with value. &#34;&#34;&#34;
         try:
             return [value] * n + self
@@ -2129,7 +1737,7 @@ Arrays, while other iterables will stored as Array elements.</p></div>
                 &#34;{} object cannot be interpreted as an integer&#34;.format(type(n).__name__)
             ) from None
 
-    def padTo(self, n, value=0):
+    def pad_to(self, n, value=0):
         &#34;&#34;&#34;
         Pads this Array with value until length of n is reached.
         &#34;&#34;&#34;
@@ -2140,7 +1748,7 @@ Arrays, while other iterables will stored as Array elements.</p></div>
                 &#34;{} object cannot be interpreted as an integer&#34;.format(type(n).__name__)
             ) from None
 
-    def padLeftTo(self, n, value=0):
+    def padleft_to(self, n, value=0):
         &#34;&#34;&#34; Pads this Array with value until length of n is reached. &#34;&#34;&#34;
         try:
             return [value] * (n - self.size) + self
@@ -2163,7 +1771,7 @@ Arrays, while other iterables will stored as Array elements.</p></div>
             raise TypeError(&#34;Array elements must support iteration&#34;)
         return Array(zip(*self))
 
-    def zipAll(self, *args, default=None):
+    def zip_all(self, *args, default=None):
         &#34;&#34;&#34;
         Zips the sequences. If the iterables are
         of uneven length, missing values are filled with default value.
@@ -2183,21 +1791,21 @@ Arrays, while other iterables will stored as Array elements.</p></div>
 
     def argmax(self):
         &#34;&#34;&#34; Returns the index of the maximum value &#34;&#34;&#34;
-        return self.enumerate.maxBy(lambda e: e[1])[0]
+        return max(self.enumerate, key=lambda e: e[1])[0]
 
     def min(self, **kwargs):
         return min(self, **kwargs)
 
     def argmin(self):
         &#34;&#34;&#34; Returns the index of the minimum value &#34;&#34;&#34;
-        return self.enumerate.minBy(lambda e: e[1])[0]
+        return min(self.enumerate, key=lambda e: e[1])[0]
 
     @property
     def head(self):
         &#34;&#34;&#34; Selects the first element of this Array. &#34;&#34;&#34;
         return self[0]
 
-    def headOption(self, default=None):
+    def head_option(self, default=None):
         &#34;&#34;&#34;
         Selects the first element of this Array if it has one,
         otherwise returns default.
@@ -2209,7 +1817,7 @@ Arrays, while other iterables will stored as Array elements.</p></div>
         &#34;&#34;&#34; Selects the last element of this Array. &#34;&#34;&#34;
         return self[-1]
 
-    def lastOption(self, default=None):
+    def last_option(self, default=None):
         &#34;&#34;&#34;
         Selects the last element of this Array if it has one,
         otherwise returns default.
@@ -2227,16 +1835,16 @@ Arrays, while other iterables will stored as Array elements.</p></div>
         return self[1:]
 
     @property
-    def isEmpty(self):
+    def isempty(self):
         &#34;&#34;&#34; Returns whether this Array is empty. &#34;&#34;&#34;
         return self.size == 0
 
     @property
-    def nonEmpty(self):
+    def nonempty(self):
         &#34;&#34;&#34; Returns whether this Array is not empty. &#34;&#34;&#34;
         return self.size != 0
 
-    def isFinite(self):
+    def isfinite(self):
         &#34;&#34;&#34;
         Tests element-wise whether the elements are neither infinity nor NaN.
         &#34;&#34;&#34;
@@ -2252,48 +1860,46 @@ Arrays, while other iterables will stored as Array elements.</p></div>
         &#34;&#34;&#34; Number of elements in this Array. &#34;&#34;&#34;
         return self.__len__()
 
-    def toInt(self):
+    def int(self):
         &#34;&#34;&#34; Converts elements in this Array to integers. &#34;&#34;&#34;
         try:
             return Array(map(lambda e: ord(e) if isinstance(e, str) else int(e), self))
         except TypeError:
             raise TypeError(&#34;Expected an Array of numbers or characters&#34;) from None
 
-    def toBool(self):
+    def float(self):
+        &#34;&#34;&#34; Converts elements in this Array to floats. &#34;&#34;&#34;
+        return Array(map(float, self))
+
+    def bool(self):
         &#34;&#34;&#34; Converts elements in this Array to booleans. &#34;&#34;&#34;
         return Array(map(bool, self))
 
-    def toArray(self):
-        &#34;&#34;&#34; Converts all iterables in the Array to Arrays &#34;&#34;&#34;
-        return Array(
-            map(lambda e: Array(e).toArray() if isinstance(e, Iterable) else e, self)
-        )
-
-    def toChar(self):
+    def char(self):
         &#34;&#34;&#34; Converts an Array of integers to chars. &#34;&#34;&#34;
         return Array(map(chr, self))
 
-    def toStr(self):
+    def to_str(self):
         &#34;&#34;&#34;
         Creates a string representation of the Array.
         See Array.join for more functionality.
         &#34;&#34;&#34;
         return &#34;&#34;.join(str(v) for v in self)
 
-    def toTuple(self):
+    def to_tuple(self):
         &#34;&#34;&#34; Returns a copy of the Array as an tuple. &#34;&#34;&#34;
         return tuple(self.copy())
 
-    def toSet(self):
+    def to_set(self):
         &#34;&#34;&#34; Returns set of the Array elements. Order is not preserved. &#34;&#34;&#34;
         return set(self)
 
-    def toIter(self):
+    def to_iter(self):
         &#34;&#34;&#34; Returns an iterator for the Array.&#34;&#34;&#34;
         for e in self:
             yield e
 
-    def toDict(self):
+    def to_dict(self):
         &#34;&#34;&#34; Creates a dictionary from an Array of Arrays / tuples. &#34;&#34;&#34;
         return dict(self)
 
@@ -2303,7 +1909,7 @@ Arrays, while other iterables will stored as Array elements.</p></div>
         Returns the Array with the same elements, but with
         outermost singleton dimension removed (if exists).
         &#34;&#34;&#34;
-        if isinstance(self.headOption(), Array.__baseIterables) and self.length == 1:
+        if isinstance(self.head_option(), Array.__baseIterables) and self.length == 1:
             return self[0]
         else:
             return self
@@ -2380,6 +1986,7 @@ Arrays, while other iterables will stored as Array elements.</p></div>
         num: int, optional
         endpoint : bool, optional
         &#34;&#34;&#34;
+        Array.__validate_bool_arg(None, endpoint, &#34;endpoint&#34;)
         step = (stop - start) / max(num - bool(endpoint), 1)
         return Array(start + step * i for i in range(num))
 
@@ -2396,18 +2003,11 @@ Arrays, while other iterables will stored as Array elements.</p></div>
         base: float, optional
         endpoint: bool, optional
         &#34;&#34;&#34;
+        Array.__validate_bool_arg(None, endpoint, &#34;endpoint&#34;)
         return base ** Array.linspace(start, stop, num, endpoint)
 
     def __convert(self, e):
         return Array(e) if isinstance(e, Array.__baseIterables) else e
-
-    def __validate_seq(self, e):
-        if len(e) != self.size:
-            raise ValueError(
-                &#34;The lengths of the sequences must match, got {} and {}&#34;.format(
-                    self.size, len(e)
-                )
-            )
 
     def __validate_index(self, i):
         if not isinstance(i, (int, slice)):
@@ -2428,6 +2028,14 @@ Arrays, while other iterables will stored as Array elements.</p></div>
         else:
             return itertools.repeat(e)
 
+    def __validate_seq(self, e):
+        if len(e) != self.size:
+            raise ValueError(
+                &#34;The lengths of the sequences must match, got {} and {}&#34;.format(
+                    self.size, len(e)
+                )
+            )
+
     def __validate_bool_arg(self, value, name):
         if not isinstance(value, bool):
             raise ValueError(f&#34;Expected type bool for {name} argument&#34;)
@@ -2439,7 +2047,6 @@ Arrays, while other iterables will stored as Array elements.</p></div>
 
     def __map(self, f, e):
         if isinstance(e, Iterable):
-            self.__validate_seq(e)
             return map(f, self, e)
         return map(f, self, itertools.repeat(e))
 
@@ -2473,9 +2080,11 @@ Arrays, while other iterables will stored as Array elements.</p></div>
         else:
             raise TypeError(f&#34;Can not concatenate {type(b).__name__} to Array&#34;)
 
+    def __pow__(self, b):
+        return self.pow(b)
+
     def __rpow__(self, b):
         if isinstance(b, Array.__baseIterables):
-            self.__validate_seq(b)
             return Array(b).pow(self)
         return Array([b] * self.size).pow(self)
 
@@ -2512,7 +2121,7 @@ Arrays, while other iterables will stored as Array elements.</p></div>
         return Array(map(operator.inv, self))
 
     def __hash__(self):
-        return hash(self.toTuple())
+        return hash(self.to_tuple())
 
     def __bool__(self):
         if self.__len__() == 0:
@@ -2582,6 +2191,7 @@ Arrays, while other iterables will stored as Array elements.</p></div>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li>builtins.list</li>
+<li><a title="funct.lazy.ASeq" href="lazy.html#funct.lazy.ASeq">ASeq</a></li>
 </ul>
 <h3>Static methods</h3>
 <dl>
@@ -2657,6 +2267,7 @@ def linspace(start, stop, num=50, endpoint=True):
     num: int, optional
     endpoint : bool, optional
     &#34;&#34;&#34;
+    Array.__validate_bool_arg(None, endpoint, &#34;endpoint&#34;)
     step = (stop - start) / max(num - bool(endpoint), 1)
     return Array(start + step * i for i in range(num))</code></pre>
 </details>
@@ -2696,6 +2307,7 @@ def logspace(start, stop, num=50, base=10, endpoint=True):
     base: float, optional
     endpoint: bool, optional
     &#34;&#34;&#34;
+    Array.__validate_bool_arg(None, endpoint, &#34;endpoint&#34;)
     return base ** Array.linspace(start, stop, num, endpoint)</code></pre>
 </details>
 </dd>
@@ -2781,7 +2393,7 @@ def init(self):
     return self[:-1]</code></pre>
 </details>
 </dd>
-<dt id="funct.Array.Array.isEmpty"><code class="name">var <span class="ident">isEmpty</span></code></dt>
+<dt id="funct.Array.Array.isempty"><code class="name">var <span class="ident">isempty</span></code></dt>
 <dd>
 <div class="desc"><p>Returns whether this Array is empty.</p></div>
 <details class="source">
@@ -2789,7 +2401,7 @@ def init(self):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@property
-def isEmpty(self):
+def isempty(self):
     &#34;&#34;&#34; Returns whether this Array is empty. &#34;&#34;&#34;
     return self.size == 0</code></pre>
 </details>
@@ -2820,7 +2432,7 @@ def length(self):
     return self.__len__()</code></pre>
 </details>
 </dd>
-<dt id="funct.Array.Array.nonEmpty"><code class="name">var <span class="ident">nonEmpty</span></code></dt>
+<dt id="funct.Array.Array.nonempty"><code class="name">var <span class="ident">nonempty</span></code></dt>
 <dd>
 <div class="desc"><p>Returns whether this Array is not empty.</p></div>
 <details class="source">
@@ -2828,7 +2440,7 @@ def length(self):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@property
-def nonEmpty(self):
+def nonempty(self):
     &#34;&#34;&#34; Returns whether this Array is not empty. &#34;&#34;&#34;
     return self.size != 0</code></pre>
 </details>
@@ -2873,7 +2485,7 @@ def squeeze(self):
     Returns the Array with the same elements, but with
     outermost singleton dimension removed (if exists).
     &#34;&#34;&#34;
-    if isinstance(self.headOption(), Array.__baseIterables) and self.length == 1:
+    if isinstance(self.head_option(), Array.__baseIterables) and self.length == 1:
         return self[0]
     else:
         return self</code></pre>
@@ -2927,24 +2539,8 @@ def unsqueeze(self):
     return Array(a)</code></pre>
 </details>
 </dd>
-<dt id="funct.Array.Array.abs_"><code class="name flex">
-<span>def <span class="ident">abs_</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Inplace element-wise absolute value.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def abs_(self):
-    &#34;&#34;&#34; Inplace element-wise absolute value. &#34;&#34;&#34;
-    self[:] = self.abs()
-    warn()
-    return self</code></pre>
-</details>
-</dd>
 <dt id="funct.Array.Array.accumulate"><code class="name flex">
-<span>def <span class="ident">accumulate</span></span>(<span>self, l=&lt;built-in function add&gt;)</span>
+<span>def <span class="ident">accumulate</span></span>(<span>self, func=&lt;built-in function add&gt;)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Returns accumulated Array of elements using provided function.
@@ -2953,12 +2549,12 @@ Defaults to accumulated sum.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def accumulate(self, l=operator.add):
+<pre><code class="python">def accumulate(self, func=operator.add):
     &#34;&#34;&#34;
     Returns accumulated Array of elements using provided function.
     Defaults to accumulated sum.
     &#34;&#34;&#34;
-    return Array(itertools.accumulate(self, l))</code></pre>
+    return Array(itertools.accumulate(self, func))</code></pre>
 </details>
 </dd>
 <dt id="funct.Array.Array.add"><code class="name flex">
@@ -2975,24 +2571,6 @@ Defaults to accumulated sum.</p></div>
     Element-wise addition with given scalar or sequence.
     &#34;&#34;&#34;
     return self.__operate(operator.add, e, inplace)</code></pre>
-</details>
-</dd>
-<dt id="funct.Array.Array.add_"><code class="name flex">
-<span>def <span class="ident">add_</span></span>(<span>self, e)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Inplace element-wise addition with given scalar or sequence.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def add_(self, e):
-    &#34;&#34;&#34;
-    Inplace element-wise addition with given scalar or sequence.
-    &#34;&#34;&#34;
-    warn()
-    self[:] = self.__operate(operator.add, e, True)
-    return self</code></pre>
 </details>
 </dd>
 <dt id="funct.Array.Array.all"><code class="name flex">
@@ -3051,7 +2629,7 @@ Defaults to accumulated sum.</p></div>
 </summary>
 <pre><code class="python">def argmax(self):
     &#34;&#34;&#34; Returns the index of the maximum value &#34;&#34;&#34;
-    return self.enumerate.maxBy(lambda e: e[1])[0]</code></pre>
+    return max(self.enumerate, key=lambda e: e[1])[0]</code></pre>
 </details>
 </dd>
 <dt id="funct.Array.Array.argmin"><code class="name flex">
@@ -3065,7 +2643,7 @@ Defaults to accumulated sum.</p></div>
 </summary>
 <pre><code class="python">def argmin(self):
     &#34;&#34;&#34; Returns the index of the minimum value &#34;&#34;&#34;
-    return self.enumerate.minBy(lambda e: e[1])[0]</code></pre>
+    return min(self.enumerate, key=lambda e: e[1])[0]</code></pre>
 </details>
 </dd>
 <dt id="funct.Array.Array.argsort"><code class="name flex">
@@ -3079,11 +2657,11 @@ Defaults to accumulated sum.</p></div>
 </summary>
 <pre><code class="python">def argsort(self, reverse=False):
     &#34;&#34;&#34; Returns the indices that would sort this Array &#34;&#34;&#34;
-    return self.enumerate.sortBy(lambda e: e[1], reverse=reverse)[:, 0]</code></pre>
+    return self.enumerate.sortby(lambda e: e[1], reverse=reverse)[:, 0]</code></pre>
 </details>
 </dd>
-<dt id="funct.Array.Array.argsortBy"><code class="name flex">
-<span>def <span class="ident">argsortBy</span></span>(<span>self, l, reverse=False)</span>
+<dt id="funct.Array.Array.argsortby"><code class="name flex">
+<span>def <span class="ident">argsortby</span></span>(<span>self, func, reverse=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Returns the indices that would sort this Array according to
@@ -3092,16 +2670,16 @@ provided sorting criteria.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def argsortBy(self, l, reverse=False):
+<pre><code class="python">def argsortby(self, func, reverse=False):
     &#34;&#34;&#34;
     Returns the indices that would sort this Array according to
     provided sorting criteria.
     &#34;&#34;&#34;
-    return self.enumerate.sortBy(lambda e: l(e[1]), reverse=reverse)[:, 0]</code></pre>
+    return self.enumerate.sortby(lambda e: func(e[1]), reverse=reverse)[:, 0]</code></pre>
 </details>
 </dd>
-<dt id="funct.Array.Array.asType"><code class="name flex">
-<span>def <span class="ident">asType</span></span>(<span>self, t)</span>
+<dt id="funct.Array.Array.astype"><code class="name flex">
+<span>def <span class="ident">astype</span></span>(<span>self, t)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Converts the elements in this Array to given type.</p></div>
@@ -3109,7 +2687,7 @@ provided sorting criteria.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def asType(self, t):
+<pre><code class="python">def astype(self, t):
     &#34;&#34;&#34;
     Converts the elements in this Array to given type.
     &#34;&#34;&#34;
@@ -3117,47 +2695,69 @@ provided sorting criteria.</p></div>
 </details>
 </dd>
 <dt id="funct.Array.Array.asyncmap"><code class="name flex">
-<span>def <span class="ident">asyncmap</span></span>(<span>self, fun)</span>
+<span>def <span class="ident">asyncmap</span></span>(<span>self, func, Executor=concurrent.futures.thread.ThreadPoolExecutor)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Executes map asynchronously.
-Returns a Future object.</p></div>
+Returns a Future object.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>func</code></strong> :&ensp;<code>Callable</code></dt>
+<dd>&nbsp;</dd>
+<dt><strong><code>Executor</code></strong> :&ensp;<code>Executor</code>, optional <code>(concurrent.futures.ThreadPoolExecutor, concurrent.futures.ProcessPoolExecutor)</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def asyncmap(self, fun):
+<pre><code class="python">def asyncmap(self, func, Executor=ThreadPoolExecutor):
     &#34;&#34;&#34;
     Executes map asynchronously.
     Returns a Future object.
+
+    Parameters
+    ----------
+    func: Callable
+    Executor: Executor, optional (concurrent.futures.ThreadPoolExecutor, concurrent.futures.ProcessPoolExecutor)
     &#34;&#34;&#34;
-    executor = ThreadPoolExecutor()
-    try:
-        return executor.submit(self.map, fun)
-    finally:
-        executor.shutdown(wait=False)</code></pre>
+    with Executor() as executor:
+        return executor.submit(self.map, func)</code></pre>
 </details>
 </dd>
 <dt id="funct.Array.Array.asyncstarmap"><code class="name flex">
-<span>def <span class="ident">asyncstarmap</span></span>(<span>self, fun)</span>
+<span>def <span class="ident">asyncstarmap</span></span>(<span>self, func, Executor=concurrent.futures.thread.ThreadPoolExecutor)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Executes starmap asynchronously.
-Returns a Future object.</p></div>
+Returns a Future object.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>func</code></strong> :&ensp;<code>Callable</code></dt>
+<dd>&nbsp;</dd>
+<dt><strong><code>Executor</code></strong> :&ensp;<code>Executor</code>, optional <code>(concurrent.futures.ThreadPoolExecutor, concurrent.futures.ProcessPoolExecutor)</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def asyncstarmap(self, fun):
+<pre><code class="python">def asyncstarmap(self, func, Executor=ThreadPoolExecutor):
     &#34;&#34;&#34;
     Executes starmap asynchronously.
     Returns a Future object.
+
+    Parameters
+    ----------
+    func: Callable
+    Executor: Executor, optional (concurrent.futures.ThreadPoolExecutor, concurrent.futures.ProcessPoolExecutor)
     &#34;&#34;&#34;
-    executor = ThreadPoolExecutor()
-    try:
-        return executor.submit(self.starmap, fun)
-    finally:
-        executor.shutdown(wait=False)</code></pre>
+    if not all(hasattr(Executor, attr) for attr in (&#34;__enter__&#34;, &#34;submit&#34;)):
+        raise ValueError(
+            f&#34;Expected Executor for Executor argument, got {type(Executor)}&#34;
+        )
+    with Executor() as executor:
+        return executor.submit(self.starmap, func)</code></pre>
 </details>
 </dd>
 <dt id="funct.Array.Array.average"><code class="name flex">
@@ -3174,11 +2774,12 @@ Returns a Future object.</p></div>
     if weights is None:
         return sum(self) / self.size
     else:
+        self.__validate_seq(weights)
         return sum(self.mul(weights)) / sum(weights)</code></pre>
 </details>
 </dd>
-<dt id="funct.Array.Array.bitwiseAnd"><code class="name flex">
-<span>def <span class="ident">bitwiseAnd</span></span>(<span>self, e, inplace=False)</span>
+<dt id="funct.Array.Array.bitwise_and"><code class="name flex">
+<span>def <span class="ident">bitwise_and</span></span>(<span>self, e, inplace=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Computes the bit-wise AND between elements in this Array
@@ -3187,7 +2788,7 @@ and given scalar or sequence, element-wise.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def bitwiseAnd(self, e, inplace=False):
+<pre><code class="python">def bitwise_and(self, e, inplace=False):
     &#34;&#34;&#34;
     Computes the bit-wise AND between elements in this Array
     and given scalar or sequence, element-wise.
@@ -3195,28 +2796,8 @@ and given scalar or sequence, element-wise.</p></div>
     return self.__operate(operator.and_, e, inplace)</code></pre>
 </details>
 </dd>
-<dt id="funct.Array.Array.bitwiseAnd_"><code class="name flex">
-<span>def <span class="ident">bitwiseAnd_</span></span>(<span>self, e)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Computes (in-place) the bit-wise AND between elements in this Array
-and given scalar or sequence, element-wise.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def bitwiseAnd_(self, e):
-    &#34;&#34;&#34;
-    Computes (in-place) the bit-wise AND between elements in this Array
-    and given scalar or sequence, element-wise.
-    &#34;&#34;&#34;
-    warn()
-    self[:] = self.__operate(operator.and_, e, True)
-    return self</code></pre>
-</details>
-</dd>
-<dt id="funct.Array.Array.bitwiseOr"><code class="name flex">
-<span>def <span class="ident">bitwiseOr</span></span>(<span>self, e, inplace=False)</span>
+<dt id="funct.Array.Array.bitwise_or"><code class="name flex">
+<span>def <span class="ident">bitwise_or</span></span>(<span>self, e, inplace=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Computes the bit-wise OR between elements in this Array
@@ -3225,7 +2806,7 @@ and given scalar or sequence, element-wise.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def bitwiseOr(self, e, inplace=False):
+<pre><code class="python">def bitwise_or(self, e, inplace=False):
     &#34;&#34;&#34;
     Computes the bit-wise OR between elements in this Array
     and given scalar or sequence, element-wise.
@@ -3233,24 +2814,18 @@ and given scalar or sequence, element-wise.</p></div>
     return self.__operate(operator.or_, e, inplace)</code></pre>
 </details>
 </dd>
-<dt id="funct.Array.Array.bitwiseOr_"><code class="name flex">
-<span>def <span class="ident">bitwiseOr_</span></span>(<span>self, e)</span>
+<dt id="funct.Array.Array.bool"><code class="name flex">
+<span>def <span class="ident">bool</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Computes (in-place) the bit-wise OR between elements in this Array
-and given scalar or sequence, element-wise.</p></div>
+<div class="desc"><p>Converts elements in this Array to booleans.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def bitwiseOr_(self, e):
-    &#34;&#34;&#34;
-    Computes (in-place) the bit-wise OR between elements in this Array
-    and given scalar or sequence, element-wise.
-    &#34;&#34;&#34;
-    warn()
-    self[:] = self.__operate(operator.or_, e, True)
-    return self</code></pre>
+<pre><code class="python">def bool(self):
+    &#34;&#34;&#34; Converts elements in this Array to booleans. &#34;&#34;&#34;
+    return Array(map(bool, self))</code></pre>
 </details>
 </dd>
 <dt id="funct.Array.Array.cat"><code class="name flex">
@@ -3284,20 +2859,18 @@ and given scalar or sequence, element-wise.</p></div>
     return Array(a)</code></pre>
 </details>
 </dd>
-<dt id="funct.Array.Array.ceil_"><code class="name flex">
-<span>def <span class="ident">ceil_</span></span>(<span>self)</span>
+<dt id="funct.Array.Array.char"><code class="name flex">
+<span>def <span class="ident">char</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Ceils the Array elements in-place.</p></div>
+<div class="desc"><p>Converts an Array of integers to chars.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def ceil_(self):
-    &#34;&#34;&#34; Ceils the Array elements in-place. &#34;&#34;&#34;
-    warn()
-    self[:] = Array(map(math.ceil, self))
-    return self</code></pre>
+<pre><code class="python">def char(self):
+    &#34;&#34;&#34; Converts an Array of integers to chars. &#34;&#34;&#34;
+    return Array(map(chr, self))</code></pre>
 </details>
 </dd>
 <dt id="funct.Array.Array.chunks"><code class="name flex">
@@ -3339,22 +2912,6 @@ results in an inequal division.</p></div>
     if inplace:
         return self.__setinplace(a, inplace)
     return Array(a)</code></pre>
-</details>
-</dd>
-<dt id="funct.Array.Array.clip_"><code class="name flex">
-<span>def <span class="ident">clip_</span></span>(<span>self, _min, _max)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Clip the values in the Array in-place.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def clip_(self, _min, _max):
-    &#34;&#34;&#34; Clip the values in the Array in-place. &#34;&#34;&#34;
-    warn()
-    self[:] = Array(map(lambda e: max(min(e, _max), _min), self))
-    return self</code></pre>
 </details>
 </dd>
 <dt id="funct.Array.Array.contains"><code class="name flex">
@@ -3436,26 +2993,8 @@ Returns the values in this Array that are not in sequence b.</p></div>
     return self.__operate(operator.truediv, e, inplace)</code></pre>
 </details>
 </dd>
-<dt id="funct.Array.Array.div_"><code class="name flex">
-<span>def <span class="ident">div_</span></span>(<span>self, e)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Inplace element-wise division with given scalar or sequence.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def div_(self, e):
-    &#34;&#34;&#34;
-    Inplace element-wise division with given scalar or sequence.
-    &#34;&#34;&#34;
-    warn()
-    self[:] = self.__operate(operator.truediv, e, True)
-    return self</code></pre>
-</details>
-</dd>
-<dt id="funct.Array.Array.dropWhile"><code class="name flex">
-<span>def <span class="ident">dropWhile</span></span>(<span>self, l)</span>
+<dt id="funct.Array.Array.dropwhile"><code class="name flex">
+<span>def <span class="ident">dropwhile</span></span>(<span>self, func)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Drops the longest prefix of elements that satisfy the given predicate.</p></div>
@@ -3463,9 +3002,9 @@ Returns the values in this Array that are not in sequence b.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def dropWhile(self, l):
+<pre><code class="python">def dropwhile(self, func):
     &#34;&#34;&#34; Drops the longest prefix of elements that satisfy the given predicate. &#34;&#34;&#34;
-    return Array(itertools.dropwhile(l, self))</code></pre>
+    return Array(itertools.dropwhile(func, self))</code></pre>
 </details>
 </dd>
 <dt id="funct.Array.Array.eq"><code class="name flex">
@@ -3482,22 +3021,6 @@ Returns the values in this Array that are not in sequence b.</p></div>
     return self.__operate(operator.eq, e, inplace)</code></pre>
 </details>
 </dd>
-<dt id="funct.Array.Array.eq_"><code class="name flex">
-<span>def <span class="ident">eq_</span></span>(<span>self, e)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Returns x == y element-wise (in-place)</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def eq_(self, e):
-    &#34;&#34;&#34; Returns x == y element-wise (in-place) &#34;&#34;&#34;
-    warn()
-    self[:] = self.__eq__(e)
-    return self</code></pre>
-</details>
-</dd>
 <dt id="funct.Array.Array.equal"><code class="name flex">
 <span>def <span class="ident">equal</span></span>(<span>self, b)</span>
 </code></dt>
@@ -3509,7 +3032,8 @@ Returns the values in this Array that are not in sequence b.</p></div>
 </summary>
 <pre><code class="python">def equal(self, b):
     &#34;&#34;&#34; Returns true this Array and given sequence have the same elements. &#34;&#34;&#34;
-    self.__validate_seq(b)
+    if len(self) != len(b):
+        return False
     return all(self.eq(b))</code></pre>
 </details>
 </dd>
@@ -3528,8 +3052,8 @@ Returns the values in this Array that are not in sequence b.</p></div>
     return self</code></pre>
 </details>
 </dd>
-<dt id="funct.Array.Array.extendLeft"><code class="name flex">
-<span>def <span class="ident">extendLeft</span></span>(<span>self, e)</span>
+<dt id="funct.Array.Array.extendleft"><code class="name flex">
+<span>def <span class="ident">extendleft</span></span>(<span>self, e)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Extends this Array by prepending elements from the iterable.</p></div>
@@ -3537,7 +3061,7 @@ Returns the values in this Array that are not in sequence b.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def extendLeft(self, e):
+<pre><code class="python">def extendleft(self, e):
     &#34;&#34;&#34; Extends this Array by prepending elements from the iterable. &#34;&#34;&#34;
     self[0:0] = Array(e)
     return self</code></pre>
@@ -3559,24 +3083,8 @@ Returns the values in this Array that are not in sequence b.</p></div>
     return Array([e] * self.size)</code></pre>
 </details>
 </dd>
-<dt id="funct.Array.Array.fill_"><code class="name flex">
-<span>def <span class="ident">fill_</span></span>(<span>self, e)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Replaces (in place) all elements of this Array with given object.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def fill_(self, e):
-    &#34;&#34;&#34; Replaces (in place) all elements of this Array with given object. &#34;&#34;&#34;
-    warn()
-    self[:] = e
-    return self</code></pre>
-</details>
-</dd>
 <dt id="funct.Array.Array.filter"><code class="name flex">
-<span>def <span class="ident">filter</span></span>(<span>self, l)</span>
+<span>def <span class="ident">filter</span></span>(<span>self, func)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Selects elements of this Array which satisfy the predicate.</p></div>
@@ -3584,9 +3092,23 @@ Returns the values in this Array that are not in sequence b.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def filter(self, l):
+<pre><code class="python">def filter(self, func):
     &#34;&#34;&#34; Selects elements of this Array which satisfy the predicate. &#34;&#34;&#34;
-    return Array(filter(l, self))</code></pre>
+    return Array(filter(func, self))</code></pre>
+</details>
+</dd>
+<dt id="funct.Array.Array.float"><code class="name flex">
+<span>def <span class="ident">float</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Converts elements in this Array to floats.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def float(self):
+    &#34;&#34;&#34; Converts elements in this Array to floats. &#34;&#34;&#34;
+    return Array(map(float, self))</code></pre>
 </details>
 </dd>
 <dt id="funct.Array.Array.floor"><code class="name flex">
@@ -3606,24 +3128,8 @@ Returns the values in this Array that are not in sequence b.</p></div>
     return Array(a)</code></pre>
 </details>
 </dd>
-<dt id="funct.Array.Array.floor_"><code class="name flex">
-<span>def <span class="ident">floor_</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Floors the Array elements in-place.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def floor_(self):
-    &#34;&#34;&#34; Floors the Array elements in-place. &#34;&#34;&#34;
-    warn()
-    self[:] = Array(map(math.floor, self))
-    return self</code></pre>
-</details>
-</dd>
 <dt id="funct.Array.Array.forall"><code class="name flex">
-<span>def <span class="ident">forall</span></span>(<span>self, l)</span>
+<span>def <span class="ident">forall</span></span>(<span>self, func)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Returns whether the specified predicate
@@ -3632,16 +3138,16 @@ holds for all elements of this Array.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def forall(self, l):
+<pre><code class="python">def forall(self, func):
     &#34;&#34;&#34;
     Returns whether the specified predicate
     holds for all elements of this Array.
     &#34;&#34;&#34;
-    return all(map(l, self))</code></pre>
+    return all(map(func, self))</code></pre>
 </details>
 </dd>
 <dt id="funct.Array.Array.forany"><code class="name flex">
-<span>def <span class="ident">forany</span></span>(<span>self, l)</span>
+<span>def <span class="ident">forany</span></span>(<span>self, func)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Returns whether the specified predicate
@@ -3650,12 +3156,27 @@ holds for any element of this Array.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def forany(self, l):
+<pre><code class="python">def forany(self, func):
     &#34;&#34;&#34;
     Returns whether the specified predicate
     holds for any element of this Array.
     &#34;&#34;&#34;
-    return any(map(l, self))</code></pre>
+    return any(map(func, self))</code></pre>
+</details>
+</dd>
+<dt id="funct.Array.Array.foreach"><code class="name flex">
+<span>def <span class="ident">foreach</span></span>(<span>self, func)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Applies <code>func</code> to each element of the Array.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def foreach(self, func):
+    &#34;&#34;&#34; Applies `func` to each element of the Array. &#34;&#34;&#34;
+    for e in self:
+        func(e)</code></pre>
 </details>
 </dd>
 <dt id="funct.Array.Array.ge"><code class="name flex">
@@ -3670,22 +3191,6 @@ holds for any element of this Array.</p></div>
 <pre><code class="python">def ge(self, e, inplace=False):
     &#34;&#34;&#34; Returns x &gt;= y element-wise &#34;&#34;&#34;
     return self.__operate(operator.ge, e, inplace)</code></pre>
-</details>
-</dd>
-<dt id="funct.Array.Array.ge_"><code class="name flex">
-<span>def <span class="ident">ge_</span></span>(<span>self, e)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Returns x &gt;= y element-wise (in-place)</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def ge_(self, e):
-    &#34;&#34;&#34; Returns x &gt;= y element-wise (in-place) &#34;&#34;&#34;
-    warn()
-    self[:] = self.__ge__(e)
-    return self</code></pre>
 </details>
 </dd>
 <dt id="funct.Array.Array.get"><code class="name flex">
@@ -3709,8 +3214,8 @@ Returns default if the index does not exist.</p></div>
         return default</code></pre>
 </details>
 </dd>
-<dt id="funct.Array.Array.groupBy"><code class="name flex">
-<span>def <span class="ident">groupBy</span></span>(<span>self, l)</span>
+<dt id="funct.Array.Array.groupby"><code class="name flex">
+<span>def <span class="ident">groupby</span></span>(<span>self, func)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Groups this Array into an Array of Array-tuples according
@@ -3719,19 +3224,14 @@ to given discriminator function.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def groupBy(self, l):
+<pre><code class="python">def groupby(self, func):
     &#34;&#34;&#34;
     Groups this Array into an Array of Array-tuples according
     to given discriminator function.
     &#34;&#34;&#34;
-    m = {}
-    for v in self:
-        k = l(v)
-        if k in m:
-            m[k].append(v)
-        else:
-            m[k] = Array([v])
-    return Array(m.items())</code></pre>
+    return Array(
+        (e, Array(g)) for e, g in itertools.groupby(sorted(self, key=func), func)
+    )</code></pre>
 </details>
 </dd>
 <dt id="funct.Array.Array.gt"><code class="name flex">
@@ -3748,24 +3248,8 @@ to given discriminator function.</p></div>
     return self.__operate(operator.gt, e, inplace)</code></pre>
 </details>
 </dd>
-<dt id="funct.Array.Array.gt_"><code class="name flex">
-<span>def <span class="ident">gt_</span></span>(<span>self, e)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Returns x &gt; y element-wise (in-place)</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def gt_(self, e):
-    &#34;&#34;&#34; Returns x &gt; y element-wise (in-place) &#34;&#34;&#34;
-    warn()
-    self[:] = self.__gt__(e)
-    return self</code></pre>
-</details>
-</dd>
-<dt id="funct.Array.Array.headOption"><code class="name flex">
-<span>def <span class="ident">headOption</span></span>(<span>self, default=None)</span>
+<dt id="funct.Array.Array.head_option"><code class="name flex">
+<span>def <span class="ident">head_option</span></span>(<span>self, default=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Selects the first element of this Array if it has one,
@@ -3774,7 +3258,7 @@ otherwise returns default.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def headOption(self, default=None):
+<pre><code class="python">def head_option(self, default=None):
     &#34;&#34;&#34;
     Selects the first element of this Array if it has one,
     otherwise returns default.
@@ -3782,8 +3266,8 @@ otherwise returns default.</p></div>
     return self.get(0, default)</code></pre>
 </details>
 </dd>
-<dt id="funct.Array.Array.indexWhere"><code class="name flex">
-<span>def <span class="ident">indexWhere</span></span>(<span>self, l)</span>
+<dt id="funct.Array.Array.index_where"><code class="name flex">
+<span>def <span class="ident">index_where</span></span>(<span>self, func)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Finds the index of the first element satisfying a predicate.</p></div>
@@ -3791,10 +3275,10 @@ otherwise returns default.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def indexWhere(self, l):
+<pre><code class="python">def index_where(self, func):
     &#34;&#34;&#34; Finds the index of the first element satisfying a predicate. &#34;&#34;&#34;
     for i, v in enumerate(self):
-        if l(v):
+        if func(v):
             return i
     raise ValueError(&#34;No matches&#34;)</code></pre>
 </details>
@@ -3820,8 +3304,8 @@ otherwise returns default.</p></div>
         r.append(o)</code></pre>
 </details>
 </dd>
-<dt id="funct.Array.Array.indicesWhere"><code class="name flex">
-<span>def <span class="ident">indicesWhere</span></span>(<span>self, l)</span>
+<dt id="funct.Array.Array.indices_where"><code class="name flex">
+<span>def <span class="ident">indices_where</span></span>(<span>self, func)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Finds all the indices of the elements satisfying a predicate.</p></div>
@@ -3829,9 +3313,9 @@ otherwise returns default.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def indicesWhere(self, l):
+<pre><code class="python">def indices_where(self, func):
     &#34;&#34;&#34; Finds all the indices of the elements satisfying a predicate. &#34;&#34;&#34;
-    return Array(i for i, v in enumerate(self) if l(v))</code></pre>
+    return Array(i for i, v in enumerate(self) if func(v))</code></pre>
 </details>
 </dd>
 <dt id="funct.Array.Array.insert"><code class="name flex">
@@ -3861,6 +3345,23 @@ otherwise returns default.</p></div>
     return self</code></pre>
 </details>
 </dd>
+<dt id="funct.Array.Array.int"><code class="name flex">
+<span>def <span class="ident">int</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Converts elements in this Array to integers.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def int(self):
+    &#34;&#34;&#34; Converts elements in this Array to integers. &#34;&#34;&#34;
+    try:
+        return Array(map(lambda e: ord(e) if isinstance(e, str) else int(e), self))
+    except TypeError:
+        raise TypeError(&#34;Expected an Array of numbers or characters&#34;) from None</code></pre>
+</details>
+</dd>
 <dt id="funct.Array.Array.intersect"><code class="name flex">
 <span>def <span class="ident">intersect</span></span>(<span>self, b)</span>
 </code></dt>
@@ -3880,8 +3381,8 @@ Returns the values that are both in this Array and sequence b.</p></div>
     return Array(e for e in self if e in s)</code></pre>
 </details>
 </dd>
-<dt id="funct.Array.Array.isFinite"><code class="name flex">
-<span>def <span class="ident">isFinite</span></span>(<span>self)</span>
+<dt id="funct.Array.Array.isfinite"><code class="name flex">
+<span>def <span class="ident">isfinite</span></span>(<span>self)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Tests element-wise whether the elements are neither infinity nor NaN.</p></div>
@@ -3889,7 +3390,7 @@ Returns the values that are both in this Array and sequence b.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def isFinite(self):
+<pre><code class="python">def isfinite(self):
     &#34;&#34;&#34;
     Tests element-wise whether the elements are neither infinity nor NaN.
     &#34;&#34;&#34;
@@ -3914,8 +3415,8 @@ with elements separated with <code>delimiter</code></p></div>
     return delimiter.join(str(v) for v in self)</code></pre>
 </details>
 </dd>
-<dt id="funct.Array.Array.lastOption"><code class="name flex">
-<span>def <span class="ident">lastOption</span></span>(<span>self, default=None)</span>
+<dt id="funct.Array.Array.last_option"><code class="name flex">
+<span>def <span class="ident">last_option</span></span>(<span>self, default=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Selects the last element of this Array if it has one,
@@ -3924,7 +3425,7 @@ otherwise returns default.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def lastOption(self, default=None):
+<pre><code class="python">def last_option(self, default=None):
     &#34;&#34;&#34;
     Selects the last element of this Array if it has one,
     otherwise returns default.
@@ -3946,22 +3447,6 @@ otherwise returns default.</p></div>
     return self.__operate(operator.le, e, inplace)</code></pre>
 </details>
 </dd>
-<dt id="funct.Array.Array.le_"><code class="name flex">
-<span>def <span class="ident">le_</span></span>(<span>self, e)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Returns x &lt;= y element-wise (in-place)</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def le_(self, e):
-    &#34;&#34;&#34; Returns x &lt;= y element-wise (in-place) &#34;&#34;&#34;
-    warn()
-    self[:] = self.__le__(e)
-    return self</code></pre>
-</details>
-</dd>
 <dt id="funct.Array.Array.lt"><code class="name flex">
 <span>def <span class="ident">lt</span></span>(<span>self, e, inplace=False)</span>
 </code></dt>
@@ -3976,24 +3461,8 @@ otherwise returns default.</p></div>
     return self.__operate(operator.lt, e, inplace)</code></pre>
 </details>
 </dd>
-<dt id="funct.Array.Array.lt_"><code class="name flex">
-<span>def <span class="ident">lt_</span></span>(<span>self, e)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Returns x &lt; y element-wise (in-place)</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def lt_(self, e):
-    &#34;&#34;&#34; Returns x &lt; y element-wise (in-place) &#34;&#34;&#34;
-    warn()
-    self[:] = self.__lt__(e)
-    return self</code></pre>
-</details>
-</dd>
 <dt id="funct.Array.Array.map"><code class="name flex">
-<span>def <span class="ident">map</span></span>(<span>self, l, inplace=False)</span>
+<span>def <span class="ident">map</span></span>(<span>self, func, inplace=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Returns an Array by applying provided function to all elements of this Array.</p></div>
@@ -4001,11 +3470,11 @@ otherwise returns default.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def map(self, l, inplace=False):
+<pre><code class="python">def map(self, func, inplace=False):
     &#34;&#34;&#34;
     Returns an Array by applying provided function to all elements of this Array.
     &#34;&#34;&#34;
-    a = map(l, self)
+    a = map(func, self)
     if inplace:
         return self.__setinplace(a, inplace)
     return Array(a)</code></pre>
@@ -4024,8 +3493,8 @@ otherwise returns default.</p></div>
     return max(self, **kwargs)</code></pre>
 </details>
 </dd>
-<dt id="funct.Array.Array.maxBy"><code class="name flex">
-<span>def <span class="ident">maxBy</span></span>(<span>self, l)</span>
+<dt id="funct.Array.Array.maxby"><code class="name flex">
+<span>def <span class="ident">maxby</span></span>(<span>self, func, **kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Finds the maximum value measured by a function.</p></div>
@@ -4033,9 +3502,9 @@ otherwise returns default.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def maxBy(self, l):
+<pre><code class="python">def maxby(self, func, **kwargs):
     &#34;&#34;&#34; Finds the maximum value measured by a function. &#34;&#34;&#34;
-    return max(self, key=l)</code></pre>
+    return max(self, key=func, **kwargs)</code></pre>
 </details>
 </dd>
 <dt id="funct.Array.Array.mean"><code class="name flex">
@@ -4065,8 +3534,8 @@ otherwise returns default.</p></div>
     return min(self, **kwargs)</code></pre>
 </details>
 </dd>
-<dt id="funct.Array.Array.minBy"><code class="name flex">
-<span>def <span class="ident">minBy</span></span>(<span>self, l)</span>
+<dt id="funct.Array.Array.minby"><code class="name flex">
+<span>def <span class="ident">minby</span></span>(<span>self, func, **kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Finds the minimum value measured by a function.</p></div>
@@ -4074,9 +3543,9 @@ otherwise returns default.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def minBy(self, l):
+<pre><code class="python">def minby(self, func, **kwargs):
     &#34;&#34;&#34; Finds the minimum value measured by a function. &#34;&#34;&#34;
-    return min(self, key=l)</code></pre>
+    return min(self, key=func, **kwargs)</code></pre>
 </details>
 </dd>
 <dt id="funct.Array.Array.mod"><code class="name flex">
@@ -4097,26 +3566,6 @@ and given scalar or sequence, element-wise.</p></div>
     return self.__operate(operator.mod, e, inplace)</code></pre>
 </details>
 </dd>
-<dt id="funct.Array.Array.mod_"><code class="name flex">
-<span>def <span class="ident">mod_</span></span>(<span>self, e)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Computes (in-place) the remainder between elements in this Array
-and given scalar or sequence, element-wise.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def mod_(self, e):
-    &#34;&#34;&#34;
-    Computes (in-place) the remainder between elements in this Array
-    and given scalar or sequence, element-wise.
-    &#34;&#34;&#34;
-    warn()
-    self[:] = self.__operate(operator.mod, e, True)
-    return self</code></pre>
-</details>
-</dd>
 <dt id="funct.Array.Array.mul"><code class="name flex">
 <span>def <span class="ident">mul</span></span>(<span>self, e, inplace=False)</span>
 </code></dt>
@@ -4133,24 +3582,6 @@ and given scalar or sequence, element-wise.</p></div>
     return self.__operate(operator.mul, e, inplace)</code></pre>
 </details>
 </dd>
-<dt id="funct.Array.Array.mul_"><code class="name flex">
-<span>def <span class="ident">mul_</span></span>(<span>self, e)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Inplace element-wise multiplication with given scalar or sequence.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def mul_(self, e):
-    &#34;&#34;&#34;
-    Inplace element-wise multiplication with given scalar or sequence.
-    &#34;&#34;&#34;
-    warn()
-    self[:] = self.__operate(operator.mul, e, True)
-    return self</code></pre>
-</details>
-</dd>
 <dt id="funct.Array.Array.ne"><code class="name flex">
 <span>def <span class="ident">ne</span></span>(<span>self, e, inplace=False)</span>
 </code></dt>
@@ -4163,22 +3594,6 @@ and given scalar or sequence, element-wise.</p></div>
 <pre><code class="python">def ne(self, e, inplace=False):
     &#34;&#34;&#34; Returns x != y element-wise &#34;&#34;&#34;
     return self.__operate(operator.ne, e, inplace)</code></pre>
-</details>
-</dd>
-<dt id="funct.Array.Array.ne_"><code class="name flex">
-<span>def <span class="ident">ne_</span></span>(<span>self, e)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Returns x != y element-wise (in-place)</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def ne_(self, e):
-    &#34;&#34;&#34; Returns x != y element-wise (in-place) &#34;&#34;&#34;
-    warn()
-    self[:] = self.__ne__(e)
-    return self</code></pre>
 </details>
 </dd>
 <dt id="funct.Array.Array.nunique"><code class="name flex">
@@ -4214,27 +3629,8 @@ and given scalar or sequence, element-wise.</p></div>
         ) from None</code></pre>
 </details>
 </dd>
-<dt id="funct.Array.Array.padLeft"><code class="name flex">
-<span>def <span class="ident">padLeft</span></span>(<span>self, n, value=0)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Pads this Array with value.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def padLeft(self, n, value=0):
-    &#34;&#34;&#34; Pads this Array with value. &#34;&#34;&#34;
-    try:
-        return [value] * n + self
-    except TypeError:
-        raise TypeError(
-            &#34;{} object cannot be interpreted as an integer&#34;.format(type(n).__name__)
-        ) from None</code></pre>
-</details>
-</dd>
-<dt id="funct.Array.Array.padLeftTo"><code class="name flex">
-<span>def <span class="ident">padLeftTo</span></span>(<span>self, n, value=0)</span>
+<dt id="funct.Array.Array.pad_to"><code class="name flex">
+<span>def <span class="ident">pad_to</span></span>(<span>self, n, value=0)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Pads this Array with value until length of n is reached.</p></div>
@@ -4242,26 +3638,7 @@ and given scalar or sequence, element-wise.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def padLeftTo(self, n, value=0):
-    &#34;&#34;&#34; Pads this Array with value until length of n is reached. &#34;&#34;&#34;
-    try:
-        return [value] * (n - self.size) + self
-    except TypeError:
-        raise TypeError(
-            &#34;{} object cannot be interpreted as an integer&#34;.format(type(n).__name__)
-        ) from None</code></pre>
-</details>
-</dd>
-<dt id="funct.Array.Array.padTo"><code class="name flex">
-<span>def <span class="ident">padTo</span></span>(<span>self, n, value=0)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Pads this Array with value until length of n is reached.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def padTo(self, n, value=0):
+<pre><code class="python">def pad_to(self, n, value=0):
     &#34;&#34;&#34;
     Pads this Array with value until length of n is reached.
     &#34;&#34;&#34;
@@ -4273,38 +3650,108 @@ and given scalar or sequence, element-wise.</p></div>
         ) from None</code></pre>
 </details>
 </dd>
+<dt id="funct.Array.Array.padleft"><code class="name flex">
+<span>def <span class="ident">padleft</span></span>(<span>self, n, value=0)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Pads this Array with value.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def padleft(self, n, value=0):
+    &#34;&#34;&#34; Pads this Array with value. &#34;&#34;&#34;
+    try:
+        return [value] * n + self
+    except TypeError:
+        raise TypeError(
+            &#34;{} object cannot be interpreted as an integer&#34;.format(type(n).__name__)
+        ) from None</code></pre>
+</details>
+</dd>
+<dt id="funct.Array.Array.padleft_to"><code class="name flex">
+<span>def <span class="ident">padleft_to</span></span>(<span>self, n, value=0)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Pads this Array with value until length of n is reached.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def padleft_to(self, n, value=0):
+    &#34;&#34;&#34; Pads this Array with value until length of n is reached. &#34;&#34;&#34;
+    try:
+        return [value] * (n - self.size) + self
+    except TypeError:
+        raise TypeError(
+            &#34;{} object cannot be interpreted as an integer&#34;.format(type(n).__name__)
+        ) from None</code></pre>
+</details>
+</dd>
 <dt id="funct.Array.Array.parmap"><code class="name flex">
-<span>def <span class="ident">parmap</span></span>(<span>self, fun, processes=None)</span>
+<span>def <span class="ident">parmap</span></span>(<span>self, func, processes=None, Pool=&lt;bound method BaseContext.Pool of &lt;multiprocessing.context.DefaultContext object&gt;&gt;)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Returns an Array by applying a function to
-all elements of this Array in parallel.</p></div>
+all elements of this Array in parallel.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>func</code></strong> :&ensp;<code>Callable</code></dt>
+<dd>&nbsp;</dd>
+<dt><strong><code>processes</code></strong> :&ensp;<code>int</code>, optional</dt>
+<dd>&nbsp;</dd>
+<dt><strong><code>Pool</code></strong> :&ensp;<code>Pool</code>, optional <code>(multiprocessing.Pool, multiprocessing.pool.ThreadPool)</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def parmap(self, fun, processes=None):
+<pre><code class="python">def parmap(self, func, processes=None, Pool=multiprocessing.Pool):
     &#34;&#34;&#34;
     Returns an Array by applying a function to
     all elements of this Array in parallel.
+
+    Parameters
+    ----------
+    func: Callable
+    processes: int, optional
+    Pool: Pool, optional (multiprocessing.Pool, multiprocessing.pool.ThreadPool)
     &#34;&#34;&#34;
-    with multiprocessing.Pool(processes=processes) as pool:
-        return Array(pool.map(fun, self))</code></pre>
+    with Pool(processes=processes) as pool:
+        return Array(pool.map(func, self))</code></pre>
 </details>
 </dd>
 <dt id="funct.Array.Array.parstarmap"><code class="name flex">
-<span>def <span class="ident">parstarmap</span></span>(<span>self, fun, processes=None)</span>
+<span>def <span class="ident">parstarmap</span></span>(<span>self, func, processes=None, Pool=&lt;bound method BaseContext.Pool of &lt;multiprocessing.context.DefaultContext object&gt;&gt;)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Parallel starmap</p></div>
+<div class="desc"><p>Parallel starmap</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>func</code></strong> :&ensp;<code>Callable</code></dt>
+<dd>&nbsp;</dd>
+<dt><strong><code>processes</code></strong> :&ensp;<code>int</code>, optional</dt>
+<dd>&nbsp;</dd>
+<dt><strong><code>Pool</code></strong> :&ensp;<code>Pool</code>, optional <code>(multiprocessing.Pool, multiprocessing.pool.ThreadPool)</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def parstarmap(self, fun, processes=None):
-    &#34;&#34;&#34; Parallel starmap &#34;&#34;&#34;
-    with multiprocessing.Pool(processes=processes) as pool:
-        return Array(pool.starmap(fun, self))</code></pre>
+<pre><code class="python">def parstarmap(self, func, processes=None, Pool=multiprocessing.Pool):
+    &#34;&#34;&#34;
+    Parallel starmap
+
+    Parameters
+    ----------
+    func: Callable
+    processes: int, optional
+    Pool: Pool, optional (multiprocessing.Pool, multiprocessing.pool.ThreadPool)
+    &#34;&#34;&#34;
+    with Pool(processes=processes) as pool:
+        return Array(pool.starmap(func, self))</code></pre>
 </details>
 </dd>
 <dt id="funct.Array.Array.pow"><code class="name flex">
@@ -4323,26 +3770,6 @@ or sequence of powers, element-wise.</p></div>
     or sequence of powers, element-wise.
     &#34;&#34;&#34;
     return self.__operate(operator.pow, e, inplace)</code></pre>
-</details>
-</dd>
-<dt id="funct.Array.Array.pow_"><code class="name flex">
-<span>def <span class="ident">pow_</span></span>(<span>self, e)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Raises elements (in-place) of this Array to given power,
-or sequence of powers, element-wise.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def pow_(self, e):
-    &#34;&#34;&#34;
-    Raises elements (in-place) of this Array to given power,
-    or sequence of powers, element-wise.
-    &#34;&#34;&#34;
-    warn()
-    self[:] = self.__operate(operator.pow, e, True)
-    return self</code></pre>
 </details>
 </dd>
 <dt id="funct.Array.Array.prepend"><code class="name flex">
@@ -4377,7 +3804,7 @@ or sequence of powers, element-wise.</p></div>
 </details>
 </dd>
 <dt id="funct.Array.Array.reduce"><code class="name flex">
-<span>def <span class="ident">reduce</span></span>(<span>self, l, init=None)</span>
+<span>def <span class="ident">reduce</span></span>(<span>self, func, init=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Reduces the elements of this Array using the specified operator.</p></div>
@@ -4385,11 +3812,11 @@ or sequence of powers, element-wise.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def reduce(self, l, init=None):
+<pre><code class="python">def reduce(self, func, init=None):
     &#34;&#34;&#34; Reduces the elements of this Array using the specified operator. &#34;&#34;&#34;
     if init is not None:
-        return reduce(l, self, init)
-    return reduce(l, self)</code></pre>
+        return reduce(func, self, init)
+    return reduce(func, self)</code></pre>
 </details>
 </dd>
 <dt id="funct.Array.Array.remove"><code class="name flex">
@@ -4412,8 +3839,8 @@ or sequence of powers, element-wise.</p></div>
     return a</code></pre>
 </details>
 </dd>
-<dt id="funct.Array.Array.removeByIndex"><code class="name flex">
-<span>def <span class="ident">removeByIndex</span></span>(<span>self, b, inplace=False)</span>
+<dt id="funct.Array.Array.remove_by_index"><code class="name flex">
+<span>def <span class="ident">remove_by_index</span></span>(<span>self, b, inplace=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Removes the value at specified index or indices.</p></div>
@@ -4421,7 +3848,7 @@ or sequence of powers, element-wise.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def removeByIndex(self, b, inplace=False):
+<pre><code class="python">def remove_by_index(self, b, inplace=False):
     &#34;&#34;&#34; Removes the value at specified index or indices. &#34;&#34;&#34;
     a = self if inplace else self.copy()
     if isinstance(b, Iterable):
@@ -4448,62 +3875,6 @@ or sequence of powers, element-wise.</p></div>
     return a</code></pre>
 </details>
 </dd>
-<dt id="funct.Array.Array.removeByIndex_"><code class="name flex">
-<span>def <span class="ident">removeByIndex_</span></span>(<span>self, b)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Removes the value at specified index or indices in-place.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def removeByIndex_(self, b):
-    &#34;&#34;&#34; Removes the value at specified index or indices in-place. &#34;&#34;&#34;
-    warn()
-    if isinstance(b, Iterable):
-        try:
-            c = 0
-            for i in b:
-                self.pop(i - c)
-                c += 1
-        except TypeError:
-            raise TypeError(
-                &#34;{} object cannot be interpreted as an integer&#34;.format(
-                    type(i).__name__
-                )
-            ) from None
-    else:
-        try:
-            self.pop(b)
-        except TypeError:
-            raise TypeError(
-                &#34;{} object cannot be interpreted as an integer&#34;.format(
-                    type(b).__name__
-                )
-            ) from None
-    return self</code></pre>
-</details>
-</dd>
-<dt id="funct.Array.Array.remove_"><code class="name flex">
-<span>def <span class="ident">remove_</span></span>(<span>self, b)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Removes first occurence(s) of the value(s) in-place.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def remove_(self, b):
-    &#34;&#34;&#34; Removes first occurence(s) of the value(s) in-place. &#34;&#34;&#34;
-    warn()
-    if isinstance(b, Iterable):
-        for i in b:
-            super().remove(i)
-    else:
-        super().remove(b)
-    return self</code></pre>
-</details>
-</dd>
 <dt id="funct.Array.Array.reverse"><code class="name flex">
 <span>def <span class="ident">reverse</span></span>(<span>self, inplace=False)</span>
 </code></dt>
@@ -4520,22 +3891,6 @@ or sequence of powers, element-wise.</p></div>
         super().reverse()
         return self
     return Array(reversed(self))</code></pre>
-</details>
-</dd>
-<dt id="funct.Array.Array.reverse_"><code class="name flex">
-<span>def <span class="ident">reverse_</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Reverses this Array in-place.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def reverse_(self):
-    &#34;&#34;&#34; Reverses this Array in-place. &#34;&#34;&#34;
-    warn()
-    super().reverse()
-    return self</code></pre>
 </details>
 </dd>
 <dt id="funct.Array.Array.roll"><code class="name flex">
@@ -4556,23 +3911,6 @@ or sequence of powers, element-wise.</p></div>
     return a</code></pre>
 </details>
 </dd>
-<dt id="funct.Array.Array.roll_"><code class="name flex">
-<span>def <span class="ident">roll_</span></span>(<span>self, n)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Rolls the elements of the Array in-place.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def roll_(self, n):
-    &#34;&#34;&#34; Rolls the elements of the Array in-place. &#34;&#34;&#34;
-    warn()
-    n = n % self.size
-    self[:] = self[-n:] + self[:-n]
-    return self</code></pre>
-</details>
-</dd>
 <dt id="funct.Array.Array.round"><code class="name flex">
 <span>def <span class="ident">round</span></span>(<span>self, d=0, inplace=False)</span>
 </code></dt>
@@ -4590,24 +3928,8 @@ or sequence of powers, element-wise.</p></div>
     return Array(a)</code></pre>
 </details>
 </dd>
-<dt id="funct.Array.Array.round_"><code class="name flex">
-<span>def <span class="ident">round_</span></span>(<span>self, d=0)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Rounds the Array in-place to the given number of decimals.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def round_(self, d=0):
-    &#34;&#34;&#34; Rounds the Array in-place to the given number of decimals. &#34;&#34;&#34;
-    warn()
-    self[:] = Array(map(lambda e: round(e, d), self))
-    return self</code></pre>
-</details>
-</dd>
-<dt id="funct.Array.Array.setDifference"><code class="name flex">
-<span>def <span class="ident">setDifference</span></span>(<span>self, b)</span>
+<dt id="funct.Array.Array.setdifference"><code class="name flex">
+<span>def <span class="ident">setdifference</span></span>(<span>self, b)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Difference between this Array and another iterable.
@@ -4617,7 +3939,7 @@ Does not preserve order of elements.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def setDifference(self, b):
+<pre><code class="python">def setdifference(self, b):
     &#34;&#34;&#34;
     Difference between this Array and another iterable.
     Returns the unique values in this Array that are not in sequence b.
@@ -4626,8 +3948,8 @@ Does not preserve order of elements.</p></div>
     return Array(set(self).difference(set(b)))</code></pre>
 </details>
 </dd>
-<dt id="funct.Array.Array.setIntersect"><code class="name flex">
-<span>def <span class="ident">setIntersect</span></span>(<span>self, b)</span>
+<dt id="funct.Array.Array.setintersect"><code class="name flex">
+<span>def <span class="ident">setintersect</span></span>(<span>self, b)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Intersection between this Array and another iterable.
@@ -4637,7 +3959,7 @@ Does not preserve order of elements.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def setIntersect(self, b):
+<pre><code class="python">def setintersect(self, b):
     &#34;&#34;&#34;
     Intersection between this Array and another iterable.
     Returns the unique values that are both in this Array and sequence b.
@@ -4646,8 +3968,8 @@ Does not preserve order of elements.</p></div>
     return Array(set(self).intersection(set(b)))</code></pre>
 </details>
 </dd>
-<dt id="funct.Array.Array.setUnion"><code class="name flex">
-<span>def <span class="ident">setUnion</span></span>(<span>self, b)</span>
+<dt id="funct.Array.Array.setunion"><code class="name flex">
+<span>def <span class="ident">setunion</span></span>(<span>self, b)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Union of this Array and another iterable.
@@ -4657,7 +3979,7 @@ Does not preserve order of elements.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def setUnion(self, b):
+<pre><code class="python">def setunion(self, b):
     &#34;&#34;&#34;
     Union of this Array and another iterable.
     Returns the unique values that are in either this Array or sequence b.
@@ -4684,8 +4006,8 @@ Does not preserve order of elements.</p></div>
     return Array(sorted(self, **kwargs))</code></pre>
 </details>
 </dd>
-<dt id="funct.Array.Array.sortBy"><code class="name flex">
-<span>def <span class="ident">sortBy</span></span>(<span>self, l, reverse=False, inplace=False)</span>
+<dt id="funct.Array.Array.sortby"><code class="name flex">
+<span>def <span class="ident">sortby</span></span>(<span>self, func, reverse=False, inplace=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Sorts this Array according to a function
@@ -4694,52 +4016,16 @@ defining the sorting criteria.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def sortBy(self, l, reverse=False, inplace=False):
+<pre><code class="python">def sortby(self, func, reverse=False, inplace=False):
     &#34;&#34;&#34;
     Sorts this Array according to a function
     defining the sorting criteria.
     &#34;&#34;&#34;
     if inplace:
         self.__validate_bool_arg(inplace, &#34;inplace&#34;)
-        super().sort(key=l, reverse=reverse)
+        super().sort(key=func, reverse=reverse)
         return self
-    return Array(sorted(self, key=l, reverse=reverse))</code></pre>
-</details>
-</dd>
-<dt id="funct.Array.Array.sortBy_"><code class="name flex">
-<span>def <span class="ident">sortBy_</span></span>(<span>self, l, reverse=False)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Sorts this Array in place according to a function
-defining the sorting criteria.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def sortBy_(self, l, reverse=False):
-    &#34;&#34;&#34;
-    Sorts this Array in place according to a function
-    defining the sorting criteria.
-    &#34;&#34;&#34;
-    warn()
-    super().sort(key=l, reverse=reverse)
-    return self</code></pre>
-</details>
-</dd>
-<dt id="funct.Array.Array.sort_"><code class="name flex">
-<span>def <span class="ident">sort_</span></span>(<span>self, **kwargs)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Sorts this Array in place.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def sort_(self, **kwargs):
-    &#34;&#34;&#34; Sorts this Array in place. &#34;&#34;&#34;
-    warn()
-    super().sort(**kwargs)
-    return self</code></pre>
+    return Array(sorted(self, key=func, reverse=reverse))</code></pre>
 </details>
 </dd>
 <dt id="funct.Array.Array.split"><code class="name flex">
@@ -4766,8 +4052,8 @@ defining the sorting criteria.</p></div>
         return self.unsqueeze</code></pre>
 </details>
 </dd>
-<dt id="funct.Array.Array.splitAt"><code class="name flex">
-<span>def <span class="ident">splitAt</span></span>(<span>self, n)</span>
+<dt id="funct.Array.Array.split_at"><code class="name flex">
+<span>def <span class="ident">split_at</span></span>(<span>self, n)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Splits this Array into subarrays at specified index or indices.</p></div>
@@ -4775,7 +4061,7 @@ defining the sorting criteria.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def splitAt(self, n):
+<pre><code class="python">def split_at(self, n):
     &#34;&#34;&#34; Splits this Array into subarrays at specified index or indices. &#34;&#34;&#34;
     if isinstance(n, int):
         return Array(self[:n], self[n:])
@@ -4783,8 +4069,8 @@ defining the sorting criteria.</p></div>
     return Array(self[n[i] : n[i + 1]] for i in range(n.size - 1))</code></pre>
 </details>
 </dd>
-<dt id="funct.Array.Array.splitTo"><code class="name flex">
-<span>def <span class="ident">splitTo</span></span>(<span>self, n)</span>
+<dt id="funct.Array.Array.split_to"><code class="name flex">
+<span>def <span class="ident">split_to</span></span>(<span>self, n)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Splits this Array to n equal length subarrays</p></div>
@@ -4792,7 +4078,7 @@ defining the sorting criteria.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def splitTo(self, n):
+<pre><code class="python">def split_to(self, n):
     &#34;&#34;&#34; Splits this Array to n equal length subarrays &#34;&#34;&#34;
     if self.size % n != 0:
         raise ValueError(&#34;Split does not result in an equal division&#34;)
@@ -4801,7 +4087,7 @@ defining the sorting criteria.</p></div>
 </details>
 </dd>
 <dt id="funct.Array.Array.starmap"><code class="name flex">
-<span>def <span class="ident">starmap</span></span>(<span>self, l)</span>
+<span>def <span class="ident">starmap</span></span>(<span>self, func)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Returns an Array by applying provided function
@@ -4810,12 +4096,12 @@ to this Array with itertools.starmap</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def starmap(self, l):
+<pre><code class="python">def starmap(self, func):
     &#34;&#34;&#34;
     Returns an Array by applying provided function
     to this Array with itertools.starmap
     &#34;&#34;&#34;
-    return Array(itertools.starmap(l, self))</code></pre>
+    return Array(itertools.starmap(func, self))</code></pre>
 </details>
 </dd>
 <dt id="funct.Array.Array.sub"><code class="name flex">
@@ -4834,24 +4120,6 @@ to this Array with itertools.starmap</p></div>
     return self.__operate(operator.sub, e, inplace)</code></pre>
 </details>
 </dd>
-<dt id="funct.Array.Array.sub_"><code class="name flex">
-<span>def <span class="ident">sub_</span></span>(<span>self, e)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Inplace element-wise subtraction with given scalar or sequence.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def sub_(self, e):
-    &#34;&#34;&#34;
-    Inplace element-wise subtraction with given scalar or sequence.
-    &#34;&#34;&#34;
-    warn()
-    self[:] = self.__operate(operator.sub, e, True)
-    return self</code></pre>
-</details>
-</dd>
 <dt id="funct.Array.Array.sum"><code class="name flex">
 <span>def <span class="ident">sum</span></span>(<span>self, start=0)</span>
 </code></dt>
@@ -4866,8 +4134,8 @@ to this Array with itertools.starmap</p></div>
     return sum(self, start)</code></pre>
 </details>
 </dd>
-<dt id="funct.Array.Array.takeWhile"><code class="name flex">
-<span>def <span class="ident">takeWhile</span></span>(<span>self, l)</span>
+<dt id="funct.Array.Array.takewhile"><code class="name flex">
+<span>def <span class="ident">takewhile</span></span>(<span>self, func)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Takes the longest prefix of elements that satisfy the given predicate.</p></div>
@@ -4875,57 +4143,13 @@ to this Array with itertools.starmap</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def takeWhile(self, l):
+<pre><code class="python">def takewhile(self, func):
     &#34;&#34;&#34; Takes the longest prefix of elements that satisfy the given predicate. &#34;&#34;&#34;
-    return Array(itertools.takewhile(l, self))</code></pre>
+    return Array(itertools.takewhile(func, self))</code></pre>
 </details>
 </dd>
-<dt id="funct.Array.Array.toArray"><code class="name flex">
-<span>def <span class="ident">toArray</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Converts all iterables in the Array to Arrays</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def toArray(self):
-    &#34;&#34;&#34; Converts all iterables in the Array to Arrays &#34;&#34;&#34;
-    return Array(
-        map(lambda e: Array(e).toArray() if isinstance(e, Iterable) else e, self)
-    )</code></pre>
-</details>
-</dd>
-<dt id="funct.Array.Array.toBool"><code class="name flex">
-<span>def <span class="ident">toBool</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Converts elements in this Array to booleans.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def toBool(self):
-    &#34;&#34;&#34; Converts elements in this Array to booleans. &#34;&#34;&#34;
-    return Array(map(bool, self))</code></pre>
-</details>
-</dd>
-<dt id="funct.Array.Array.toChar"><code class="name flex">
-<span>def <span class="ident">toChar</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Converts an Array of integers to chars.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def toChar(self):
-    &#34;&#34;&#34; Converts an Array of integers to chars. &#34;&#34;&#34;
-    return Array(map(chr, self))</code></pre>
-</details>
-</dd>
-<dt id="funct.Array.Array.toDict"><code class="name flex">
-<span>def <span class="ident">toDict</span></span>(<span>self)</span>
+<dt id="funct.Array.Array.to_dict"><code class="name flex">
+<span>def <span class="ident">to_dict</span></span>(<span>self)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Creates a dictionary from an Array of Arrays / tuples.</p></div>
@@ -4933,30 +4157,13 @@ to this Array with itertools.starmap</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def toDict(self):
+<pre><code class="python">def to_dict(self):
     &#34;&#34;&#34; Creates a dictionary from an Array of Arrays / tuples. &#34;&#34;&#34;
     return dict(self)</code></pre>
 </details>
 </dd>
-<dt id="funct.Array.Array.toInt"><code class="name flex">
-<span>def <span class="ident">toInt</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Converts elements in this Array to integers.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def toInt(self):
-    &#34;&#34;&#34; Converts elements in this Array to integers. &#34;&#34;&#34;
-    try:
-        return Array(map(lambda e: ord(e) if isinstance(e, str) else int(e), self))
-    except TypeError:
-        raise TypeError(&#34;Expected an Array of numbers or characters&#34;) from None</code></pre>
-</details>
-</dd>
-<dt id="funct.Array.Array.toIter"><code class="name flex">
-<span>def <span class="ident">toIter</span></span>(<span>self)</span>
+<dt id="funct.Array.Array.to_iter"><code class="name flex">
+<span>def <span class="ident">to_iter</span></span>(<span>self)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Returns an iterator for the Array.</p></div>
@@ -4964,14 +4171,14 @@ to this Array with itertools.starmap</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def toIter(self):
+<pre><code class="python">def to_iter(self):
     &#34;&#34;&#34; Returns an iterator for the Array.&#34;&#34;&#34;
     for e in self:
         yield e</code></pre>
 </details>
 </dd>
-<dt id="funct.Array.Array.toSet"><code class="name flex">
-<span>def <span class="ident">toSet</span></span>(<span>self)</span>
+<dt id="funct.Array.Array.to_set"><code class="name flex">
+<span>def <span class="ident">to_set</span></span>(<span>self)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Returns set of the Array elements. Order is not preserved.</p></div>
@@ -4979,13 +4186,13 @@ to this Array with itertools.starmap</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def toSet(self):
+<pre><code class="python">def to_set(self):
     &#34;&#34;&#34; Returns set of the Array elements. Order is not preserved. &#34;&#34;&#34;
     return set(self)</code></pre>
 </details>
 </dd>
-<dt id="funct.Array.Array.toStr"><code class="name flex">
-<span>def <span class="ident">toStr</span></span>(<span>self)</span>
+<dt id="funct.Array.Array.to_str"><code class="name flex">
+<span>def <span class="ident">to_str</span></span>(<span>self)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Creates a string representation of the Array.
@@ -4994,7 +4201,7 @@ See Array.join for more functionality.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def toStr(self):
+<pre><code class="python">def to_str(self):
     &#34;&#34;&#34;
     Creates a string representation of the Array.
     See Array.join for more functionality.
@@ -5002,8 +4209,8 @@ See Array.join for more functionality.</p></div>
     return &#34;&#34;.join(str(v) for v in self)</code></pre>
 </details>
 </dd>
-<dt id="funct.Array.Array.toTuple"><code class="name flex">
-<span>def <span class="ident">toTuple</span></span>(<span>self)</span>
+<dt id="funct.Array.Array.to_tuple"><code class="name flex">
+<span>def <span class="ident">to_tuple</span></span>(<span>self)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Returns a copy of the Array as an tuple.</p></div>
@@ -5011,7 +4218,7 @@ See Array.join for more functionality.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def toTuple(self):
+<pre><code class="python">def to_tuple(self):
     &#34;&#34;&#34; Returns a copy of the Array as an tuple. &#34;&#34;&#34;
     return tuple(self.copy())</code></pre>
 </details>
@@ -5111,8 +4318,8 @@ shorter than the window size.</p></div>
     return Array(zip(self, *args))</code></pre>
 </details>
 </dd>
-<dt id="funct.Array.Array.zipAll"><code class="name flex">
-<span>def <span class="ident">zipAll</span></span>(<span>self, *args, default=None)</span>
+<dt id="funct.Array.Array.zip_all"><code class="name flex">
+<span>def <span class="ident">zip_all</span></span>(<span>self, *args, default=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Zips the sequences. If the iterables are
@@ -5121,7 +4328,7 @@ of uneven length, missing values are filled with default value.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def zipAll(self, *args, default=None):
+<pre><code class="python">def zip_all(self, *args, default=None):
     &#34;&#34;&#34;
     Zips the sequences. If the iterables are
     of uneven length, missing values are filled with default value.
@@ -5130,6 +4337,63 @@ of uneven length, missing values are filled with default value.</p></div>
 </details>
 </dd>
 </dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="funct.lazy.ASeq" href="lazy.html#funct.lazy.ASeq">ASeq</a></b></code>:
+<ul class="hlist">
+<li><code><a title="funct.lazy.ASeq.abs_" href="lazy.html#funct.lazy.ASeq.abs_">abs_</a></code></li>
+<li><code><a title="funct.lazy.ASeq.add_" href="lazy.html#funct.lazy.ASeq.add_">add_</a></code></li>
+<li><code><a title="funct.lazy.ASeq.all_" href="lazy.html#funct.lazy.ASeq.all_">all_</a></code></li>
+<li><code><a title="funct.lazy.ASeq.any_" href="lazy.html#funct.lazy.ASeq.any_">any_</a></code></li>
+<li><code><a title="funct.lazy.ASeq.argmax_" href="lazy.html#funct.lazy.ASeq.argmax_">argmax_</a></code></li>
+<li><code><a title="funct.lazy.ASeq.argmin_" href="lazy.html#funct.lazy.ASeq.argmin_">argmin_</a></code></li>
+<li><code><a title="funct.lazy.ASeq.astype_" href="lazy.html#funct.lazy.ASeq.astype_">astype_</a></code></li>
+<li><code><a title="funct.lazy.ASeq.bitwise_and_" href="lazy.html#funct.lazy.ASeq.bitwise_and_">bitwise_and_</a></code></li>
+<li><code><a title="funct.lazy.ASeq.bitwise_or_" href="lazy.html#funct.lazy.ASeq.bitwise_or_">bitwise_or_</a></code></li>
+<li><code><a title="funct.lazy.ASeq.bool_" href="lazy.html#funct.lazy.ASeq.bool_">bool_</a></code></li>
+<li><code><a title="funct.lazy.ASeq.ceil_" href="lazy.html#funct.lazy.ASeq.ceil_">ceil_</a></code></li>
+<li><code><a title="funct.lazy.ASeq.char_" href="lazy.html#funct.lazy.ASeq.char_">char_</a></code></li>
+<li><code><a title="funct.lazy.ASeq.clip_" href="lazy.html#funct.lazy.ASeq.clip_">clip_</a></code></li>
+<li><code><a title="funct.lazy.ASeq.copy_" href="lazy.html#funct.lazy.ASeq.copy_">copy_</a></code></li>
+<li><code><a title="funct.lazy.ASeq.div_" href="lazy.html#funct.lazy.ASeq.div_">div_</a></code></li>
+<li><code><a title="funct.lazy.ASeq.dropwhile_" href="lazy.html#funct.lazy.ASeq.dropwhile_">dropwhile_</a></code></li>
+<li><code><a title="funct.lazy.ASeq.enumerate_" href="lazy.html#funct.lazy.ASeq.enumerate_">enumerate_</a></code></li>
+<li><code><a title="funct.lazy.ASeq.eq_" href="lazy.html#funct.lazy.ASeq.eq_">eq_</a></code></li>
+<li><code><a title="funct.lazy.ASeq.filter_" href="lazy.html#funct.lazy.ASeq.filter_">filter_</a></code></li>
+<li><code><a title="funct.lazy.ASeq.float_" href="lazy.html#funct.lazy.ASeq.float_">float_</a></code></li>
+<li><code><a title="funct.lazy.ASeq.floor_" href="lazy.html#funct.lazy.ASeq.floor_">floor_</a></code></li>
+<li><code><a title="funct.lazy.ASeq.forall_" href="lazy.html#funct.lazy.ASeq.forall_">forall_</a></code></li>
+<li><code><a title="funct.lazy.ASeq.forany_" href="lazy.html#funct.lazy.ASeq.forany_">forany_</a></code></li>
+<li><code><a title="funct.lazy.ASeq.foreach_" href="lazy.html#funct.lazy.ASeq.foreach_">foreach_</a></code></li>
+<li><code><a title="funct.lazy.ASeq.ge_" href="lazy.html#funct.lazy.ASeq.ge_">ge_</a></code></li>
+<li><code><a title="funct.lazy.ASeq.gt_" href="lazy.html#funct.lazy.ASeq.gt_">gt_</a></code></li>
+<li><code><a title="funct.lazy.ASeq.head_" href="lazy.html#funct.lazy.ASeq.head_">head_</a></code></li>
+<li><code><a title="funct.lazy.ASeq.head_option_" href="lazy.html#funct.lazy.ASeq.head_option_">head_option_</a></code></li>
+<li><code><a title="funct.lazy.ASeq.int_" href="lazy.html#funct.lazy.ASeq.int_">int_</a></code></li>
+<li><code><a title="funct.lazy.ASeq.isfinite_" href="lazy.html#funct.lazy.ASeq.isfinite_">isfinite_</a></code></li>
+<li><code><a title="funct.lazy.ASeq.le_" href="lazy.html#funct.lazy.ASeq.le_">le_</a></code></li>
+<li><code><a title="funct.lazy.ASeq.lt_" href="lazy.html#funct.lazy.ASeq.lt_">lt_</a></code></li>
+<li><code><a title="funct.lazy.ASeq.map_" href="lazy.html#funct.lazy.ASeq.map_">map_</a></code></li>
+<li><code><a title="funct.lazy.ASeq.maxby_" href="lazy.html#funct.lazy.ASeq.maxby_">maxby_</a></code></li>
+<li><code><a title="funct.lazy.ASeq.minby_" href="lazy.html#funct.lazy.ASeq.minby_">minby_</a></code></li>
+<li><code><a title="funct.lazy.ASeq.mod_" href="lazy.html#funct.lazy.ASeq.mod_">mod_</a></code></li>
+<li><code><a title="funct.lazy.ASeq.mul_" href="lazy.html#funct.lazy.ASeq.mul_">mul_</a></code></li>
+<li><code><a title="funct.lazy.ASeq.ne_" href="lazy.html#funct.lazy.ASeq.ne_">ne_</a></code></li>
+<li><code><a title="funct.lazy.ASeq.pow_" href="lazy.html#funct.lazy.ASeq.pow_">pow_</a></code></li>
+<li><code><a title="funct.lazy.ASeq.product_" href="lazy.html#funct.lazy.ASeq.product_">product_</a></code></li>
+<li><code><a title="funct.lazy.ASeq.reduce_" href="lazy.html#funct.lazy.ASeq.reduce_">reduce_</a></code></li>
+<li><code><a title="funct.lazy.ASeq.round_" href="lazy.html#funct.lazy.ASeq.round_">round_</a></code></li>
+<li><code><a title="funct.lazy.ASeq.starmap_" href="lazy.html#funct.lazy.ASeq.starmap_">starmap_</a></code></li>
+<li><code><a title="funct.lazy.ASeq.sub_" href="lazy.html#funct.lazy.ASeq.sub_">sub_</a></code></li>
+<li><code><a title="funct.lazy.ASeq.sum_" href="lazy.html#funct.lazy.ASeq.sum_">sum_</a></code></li>
+<li><code><a title="funct.lazy.ASeq.takewhile_" href="lazy.html#funct.lazy.ASeq.takewhile_">takewhile_</a></code></li>
+<li><code><a title="funct.lazy.ASeq.to_Array" href="lazy.html#funct.lazy.ASeq.to_Array">to_Array</a></code></li>
+<li><code><a title="funct.lazy.ASeq.unzip_" href="lazy.html#funct.lazy.ASeq.unzip_">unzip_</a></code></li>
+<li><code><a title="funct.lazy.ASeq.zip_" href="lazy.html#funct.lazy.ASeq.zip_">zip_</a></code></li>
+<li><code><a title="funct.lazy.ASeq.zip_all_" href="lazy.html#funct.lazy.ASeq.zip_all_">zip_all_</a></code></li>
+</ul>
+</li>
+</ul>
 </dd>
 </dl>
 </section>
@@ -5145,21 +4409,14 @@ of uneven length, missing values are filled with default value.</p></div>
 <li><code><a title="funct" href="index.html">funct</a></code></li>
 </ul>
 </li>
-<li><h3><a href="#header-functions">Functions</a></h3>
-<ul class="">
-<li><code><a title="funct.Array.warn" href="#funct.Array.warn">warn</a></code></li>
-</ul>
-</li>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
 <h4><code><a title="funct.Array.Array" href="#funct.Array.Array">Array</a></code></h4>
 <ul class="two-column">
 <li><code><a title="funct.Array.Array.abs" href="#funct.Array.Array.abs">abs</a></code></li>
-<li><code><a title="funct.Array.Array.abs_" href="#funct.Array.Array.abs_">abs_</a></code></li>
 <li><code><a title="funct.Array.Array.accumulate" href="#funct.Array.Array.accumulate">accumulate</a></code></li>
 <li><code><a title="funct.Array.Array.add" href="#funct.Array.Array.add">add</a></code></li>
-<li><code><a title="funct.Array.Array.add_" href="#funct.Array.Array.add_">add_</a></code></li>
 <li><code><a title="funct.Array.Array.all" href="#funct.Array.Array.all">all</a></code></li>
 <li><code><a title="funct.Array.Array.any" href="#funct.Array.Array.any">any</a></code></li>
 <li><code><a title="funct.Array.Array.append" href="#funct.Array.Array.append">append</a></code></li>
@@ -5167,131 +4424,108 @@ of uneven length, missing values are filled with default value.</p></div>
 <li><code><a title="funct.Array.Array.argmax" href="#funct.Array.Array.argmax">argmax</a></code></li>
 <li><code><a title="funct.Array.Array.argmin" href="#funct.Array.Array.argmin">argmin</a></code></li>
 <li><code><a title="funct.Array.Array.argsort" href="#funct.Array.Array.argsort">argsort</a></code></li>
-<li><code><a title="funct.Array.Array.argsortBy" href="#funct.Array.Array.argsortBy">argsortBy</a></code></li>
-<li><code><a title="funct.Array.Array.asType" href="#funct.Array.Array.asType">asType</a></code></li>
+<li><code><a title="funct.Array.Array.argsortby" href="#funct.Array.Array.argsortby">argsortby</a></code></li>
+<li><code><a title="funct.Array.Array.astype" href="#funct.Array.Array.astype">astype</a></code></li>
 <li><code><a title="funct.Array.Array.asyncmap" href="#funct.Array.Array.asyncmap">asyncmap</a></code></li>
 <li><code><a title="funct.Array.Array.asyncstarmap" href="#funct.Array.Array.asyncstarmap">asyncstarmap</a></code></li>
 <li><code><a title="funct.Array.Array.average" href="#funct.Array.Array.average">average</a></code></li>
-<li><code><a title="funct.Array.Array.bitwiseAnd" href="#funct.Array.Array.bitwiseAnd">bitwiseAnd</a></code></li>
-<li><code><a title="funct.Array.Array.bitwiseAnd_" href="#funct.Array.Array.bitwiseAnd_">bitwiseAnd_</a></code></li>
-<li><code><a title="funct.Array.Array.bitwiseOr" href="#funct.Array.Array.bitwiseOr">bitwiseOr</a></code></li>
-<li><code><a title="funct.Array.Array.bitwiseOr_" href="#funct.Array.Array.bitwiseOr_">bitwiseOr_</a></code></li>
+<li><code><a title="funct.Array.Array.bitwise_and" href="#funct.Array.Array.bitwise_and">bitwise_and</a></code></li>
+<li><code><a title="funct.Array.Array.bitwise_or" href="#funct.Array.Array.bitwise_or">bitwise_or</a></code></li>
+<li><code><a title="funct.Array.Array.bool" href="#funct.Array.Array.bool">bool</a></code></li>
 <li><code><a title="funct.Array.Array.cat" href="#funct.Array.Array.cat">cat</a></code></li>
 <li><code><a title="funct.Array.Array.ceil" href="#funct.Array.Array.ceil">ceil</a></code></li>
-<li><code><a title="funct.Array.Array.ceil_" href="#funct.Array.Array.ceil_">ceil_</a></code></li>
+<li><code><a title="funct.Array.Array.char" href="#funct.Array.Array.char">char</a></code></li>
 <li><code><a title="funct.Array.Array.chunks" href="#funct.Array.Array.chunks">chunks</a></code></li>
 <li><code><a title="funct.Array.Array.clip" href="#funct.Array.Array.clip">clip</a></code></li>
-<li><code><a title="funct.Array.Array.clip_" href="#funct.Array.Array.clip_">clip_</a></code></li>
 <li><code><a title="funct.Array.Array.contains" href="#funct.Array.Array.contains">contains</a></code></li>
 <li><code><a title="funct.Array.Array.copy" href="#funct.Array.Array.copy">copy</a></code></li>
 <li><code><a title="funct.Array.Array.diff" href="#funct.Array.Array.diff">diff</a></code></li>
 <li><code><a title="funct.Array.Array.difference" href="#funct.Array.Array.difference">difference</a></code></li>
 <li><code><a title="funct.Array.Array.div" href="#funct.Array.Array.div">div</a></code></li>
-<li><code><a title="funct.Array.Array.div_" href="#funct.Array.Array.div_">div_</a></code></li>
-<li><code><a title="funct.Array.Array.dropWhile" href="#funct.Array.Array.dropWhile">dropWhile</a></code></li>
+<li><code><a title="funct.Array.Array.dropwhile" href="#funct.Array.Array.dropwhile">dropwhile</a></code></li>
 <li><code><a title="funct.Array.Array.enumerate" href="#funct.Array.Array.enumerate">enumerate</a></code></li>
 <li><code><a title="funct.Array.Array.eq" href="#funct.Array.Array.eq">eq</a></code></li>
-<li><code><a title="funct.Array.Array.eq_" href="#funct.Array.Array.eq_">eq_</a></code></li>
 <li><code><a title="funct.Array.Array.equal" href="#funct.Array.Array.equal">equal</a></code></li>
 <li><code><a title="funct.Array.Array.extend" href="#funct.Array.Array.extend">extend</a></code></li>
-<li><code><a title="funct.Array.Array.extendLeft" href="#funct.Array.Array.extendLeft">extendLeft</a></code></li>
+<li><code><a title="funct.Array.Array.extendleft" href="#funct.Array.Array.extendleft">extendleft</a></code></li>
 <li><code><a title="funct.Array.Array.fill" href="#funct.Array.Array.fill">fill</a></code></li>
-<li><code><a title="funct.Array.Array.fill_" href="#funct.Array.Array.fill_">fill_</a></code></li>
 <li><code><a title="funct.Array.Array.filter" href="#funct.Array.Array.filter">filter</a></code></li>
 <li><code><a title="funct.Array.Array.flatten" href="#funct.Array.Array.flatten">flatten</a></code></li>
+<li><code><a title="funct.Array.Array.float" href="#funct.Array.Array.float">float</a></code></li>
 <li><code><a title="funct.Array.Array.floor" href="#funct.Array.Array.floor">floor</a></code></li>
-<li><code><a title="funct.Array.Array.floor_" href="#funct.Array.Array.floor_">floor_</a></code></li>
 <li><code><a title="funct.Array.Array.forall" href="#funct.Array.Array.forall">forall</a></code></li>
 <li><code><a title="funct.Array.Array.forany" href="#funct.Array.Array.forany">forany</a></code></li>
+<li><code><a title="funct.Array.Array.foreach" href="#funct.Array.Array.foreach">foreach</a></code></li>
 <li><code><a title="funct.Array.Array.ge" href="#funct.Array.Array.ge">ge</a></code></li>
-<li><code><a title="funct.Array.Array.ge_" href="#funct.Array.Array.ge_">ge_</a></code></li>
 <li><code><a title="funct.Array.Array.get" href="#funct.Array.Array.get">get</a></code></li>
-<li><code><a title="funct.Array.Array.groupBy" href="#funct.Array.Array.groupBy">groupBy</a></code></li>
+<li><code><a title="funct.Array.Array.groupby" href="#funct.Array.Array.groupby">groupby</a></code></li>
 <li><code><a title="funct.Array.Array.gt" href="#funct.Array.Array.gt">gt</a></code></li>
-<li><code><a title="funct.Array.Array.gt_" href="#funct.Array.Array.gt_">gt_</a></code></li>
 <li><code><a title="funct.Array.Array.head" href="#funct.Array.Array.head">head</a></code></li>
-<li><code><a title="funct.Array.Array.headOption" href="#funct.Array.Array.headOption">headOption</a></code></li>
-<li><code><a title="funct.Array.Array.indexWhere" href="#funct.Array.Array.indexWhere">indexWhere</a></code></li>
+<li><code><a title="funct.Array.Array.head_option" href="#funct.Array.Array.head_option">head_option</a></code></li>
+<li><code><a title="funct.Array.Array.index_where" href="#funct.Array.Array.index_where">index_where</a></code></li>
 <li><code><a title="funct.Array.Array.indices" href="#funct.Array.Array.indices">indices</a></code></li>
-<li><code><a title="funct.Array.Array.indicesWhere" href="#funct.Array.Array.indicesWhere">indicesWhere</a></code></li>
+<li><code><a title="funct.Array.Array.indices_where" href="#funct.Array.Array.indices_where">indices_where</a></code></li>
 <li><code><a title="funct.Array.Array.init" href="#funct.Array.Array.init">init</a></code></li>
 <li><code><a title="funct.Array.Array.insert" href="#funct.Array.Array.insert">insert</a></code></li>
+<li><code><a title="funct.Array.Array.int" href="#funct.Array.Array.int">int</a></code></li>
 <li><code><a title="funct.Array.Array.intersect" href="#funct.Array.Array.intersect">intersect</a></code></li>
-<li><code><a title="funct.Array.Array.isEmpty" href="#funct.Array.Array.isEmpty">isEmpty</a></code></li>
-<li><code><a title="funct.Array.Array.isFinite" href="#funct.Array.Array.isFinite">isFinite</a></code></li>
+<li><code><a title="funct.Array.Array.isempty" href="#funct.Array.Array.isempty">isempty</a></code></li>
+<li><code><a title="funct.Array.Array.isfinite" href="#funct.Array.Array.isfinite">isfinite</a></code></li>
 <li><code><a title="funct.Array.Array.join" href="#funct.Array.Array.join">join</a></code></li>
 <li><code><a title="funct.Array.Array.last" href="#funct.Array.Array.last">last</a></code></li>
-<li><code><a title="funct.Array.Array.lastOption" href="#funct.Array.Array.lastOption">lastOption</a></code></li>
+<li><code><a title="funct.Array.Array.last_option" href="#funct.Array.Array.last_option">last_option</a></code></li>
 <li><code><a title="funct.Array.Array.le" href="#funct.Array.Array.le">le</a></code></li>
-<li><code><a title="funct.Array.Array.le_" href="#funct.Array.Array.le_">le_</a></code></li>
 <li><code><a title="funct.Array.Array.length" href="#funct.Array.Array.length">length</a></code></li>
 <li><code><a title="funct.Array.Array.linspace" href="#funct.Array.Array.linspace">linspace</a></code></li>
 <li><code><a title="funct.Array.Array.logspace" href="#funct.Array.Array.logspace">logspace</a></code></li>
 <li><code><a title="funct.Array.Array.lt" href="#funct.Array.Array.lt">lt</a></code></li>
-<li><code><a title="funct.Array.Array.lt_" href="#funct.Array.Array.lt_">lt_</a></code></li>
 <li><code><a title="funct.Array.Array.map" href="#funct.Array.Array.map">map</a></code></li>
 <li><code><a title="funct.Array.Array.max" href="#funct.Array.Array.max">max</a></code></li>
-<li><code><a title="funct.Array.Array.maxBy" href="#funct.Array.Array.maxBy">maxBy</a></code></li>
+<li><code><a title="funct.Array.Array.maxby" href="#funct.Array.Array.maxby">maxby</a></code></li>
 <li><code><a title="funct.Array.Array.mean" href="#funct.Array.Array.mean">mean</a></code></li>
 <li><code><a title="funct.Array.Array.min" href="#funct.Array.Array.min">min</a></code></li>
-<li><code><a title="funct.Array.Array.minBy" href="#funct.Array.Array.minBy">minBy</a></code></li>
+<li><code><a title="funct.Array.Array.minby" href="#funct.Array.Array.minby">minby</a></code></li>
 <li><code><a title="funct.Array.Array.mod" href="#funct.Array.Array.mod">mod</a></code></li>
-<li><code><a title="funct.Array.Array.mod_" href="#funct.Array.Array.mod_">mod_</a></code></li>
 <li><code><a title="funct.Array.Array.mul" href="#funct.Array.Array.mul">mul</a></code></li>
-<li><code><a title="funct.Array.Array.mul_" href="#funct.Array.Array.mul_">mul_</a></code></li>
 <li><code><a title="funct.Array.Array.ne" href="#funct.Array.Array.ne">ne</a></code></li>
-<li><code><a title="funct.Array.Array.ne_" href="#funct.Array.Array.ne_">ne_</a></code></li>
-<li><code><a title="funct.Array.Array.nonEmpty" href="#funct.Array.Array.nonEmpty">nonEmpty</a></code></li>
+<li><code><a title="funct.Array.Array.nonempty" href="#funct.Array.Array.nonempty">nonempty</a></code></li>
 <li><code><a title="funct.Array.Array.nunique" href="#funct.Array.Array.nunique">nunique</a></code></li>
 <li><code><a title="funct.Array.Array.pad" href="#funct.Array.Array.pad">pad</a></code></li>
-<li><code><a title="funct.Array.Array.padLeft" href="#funct.Array.Array.padLeft">padLeft</a></code></li>
-<li><code><a title="funct.Array.Array.padLeftTo" href="#funct.Array.Array.padLeftTo">padLeftTo</a></code></li>
-<li><code><a title="funct.Array.Array.padTo" href="#funct.Array.Array.padTo">padTo</a></code></li>
+<li><code><a title="funct.Array.Array.pad_to" href="#funct.Array.Array.pad_to">pad_to</a></code></li>
+<li><code><a title="funct.Array.Array.padleft" href="#funct.Array.Array.padleft">padleft</a></code></li>
+<li><code><a title="funct.Array.Array.padleft_to" href="#funct.Array.Array.padleft_to">padleft_to</a></code></li>
 <li><code><a title="funct.Array.Array.parmap" href="#funct.Array.Array.parmap">parmap</a></code></li>
 <li><code><a title="funct.Array.Array.parstarmap" href="#funct.Array.Array.parstarmap">parstarmap</a></code></li>
 <li><code><a title="funct.Array.Array.pow" href="#funct.Array.Array.pow">pow</a></code></li>
-<li><code><a title="funct.Array.Array.pow_" href="#funct.Array.Array.pow_">pow_</a></code></li>
 <li><code><a title="funct.Array.Array.prepend" href="#funct.Array.Array.prepend">prepend</a></code></li>
 <li><code><a title="funct.Array.Array.product" href="#funct.Array.Array.product">product</a></code></li>
 <li><code><a title="funct.Array.Array.range" href="#funct.Array.Array.range">range</a></code></li>
 <li><code><a title="funct.Array.Array.reduce" href="#funct.Array.Array.reduce">reduce</a></code></li>
 <li><code><a title="funct.Array.Array.remove" href="#funct.Array.Array.remove">remove</a></code></li>
-<li><code><a title="funct.Array.Array.removeByIndex" href="#funct.Array.Array.removeByIndex">removeByIndex</a></code></li>
-<li><code><a title="funct.Array.Array.removeByIndex_" href="#funct.Array.Array.removeByIndex_">removeByIndex_</a></code></li>
-<li><code><a title="funct.Array.Array.remove_" href="#funct.Array.Array.remove_">remove_</a></code></li>
+<li><code><a title="funct.Array.Array.remove_by_index" href="#funct.Array.Array.remove_by_index">remove_by_index</a></code></li>
 <li><code><a title="funct.Array.Array.reverse" href="#funct.Array.Array.reverse">reverse</a></code></li>
-<li><code><a title="funct.Array.Array.reverse_" href="#funct.Array.Array.reverse_">reverse_</a></code></li>
 <li><code><a title="funct.Array.Array.roll" href="#funct.Array.Array.roll">roll</a></code></li>
-<li><code><a title="funct.Array.Array.roll_" href="#funct.Array.Array.roll_">roll_</a></code></li>
 <li><code><a title="funct.Array.Array.round" href="#funct.Array.Array.round">round</a></code></li>
-<li><code><a title="funct.Array.Array.round_" href="#funct.Array.Array.round_">round_</a></code></li>
-<li><code><a title="funct.Array.Array.setDifference" href="#funct.Array.Array.setDifference">setDifference</a></code></li>
-<li><code><a title="funct.Array.Array.setIntersect" href="#funct.Array.Array.setIntersect">setIntersect</a></code></li>
-<li><code><a title="funct.Array.Array.setUnion" href="#funct.Array.Array.setUnion">setUnion</a></code></li>
+<li><code><a title="funct.Array.Array.setdifference" href="#funct.Array.Array.setdifference">setdifference</a></code></li>
+<li><code><a title="funct.Array.Array.setintersect" href="#funct.Array.Array.setintersect">setintersect</a></code></li>
+<li><code><a title="funct.Array.Array.setunion" href="#funct.Array.Array.setunion">setunion</a></code></li>
 <li><code><a title="funct.Array.Array.size" href="#funct.Array.Array.size">size</a></code></li>
 <li><code><a title="funct.Array.Array.sort" href="#funct.Array.Array.sort">sort</a></code></li>
-<li><code><a title="funct.Array.Array.sortBy" href="#funct.Array.Array.sortBy">sortBy</a></code></li>
-<li><code><a title="funct.Array.Array.sortBy_" href="#funct.Array.Array.sortBy_">sortBy_</a></code></li>
-<li><code><a title="funct.Array.Array.sort_" href="#funct.Array.Array.sort_">sort_</a></code></li>
+<li><code><a title="funct.Array.Array.sortby" href="#funct.Array.Array.sortby">sortby</a></code></li>
 <li><code><a title="funct.Array.Array.split" href="#funct.Array.Array.split">split</a></code></li>
-<li><code><a title="funct.Array.Array.splitAt" href="#funct.Array.Array.splitAt">splitAt</a></code></li>
-<li><code><a title="funct.Array.Array.splitTo" href="#funct.Array.Array.splitTo">splitTo</a></code></li>
+<li><code><a title="funct.Array.Array.split_at" href="#funct.Array.Array.split_at">split_at</a></code></li>
+<li><code><a title="funct.Array.Array.split_to" href="#funct.Array.Array.split_to">split_to</a></code></li>
 <li><code><a title="funct.Array.Array.squeeze" href="#funct.Array.Array.squeeze">squeeze</a></code></li>
 <li><code><a title="funct.Array.Array.starmap" href="#funct.Array.Array.starmap">starmap</a></code></li>
 <li><code><a title="funct.Array.Array.sub" href="#funct.Array.Array.sub">sub</a></code></li>
-<li><code><a title="funct.Array.Array.sub_" href="#funct.Array.Array.sub_">sub_</a></code></li>
 <li><code><a title="funct.Array.Array.sum" href="#funct.Array.Array.sum">sum</a></code></li>
 <li><code><a title="funct.Array.Array.tail" href="#funct.Array.Array.tail">tail</a></code></li>
-<li><code><a title="funct.Array.Array.takeWhile" href="#funct.Array.Array.takeWhile">takeWhile</a></code></li>
-<li><code><a title="funct.Array.Array.toArray" href="#funct.Array.Array.toArray">toArray</a></code></li>
-<li><code><a title="funct.Array.Array.toBool" href="#funct.Array.Array.toBool">toBool</a></code></li>
-<li><code><a title="funct.Array.Array.toChar" href="#funct.Array.Array.toChar">toChar</a></code></li>
-<li><code><a title="funct.Array.Array.toDict" href="#funct.Array.Array.toDict">toDict</a></code></li>
-<li><code><a title="funct.Array.Array.toInt" href="#funct.Array.Array.toInt">toInt</a></code></li>
-<li><code><a title="funct.Array.Array.toIter" href="#funct.Array.Array.toIter">toIter</a></code></li>
-<li><code><a title="funct.Array.Array.toSet" href="#funct.Array.Array.toSet">toSet</a></code></li>
-<li><code><a title="funct.Array.Array.toStr" href="#funct.Array.Array.toStr">toStr</a></code></li>
-<li><code><a title="funct.Array.Array.toTuple" href="#funct.Array.Array.toTuple">toTuple</a></code></li>
+<li><code><a title="funct.Array.Array.takewhile" href="#funct.Array.Array.takewhile">takewhile</a></code></li>
+<li><code><a title="funct.Array.Array.to_dict" href="#funct.Array.Array.to_dict">to_dict</a></code></li>
+<li><code><a title="funct.Array.Array.to_iter" href="#funct.Array.Array.to_iter">to_iter</a></code></li>
+<li><code><a title="funct.Array.Array.to_set" href="#funct.Array.Array.to_set">to_set</a></code></li>
+<li><code><a title="funct.Array.Array.to_str" href="#funct.Array.Array.to_str">to_str</a></code></li>
+<li><code><a title="funct.Array.Array.to_tuple" href="#funct.Array.Array.to_tuple">to_tuple</a></code></li>
 <li><code><a title="funct.Array.Array.union" href="#funct.Array.Array.union">union</a></code></li>
 <li><code><a title="funct.Array.Array.unique" href="#funct.Array.Array.unique">unique</a></code></li>
 <li><code><a title="funct.Array.Array.unsqueeze" href="#funct.Array.Array.unsqueeze">unsqueeze</a></code></li>
@@ -5299,7 +4533,7 @@ of uneven length, missing values are filled with default value.</p></div>
 <li><code><a title="funct.Array.Array.windows" href="#funct.Array.Array.windows">windows</a></code></li>
 <li><code><a title="funct.Array.Array.zeros" href="#funct.Array.Array.zeros">zeros</a></code></li>
 <li><code><a title="funct.Array.Array.zip" href="#funct.Array.Array.zip">zip</a></code></li>
-<li><code><a title="funct.Array.Array.zipAll" href="#funct.Array.Array.zipAll">zipAll</a></code></li>
+<li><code><a title="funct.Array.Array.zip_all" href="#funct.Array.Array.zip_all">zip_all</a></code></li>
 </ul>
 </li>
 </ul>
