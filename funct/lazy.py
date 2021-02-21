@@ -247,17 +247,12 @@ class ASeq:
         """
         return Aiter(A.itertools.zip_longest(self, *args, fillvalue=default))
 
-    @property
-    def head_(self):
-        """ Returns the first element of the iterator. """
-        return next(self)
-
-    def head_option_(self, default=None):
+    def next_(self, *args):
         """
-        Returns the first element of the iterator if
-        it has one, otherwise returns `default`.
+        Returns the first element of the iterator.
+        If the iterator is exhausted returns default if given.
         """
-        return next(self, default)
+        return next(self, *args)
 
     @property
     def enumerate_(self):

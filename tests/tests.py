@@ -299,7 +299,6 @@ class TestArray(unittest.TestCase):
         l = Array(1, 2, 3)
         a = Array.arange(10)
         d = Array(-1, -2, -4)
-        e = Array(5, 4, 99, 1)
 
         self.assertEqual(a.max_(), 9)
         self.assertEqual(a.min_(), 0)
@@ -376,7 +375,7 @@ class TestArray(unittest.TestCase):
         self.assertFalse(w.isfinite_().all_())
         self.assertTrue(h.isfinite_().all_())
         self.assertEqual(Array(1, 2, 3).mul_(1).product_(), 6)
-        self.assertEqual(Array(1, 2).add_(10).head_, 11)
+        self.assertEqual(Array(1, 2).add_(10).next_(), 11)
 
 
     def test_errs(self):
