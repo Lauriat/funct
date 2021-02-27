@@ -260,9 +260,14 @@ class ASeq:
         return Aenum(self)
 
     def __lazy_operate(self, f, e):
+        fn = (
+            lambda x, y, f=f: A.Array(A.Array(x)._apply(f, y))
+            if isinstance(x, A.Iterable)
+            else f(x, y)
+        )
         if isinstance(e, A.Iterable):
-            return Amap(f, self, e)
-        return Amap(f, self, A.itertools.repeat(e))
+            return Amap(fn, self, e)
+        return Amap(fn, self, A.itertools.repeat(e))
 
     def copy_(self, n=2):
         """

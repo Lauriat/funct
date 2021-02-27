@@ -45,6 +45,7 @@ class TestArray(unittest.TestCase):
         self.assertEqual(len(Array(1, 1, 2, 2).unique().to_set() - {1, 2}), 0)
         g[0] = [1, 2]
         self.assertTrue(isinstance(next(g.to_iter()), Array))
+        self.assertTrue(m.mul(1).equal(m))
         m[0][0] = 555
         self.assertEqual(m[0][0], 555)
         f = Array(range(10))
@@ -67,7 +68,9 @@ class TestArray(unittest.TestCase):
         )
         self.assertTrue(Array.arange(10.1).eq(np.arange(10.1)).all())
         self.assertTrue(Array.linspace(1, 3, 2).eq(np.linspace(1, 3, 2)).all())
-        self.assertTrue(Array.linspace(1.2, 2.4, 20).eq(np.linspace(1.2, 2.4, 20)).all())
+        self.assertTrue(
+            Array.linspace(1.2, 2.4, 20).eq(np.linspace(1.2, 2.4, 20)).all()
+        )
         self.assertTrue(
             Array.linspace(1.2, 2.4, 11, endpoint=False).equal(
                 np.linspace(1.2, 2.4, 11, endpoint=False)
@@ -181,7 +184,9 @@ class TestArray(unittest.TestCase):
             .sortby(lambda k: k[1])
             .equal([(5, 1), (4, 2), (-1, 3)])
         )
-        self.assertTrue(Array(6, 5, 2, 1).sortby(lambda k: k, inplace=True).eq((1, 2, 5, 6)).all())
+        self.assertTrue(
+            Array(6, 5, 2, 1).sortby(lambda k: k, inplace=True).eq((1, 2, 5, 6)).all()
+        )
         self.assertTrue(l.astype(str).eq(["1", "2", "3"]).all())
         self.assertTrue(l.join("-") == "1-2-3")
         self.assertTrue(l.prepend(0).eq([0, 1, 2, 3]).all())
@@ -201,10 +206,14 @@ class TestArray(unittest.TestCase):
         self.assertTrue(Array(1, 2, 3).eq(Array(1, 2, 3)).all())
         self.assertTrue((Array(1, 2, 3) > Array(-1, -2, 0)).all())
         self.assertTrue(Array(1, 2, 3).ge((-1, -2, 0)).all())
-        self.assertTrue((Array(1, 2, 3) >= Array(0, 2, 5)).eq([True, True, False]).all())
+        self.assertTrue(
+            (Array(1, 2, 3) >= Array(0, 2, 5)).eq([True, True, False]).all()
+        )
         self.assertTrue(Array(1, 2, 3).ge((0, 2, 5)).eq([True, True, False]).all())
         self.assertTrue((Array(-1, -2, 0) < Array(1, 2, 3)).all())
-        self.assertTrue((Array(0, 2, 5) <= Array(1, 2, 3)).eq([True, True, False]).all())
+        self.assertTrue(
+            (Array(0, 2, 5) <= Array(1, 2, 3)).eq([True, True, False]).all()
+        )
         self.assertTrue(Array(5, 6, 7, 8, 9)[[0, 2, 4]].eq([5, 7, 9]).all())
         self.assertTrue(Array(5, 6, 7, 8, 9)[:3].eq([5, 6, 7]).all())
         self.assertTrue(Array(1.1, 1.2, 1.3).round().equal((1, 1, 1)))
@@ -239,7 +248,9 @@ class TestArray(unittest.TestCase):
         self.assertTrue(Array([1, 2, 3])[[True, False, False]].equal([1]))
         self.assertTrue(isinstance(Array([[[1], 0]]).head.head, Array))
         self.assertTrue(isinstance(Array([[np.zeros(1), 0]]).head.head, np.ndarray))
-        self.assertTrue(isinstance(Array([[np.zeros(1), 0]]).to_Array().head.head, Array))
+        self.assertTrue(
+            isinstance(Array([[np.zeros(1), 0]]).to_Array().head.head, Array)
+        )
         self.assertTrue(isinstance(Array([gg()]).head, type(gg())))
         self.assertTrue(isinstance(Array([gg()]).to_Array().head, Array))
         self.assertEqual(Array(1, 2, 3).mean(), 2)
@@ -299,6 +310,7 @@ class TestArray(unittest.TestCase):
         l = Array(1, 2, 3)
         a = Array.arange(10)
         d = Array(-1, -2, -4)
+        m = Array((1, 2), (3, 4))
 
         self.assertEqual(a.max_(), 9)
         self.assertEqual(a.min_(), 0)
@@ -309,6 +321,9 @@ class TestArray(unittest.TestCase):
         self.assertTrue(Array(1.1, 2.9).int_().eq_((1, 2)).all_())
         self.assertTrue(Array("ab").int_().eq_((97, 98)).all_())
         self.assertTrue(Array(97, 98).char_().eq_(["a", "b"]).all_())
+        self.assertTrue(m.add_(0).result().equal(m))
+        self.assertFalse(Array([1], [2]).equal((1, 2)))
+        self.assertTrue(Array([1], [2], 3).equal([(1,), (2,), 3]))
         qq = Array(-1, 2, -3)
         self.assertTrue(qq.abs_().result().equal((1, 2, 3)))
         a = Array.arange(10, 20)
@@ -376,7 +391,6 @@ class TestArray(unittest.TestCase):
         self.assertTrue(h.isfinite_().all_())
         self.assertEqual(Array(1, 2, 3).mul_(1).product_(), 6)
         self.assertEqual(Array(1, 2).add_(10).next_(), 11)
-
 
     def test_errs(self):
         with self.assertRaises(ValueError):

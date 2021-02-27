@@ -254,6 +254,17 @@ class Array(list, L.ASeq):
         """ Returns true this Array and given sequence have the same elements. """
         if len(self) != len(b):
             return False
+        if any(map(lambda e: isinstance(e, Array), self)):
+            try:
+                return all(
+                    map(
+                        lambda x, y: x.equal(y) if isinstance(x, Array) else x == y,
+                        self,
+                        b,
+                    )
+                )
+            except TypeError:
+                return False
         return all(self.eq(b))
 
     def remove(self, b, inplace=False):
@@ -835,6 +846,17 @@ class Array(list, L.ASeq):
             ) from None
 
     @staticmethod
+    def zeros_like(e):
+        """ Returns a zero-filled Array of given length. """
+        if isinstance(e, Array.__baseIterables):
+            return Array(e).mul(0)
+        raise TypeError(
+            "Expected one of ("
+            + ", ".join(str(e) for e in Array.__baseIterables)
+            + f") got {type(e)}"
+        )
+
+    @staticmethod
     def arange(*args):
         """
         Returns an Array of evenly spaced values within given interval
@@ -887,6 +909,13 @@ class Array(list, L.ASeq):
         Array.__validate_bool_arg(None, endpoint, "endpoint")
         return base ** Array.linspace(start, stop, num, endpoint)
 
+    def _apply(self, f, e):
+        if any(map(lambda e: isinstance(e, Array), self)):
+            return self.__ndmap(f, e)
+        if isinstance(e, Iterable):
+            return map(f, self, e)
+        return map(f, self, itertools.repeat(e))
+
     def __convert(self, e):
         return Array(e) if isinstance(e, Array.__baseIterables) else e
 
@@ -926,7 +955,15 @@ class Array(list, L.ASeq):
         self[:] = s
         return self
 
+    def __ndmap(self, f, e):
+        fn = lambda x, y, f=f: Array(x.__map(f, y)) if isinstance(x, Array) else f(x, y)
+        if isinstance(e, Iterable):
+            return map(fn, self, e)
+        return map(fn, self, itertools.repeat(e))
+
     def __map(self, f, e):
+        if any(map(lambda e: isinstance(e, Array), self)):
+            return self.__ndmap(f, e)
         if isinstance(e, Iterable):
             return map(f, self, e)
         return map(f, self, itertools.repeat(e))
