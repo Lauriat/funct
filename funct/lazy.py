@@ -19,11 +19,15 @@ class ASeq:
 
     def sum_(self, start=0):
         """ Returns the sum of the elements. """
-        return sum(self, start)
+        if not isinstance(self, A.Array):
+            return self.result().sum(start=start)
+        return self.sum(start=start)
 
     def product_(self, start=1):
         """ Returns the product of the elements. """
-        return A.reduce(lambda a, b: a * b, self, start)
+        if not isinstance(self, A.Array):
+            return self.result().product(start=start)
+        return self.product(start=start)
 
     def forall_(self, func):
         """

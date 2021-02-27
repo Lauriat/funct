@@ -94,20 +94,33 @@ class Array(list, L.ASeq):
 
     def sum(self, start=0):
         """ Returns the sum of the Array elements. """
+        if self.__isnd():
+            return reduce(
+                lambda a, b: sum(b, a) if isinstance(b, Array) else a + b, self, start
+            )
         return sum(self, start)
 
     def product(self, start=1):
         """ Returns the product of the Array elements. """
+        if self.__isnd():
+            return reduce(
+                lambda a, b: (a * b.product()) if isinstance(b, Array) else a * b,
+                self,
+                start,
+            )
         return reduce(lambda a, b: a * b, self, start)
 
     def mean(self):
         """ Returns the average of the Array elements. """
-        return sum(self) / self.size
+        if not self.__isnd():
+            return sum(self) / self.size
+        else:
+            return self.sum() / self.numel
 
     def average(self, weights=None):
         """ Returns the weighted average of the Array elements. """
         if weights is None:
-            return sum(self) / self.size
+            return self.mean()
         else:
             self.__validate_seq(weights)
             return sum(self.mul(weights)) / sum(weights)
@@ -659,7 +672,7 @@ class Array(list, L.ASeq):
         >>> Array((1, "a"), (2, "b")).unzip()
         Array(Array(1, 2), Array('a', 'b'))
         """
-        if not all(map(lambda e: isinstance(e, Iterable), self)):
+        if not all(map(lambda e: isinstance(e, Array), self)):
             raise TypeError("Array elements must support iteration")
         return Array(zip(*self))
 
@@ -744,12 +757,19 @@ class Array(list, L.ASeq):
 
     @property
     def length(self):
-        """ Number of elements in this Array. """
+        """ Length of the Array. """
         return self.__len__()
 
     @property
+    def numel(self):
+        """ Total number of elements in the Array. """
+        if not self.__isnd():
+            return len(self)
+        return sum(e.numel if isinstance(e, Array) else 1 for e in self)
+
+    @property
     def size(self):
-        """ Number of elements in this Array. """
+        """ Length of the Array. """
         return self.__len__()
 
     def int(self):
@@ -801,7 +821,7 @@ class Array(list, L.ASeq):
         Returns the Array with the same elements, but with
         outermost singleton dimension removed (if exists).
         """
-        if isinstance(self.head_option(), Array.__baseIterables) and self.length == 1:
+        if isinstance(self.head_option(), Array) and self.length == 1:
             return self[0]
         else:
             return self
@@ -816,12 +836,8 @@ class Array(list, L.ASeq):
     @property
     def flatten(self):
         """ Returns the Array collapsed into one dimension. """
-        r = Array(
-            e
-            for s in self
-            for e in (s if isinstance(s, Array.__baseIterables) else [s])
-        )
-        if any(map(lambda e: isinstance(e, Array.__baseIterables), r)):
+        r = Array(e for s in self for e in (s if isinstance(s, Array) else [s]))
+        if any(map(lambda e: isinstance(e, Array), r)):
             return r.flatten
         return r
 
@@ -948,11 +964,12 @@ class Array(list, L.ASeq):
         self[:] = s
         return self
 
+    def __isnd(self):
+        return any(map(lambda e: isinstance(e, Array), self))
+
     def __map(self, f):
         if any(map(lambda e: isinstance(e, Array), self)):
-            f = lambda x, f=f: (
-                Array(x.__map(f)) if isinstance(x, Array) else f(x)
-            )
+            f = lambda x, f=f: (Array(x.__map(f)) if isinstance(x, Array) else f(x))
         return map(f, self)
 
     def __map2(self, f, e):
