@@ -87,7 +87,7 @@ class Array(list, L.ASeq):
 
     def abs(self, inplace=False):
         """ Element-wise absolute value. """
-        a = map(abs, self)
+        a = self.__map(abs)
         if inplace:
             return self.__setinplace(a, inplace)
         return Array(a)
@@ -114,21 +114,21 @@ class Array(list, L.ASeq):
 
     def floor(self, inplace=False):
         """ Floors the Array elements. """
-        a = map(math.floor, self)
+        a = self.__map(math.floor)
         if inplace:
             return self.__setinplace(a, inplace)
         return Array(a)
 
     def ceil(self, inplace=False):
         """ Ceils the Array elements. """
-        a = map(math.ceil, self)
+        a = self.__map(math.ceil)
         if inplace:
             return self.__setinplace(a, inplace)
         return Array(a)
 
     def round(self, d=0, inplace=False):
         """ Rounds the Array to the given number of decimals. """
-        a = map(lambda e: round(e, d), self)
+        a = self.__map(lambda e: round(e, d))
         if inplace:
             return self.__setinplace(a, inplace)
         return Array(a)
@@ -168,7 +168,7 @@ class Array(list, L.ASeq):
         """
         Clip the values in the Array between the interval (`_min`, `_max`).
         """
-        a = map(lambda e: max(min(e, _max), _min), self)
+        a = self.__map(lambda e: max(min(e, _max), _min))
         if inplace:
             return self.__setinplace(a, inplace)
         return Array(a)
@@ -740,7 +740,7 @@ class Array(list, L.ASeq):
         """
         Tests element-wise whether the elements are neither infinity nor NaN.
         """
-        return Array(map(math.isfinite, self))
+        return Array(self.__map(math.isfinite))
 
     @property
     def length(self):
@@ -755,21 +755,21 @@ class Array(list, L.ASeq):
     def int(self):
         """ Converts elements in this Array to integers. """
         try:
-            return Array(map(lambda e: ord(e) if isinstance(e, str) else int(e), self))
+            return Array(self.__map(lambda e: ord(e) if isinstance(e, str) else int(e)))
         except TypeError:
             raise TypeError("Expected an Array of numbers or characters") from None
 
     def float(self):
         """ Converts elements in this Array to floats. """
-        return Array(map(float, self))
+        return Array(self.__map(float))
 
     def bool(self):
         """ Converts elements in this Array to booleans. """
-        return Array(map(bool, self))
+        return Array(self.__map(bool))
 
     def char(self):
         """ Converts an Array of integers to chars. """
-        return Array(map(chr, self))
+        return Array(self.__map(chr))
 
     def to_str(self):
         """
@@ -847,7 +847,7 @@ class Array(list, L.ASeq):
 
     @staticmethod
     def zeros_like(e):
-        """ Returns a zero-filled Array of given length. """
+        """ Returns a zero-filled Array with same shape as given Array. """
         if isinstance(e, Array.__baseIterables):
             return Array(e).mul(0)
         raise TypeError(
@@ -909,13 +909,6 @@ class Array(list, L.ASeq):
         Array.__validate_bool_arg(None, endpoint, "endpoint")
         return base ** Array.linspace(start, stop, num, endpoint)
 
-    def _apply(self, f, e):
-        if any(map(lambda e: isinstance(e, Array), self)):
-            return self.__ndmap(f, e)
-        if isinstance(e, Iterable):
-            return map(f, self, e)
-        return map(f, self, itertools.repeat(e))
-
     def __convert(self, e):
         return Array(e) if isinstance(e, Array.__baseIterables) else e
 
@@ -955,22 +948,25 @@ class Array(list, L.ASeq):
         self[:] = s
         return self
 
-    def __ndmap(self, f, e):
-        fn = lambda x, y, f=f: Array(x.__map(f, y)) if isinstance(x, Array) else f(x, y)
-        if isinstance(e, Iterable):
-            return map(fn, self, e)
-        return map(fn, self, itertools.repeat(e))
-
-    def __map(self, f, e):
+    def __map(self, f):
         if any(map(lambda e: isinstance(e, Array), self)):
-            return self.__ndmap(f, e)
+            f = lambda x, f=f: (
+                Array(x.__map(f)) if isinstance(x, Array) else f(x)
+            )
+        return map(f, self)
+
+    def __map2(self, f, e):
+        if any(map(lambda e: isinstance(e, Array), self)):
+            f = lambda x, y, f=f: (
+                Array(x.__map2(f, y)) if isinstance(x, Array) else f(x, y)
+            )
         if isinstance(e, Iterable):
             return map(f, self, e)
         return map(f, self, itertools.repeat(e))
 
     def __operate(self, op, e, inplace):
         self.__validate_bool_arg(inplace, "inplace")
-        a = self.__map(op, e)
+        a = self.__map2(op, e)
         if inplace:
             self[:] = a
             return self

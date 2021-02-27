@@ -37,6 +37,8 @@ class TestArray(unittest.TestCase):
         self.assertTrue(l.map(testfun).equal((1, 2, 0)))
         self.assertTrue(l.parmap(testfun).equal((1, 2, 0)))
         self.assertTrue(l.asyncmap(testfun).result().equal((1, 2, 0)))
+        self.assertTrue(m.int().equal(m))
+        self.assertTrue(m.abs().equal(m))
         ee = Array(3, 3, 33)
         ee.clear()
         self.assertTrue(ee.isempty)
@@ -338,6 +340,7 @@ class TestArray(unittest.TestCase):
         d.add([3, 2, 1], inplace=True)
         self.assertTrue(d.eq((3, 1, -2)).all)
 
+        self.assertTrue(m.abs_().result().equal(m))
         self.assertTrue(d.mul(-1).eq((-3, -1, 2)).all)
         d.mul(-1, inplace=True)
         self.assertTrue(d.eq((-3, -1, 2)).all)

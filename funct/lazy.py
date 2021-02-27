@@ -10,7 +10,9 @@ class ASeq:
         """ Converts all iterables in the Array to Arrays """
         return A.Array(
             map(
-                lambda e: A.Array(e).to_Array() if isinstance(e, A.Iterable) else e,
+                lambda e: A.Array(e).to_Array()
+                if (isinstance(e, A.Iterable) and not isinstance(e, str))
+                else e,
                 self,
             )
         )
@@ -132,19 +134,19 @@ class ASeq:
 
     def abs_(self):
         """ Element-wise absolute value. """
-        return Amap(abs, self)
+        return self.__lazy_map(abs)
 
     def floor_(self):
         """ Floors the elements of the iterable. """
-        return Amap(math.floor, self)
+        return self.__lazy_map(math.floor)
 
     def ceil_(self):
         """ Ceils the elements of the iterable. """
-        return Amap(math.ceil, self)
+        return self.__lazy_map(math.ceil)
 
     def round_(self, d=0):
         """ Rounds the elements to the given number of decimals. """
-        return Amap(lambda e: round(e, d), self)
+        return self.__lazy_map(lambda e: round(e, d))
 
     def gt_(self, e):
         """ Computes x > y element-wise """
@@ -174,7 +176,7 @@ class ASeq:
         """
         Tests element-wise whether the elements are neither infinity nor NaN.
         """
-        return Amap(math.isfinite, self)
+        return self.__lazy_map(math.isfinite)
 
     def astype_(self, t):
         """
@@ -185,27 +187,27 @@ class ASeq:
     def int_(self):
         """ Converts elements in the iterable to integers. """
         try:
-            return Amap(lambda e: ord(e) if isinstance(e, str) else int(e), self)
+            return self.__lazy_map(lambda e: ord(e) if isinstance(e, str) else int(e))
         except TypeError:
             raise TypeError("Expected an Array of numbers or characters") from None
 
     def float_(self):
         """ Converts elements in the iterable to floats. """
-        return Amap(float, self)
+        return self.__lazy_map(float)
 
     def bool_(self):
         """ Converts elements in the iterable to booleans. """
-        return Amap(bool, self)
+        return self.__lazy_map(bool)
 
     def char_(self):
         """ Converts elements in the iterable to chars. """
-        return Amap(chr, self)
+        return self.__lazy_map(chr)
 
     def clip_(self, _min, _max):
         """
         Clip the values in the iterable between the interval (`_min`, `_max`).
         """
-        return Amap(lambda e: max(min(e, _max), _min), self)
+        return self.__lazy_map(lambda e: max(min(e, _max), _min))
 
     def map_(self, func):
         """ Lazy map """
@@ -261,13 +263,15 @@ class ASeq:
 
     def __lazy_operate(self, f, e):
         fn = (
-            lambda x, y, f=f: A.Array(A.Array(x)._apply(f, y))
-            if isinstance(x, A.Iterable)
-            else f(x, y)
+            lambda x, y, f=f: x.__lazy_operate(f, y) if isinstance(x, ASeq) else f(x, y)
         )
         if isinstance(e, A.Iterable):
             return Amap(fn, self, e)
         return Amap(fn, self, A.itertools.repeat(e))
+
+    def __lazy_map(self, f):
+        fn = lambda x, f=f: x.__lazy_map(f) if isinstance(x, ASeq) else f(x)
+        return Amap(fn, self)
 
     def copy_(self, n=2):
         """
@@ -281,7 +285,7 @@ class AFunc:
     __slots__ = []
 
     def result(self):
-        return A.Array(self)
+        return A.Array(self).to_Array()
 
 
 class Amap(ASeq, AFunc, map):
