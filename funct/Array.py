@@ -332,9 +332,18 @@ class Array(list, L.ASeq):
 
     def map(self, func, inplace=False):
         """
-        Returns an Array by applying provided function to all elements of this Array.
+        Returns an Array by applying provided function to each element in this Array.
         """
         a = map(func, self)
+        if inplace:
+            return self.__setinplace(a, inplace)
+        return Array(a)
+
+    def apply(self, func, inplace=False):
+        """
+        Applies function to all non-Array elements of the Array.
+        """
+        a = self.__map(func)
         if inplace:
             return self.__setinplace(a, inplace)
         return Array(a)
@@ -964,7 +973,8 @@ class Array(list, L.ASeq):
             raise ValueError(f"Expected type bool for {name} argument")
 
     def __setinplace(self, s, arg):
-        self.__validate_bool_arg(arg, "inplace")
+        if not isinstance(arg, bool):
+            raise ValueError("Expected type bool for inplace argument")
         self[:] = s
         return self
 
@@ -986,7 +996,8 @@ class Array(list, L.ASeq):
         return map(f, self, itertools.repeat(e))
 
     def __operate(self, op, e, inplace):
-        self.__validate_bool_arg(inplace, "inplace")
+        if not isinstance(inplace, bool):
+            raise ValueError("Expected type bool for inplace argument")
         a = self.__map2(op, e)
         if inplace:
             self[:] = a

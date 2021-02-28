@@ -217,6 +217,12 @@ class ASeq:
         """ Lazy map """
         return Amap(func, self)
 
+    def apply_(self, func):
+        """
+        Applies function to all non-iterable elements of the iterable.
+        """
+        return self.__lazy_map(func)
+
     def starmap_(self, func):
         """ Lazy starmap """
         return Amap(lambda a: func(*a), self)
@@ -267,14 +273,16 @@ class ASeq:
 
     def __lazy_operate(self, f, e):
         fn = (
-            lambda x, y, f=f: x.__lazy_operate(f, y) if isinstance(x, ASeq) else f(x, y)
+            lambda x, y: A.Array(x.__lazy_operate(f, y))
+            if isinstance(x, ASeq)
+            else f(x, y)
         )
         if isinstance(e, A.Iterable):
             return Amap(fn, self, e)
         return Amap(fn, self, A.itertools.repeat(e))
 
     def __lazy_map(self, f):
-        fn = lambda x, f=f: x.__lazy_map(f) if isinstance(x, ASeq) else f(x)
+        fn = lambda x, f=f: A.Array(x.__lazy_map(f)) if isinstance(x, ASeq) else f(x)
         return Amap(fn, self)
 
     def __radd__(self, b):
@@ -292,7 +300,7 @@ class AFunc:
     __slots__ = []
 
     def result(self):
-        return A.Array(self).to_Array()
+        return A.Array(self)
 
 
 class Amap(ASeq, AFunc, map):
