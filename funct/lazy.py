@@ -277,6 +277,9 @@ class ASeq:
         fn = lambda x, f=f: x.__lazy_map(f) if isinstance(x, ASeq) else f(x)
         return Amap(fn, self)
 
+    def __radd__(self, b):
+        return b + sum(self)
+
     def copy_(self, n=2):
         """
         Returns n independent iterators from the iterable.

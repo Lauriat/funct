@@ -39,6 +39,8 @@ class TestArray(unittest.TestCase):
         self.assertTrue(l.asyncmap(testfun).result().equal((1, 2, 0)))
         self.assertTrue(m.int().equal(m))
         self.assertTrue(m.abs().equal(m))
+        self.assertEqual(m.sum(), 10)
+        self.assertEqual(m.mean(), 2.5)
         ee = Array(3, 3, 33)
         ee.clear()
         self.assertTrue(ee.isempty)
@@ -314,6 +316,7 @@ class TestArray(unittest.TestCase):
         d = Array(-1, -2, -4)
         m = Array((1, 2), (3, 4))
 
+        self.assertEqual(m.add_(0).sum_(), 10)
         self.assertEqual(a.max_(), 9)
         self.assertEqual(a.min_(), 0)
         self.assertEqual(a.sum_(), 45)
@@ -412,8 +415,6 @@ class TestArray(unittest.TestCase):
             Array().pad(4.2)
         with self.assertRaises(TypeError):
             Array().get("a")
-        with self.assertRaises(TypeError):
-            1 + Array(1, 2, 3)
         with self.assertRaises(TypeError):
             "a" + Array(1, 2, 3)
         with self.assertRaises(TypeError):

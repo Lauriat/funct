@@ -122,8 +122,12 @@ class Array(list, L.ASeq):
         if weights is None:
             return self.mean()
         else:
+            if self.__isnd():
+                raise NotImplementedError(
+                    "Weigthed average not supported for multidimensional Arrays"
+                )
             self.__validate_seq(weights)
-            return sum(self.mul(weights)) / sum(weights)
+            return self.mul(weights).sum() / sum(weights)
 
     def floor(self, inplace=False):
         """ Floors the Array elements. """
@@ -1009,7 +1013,7 @@ class Array(list, L.ASeq):
         if isinstance(b, Array.__baseIterables):
             return Array(b) + self
         else:
-            raise TypeError(f"Can not concatenate {type(b).__name__} to Array")
+            return b + sum(self)
 
     def __pow__(self, b):
         return self.pow(b)
